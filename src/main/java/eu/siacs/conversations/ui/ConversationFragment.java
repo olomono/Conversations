@@ -1066,9 +1066,11 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 			MenuItem cancelTransmission = menu.findItem(R.id.cancel_transmission);
 			MenuItem deleteFile = menu.findItem(R.id.delete_file);
 			MenuItem showErrorMessage = menu.findItem(R.id.show_error_message);
+			if (!encrypted && !m.isGeoUri() && !m.treatAsDownloadable()) {
+				quoteMessage.setVisible(MessageUtils.prepareQuote(m).length() > 0);
+			}
 			if (!m.isFileOrImage() && !encrypted && !m.isGeoUri() && !m.treatAsDownloadable()) {
 				copyMessage.setVisible(true);
-				quoteMessage.setVisible(MessageUtils.prepareQuote(m).length() > 0);
 				String body = m.getMergedBody().toString();
 				if (ShareUtil.containsXmppUri(body)) {
 					copyLink.setTitle(R.string.copy_jabber_id);
