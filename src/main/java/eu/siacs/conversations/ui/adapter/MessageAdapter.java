@@ -374,7 +374,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 
 	/**
 	 * Applies QuoteSpan to group of lines which starts with > or » characters.
-	 * Appends likebreaks and applies DividerSpan to them to show a padding between quote and text.
+	 * Appends line breaks and applies DividerSpan to them to show a padding between quote and text.
 	 */
 	private boolean handleTextQuotes(SpannableStringBuilder body, boolean darkBackground) {
 		boolean startsWithQuote = false;
@@ -633,6 +633,8 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 					viewHolder.indicator = view.findViewById(R.id.security_indicator);
 					viewHolder.edit_indicator = view.findViewById(R.id.edit_indicator);
 					viewHolder.image = view.findViewById(R.id.message_image);
+					viewHolder.messageImageQuotationBar = view.findViewById(R.id.message_image_quotation_bar);
+					viewHolder.messageImageQuotation = view.findViewById(R.id.message_image_quotation);
 					viewHolder.messageBody = view.findViewById(R.id.message_body);
 					viewHolder.time = view.findViewById(R.id.message_time);
 					viewHolder.indicatorReceived = view.findViewById(R.id.indicator_received);
@@ -646,6 +648,8 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 					viewHolder.indicator = view.findViewById(R.id.security_indicator);
 					viewHolder.edit_indicator = view.findViewById(R.id.edit_indicator);
 					viewHolder.image = view.findViewById(R.id.message_image);
+					viewHolder.messageImageQuotationBar = view.findViewById(R.id.message_image_quotation_bar);
+					viewHolder.messageImageQuotation = view.findViewById(R.id.message_image_quotation);
 					viewHolder.messageBody = view.findViewById(R.id.message_body);
 					viewHolder.time = view.findViewById(R.id.message_time);
 					viewHolder.indicatorReceived = view.findViewById(R.id.indicator_received);
@@ -675,6 +679,9 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		}
 
 		boolean darkBackground = type == RECEIVED && (!isInValidSession || mUseGreenBackground) || activity.isDarkTheme();
+
+		// TODO change separator for better fitting
+		message.parseForImageOrFileQuotation();
 
 		if (type == DATE_SEPARATOR) {
 			if (UIHelper.today(message.getTimeSent())) {
@@ -746,6 +753,30 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 			} else {
 				displayInfoMessage(viewHolder, UIHelper.getMessagePreview(activity, message).first, darkBackground);
 			}
+
+
+//		} else if (message.getType() == Message.TYPE_IMAGE_OR_FILE_QUOTATION) {
+//			displayImageMessage(viewHolder, message);
+
+
+		} else if (message.getType() == Message.TYPE_IMAGE_OR_FILE_QUOTATION) {
+			activity.loadBitmapForQuotedImage(message, viewHolder.messageImageQuotation);
+			viewHolder.messageImageQuotationBar.setVisibility(View.VISIBLE);
+			viewHolder.messageImageQuotation.setVisibility(View.VISIBLE);
+
+			// TODO correct: separate URI and comment temporarily
+			String originalBody = message.getBody();
+			String body = message.getBody();
+			// TODO corner cases
+			String[] bodyParts = body.split("\n\n");
+			String quotationURI = bodyParts[0];
+			String quotationComment = bodyParts[1];
+			message.setBody(quotationURI);
+			displayImageMessage(viewHolder, message);
+			message.setBody(quotationComment);
+			displayTextMessage(viewHolder, message, darkBackground, type);
+			message.setBody(originalBody);
+
 		} else if (message.isFileOrImage() && message.getEncryption() != Message.ENCRYPTION_PGP && message.getEncryption() != Message.ENCRYPTION_DECRYPTION_FAILED) {
 			if (message.getFileParams().width > 0 && message.getFileParams().height > 0) {
 				displayImageMessage(viewHolder, message);
@@ -990,9 +1021,11 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		protected ImageView indicatorReceived;
 		protected TextView time;
 		protected CopyTextView messageBody;
+		protected ImageView messageImageQuotation;
 		protected ImageView contact_picture;
 		protected TextView status_message;
 		protected TextView encryption;
+		protected View messageImageQuotationBar;
 	}
 
 	static class AsyncDrawable extends BitmapDrawable {

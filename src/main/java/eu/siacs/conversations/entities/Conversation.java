@@ -77,6 +77,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 	private ChatState mIncomingChatState = Config.DEFAULT_CHATSTATE;
 	private String mFirstMamReference = null;
 	private Message correctingMessage;
+	private Message quotedFileMessage = null;
 
 	public Conversation(final String name, final Account account, final Jid contactJid,
 	                    final int mode) {
@@ -951,6 +952,14 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 			}
 		}
 		return 0;
+	}
+
+    public Message getQuotedFileMessage() {
+        return quotedFileMessage;
+    }
+
+	public void setQuotedFileMessage(Message quotedFileMessage) {
+		this.quotedFileMessage = quotedFileMessage;
 	}
 
 	public interface OnMessageFound {

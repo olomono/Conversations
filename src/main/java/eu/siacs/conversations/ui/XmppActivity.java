@@ -86,6 +86,10 @@ public abstract class XmppActivity extends ActionBarActivity {
 	protected static final int REQUEST_INVITE_TO_CONVERSATION = 0x0102;
 	protected static final int REQUEST_CHOOSE_PGP_ID = 0x0103;
 	protected static final int REQUEST_BATTERY_OP = 0x49ff;
+
+	private static final int BITMAP_SCALE = 288;
+	private static final int BITMAP_SCALE_FOR_QUOTED_IMAGE = 100;
+
 	public XmppConnectionService xmppConnectionService;
 	public boolean xmppConnectionServiceBound = false;
 
@@ -880,9 +884,17 @@ public abstract class XmppActivity extends ActionBarActivity {
 	}
 
 	public void loadBitmap(Message message, ImageView imageView) {
+		loadBitmap(message, imageView, BITMAP_SCALE, true);
+	}
+
+	public void loadBitmapForQuotedImage(Message message, ImageView imageView) {
+		loadBitmap(message, imageView, BITMAP_SCALE_FOR_QUOTED_IMAGE, false);
+	}
+
+	public void loadBitmap(Message message, ImageView imageView, int scale, boolean cacheOnly) {
 		Bitmap bm;
 		try {
-			bm = xmppConnectionService.getFileBackend().getThumbnail(message, (int) (metrics.density * 288), true);
+			bm = xmppConnectionService.getFileBackend().getThumbnail(message, (int) (metrics.density * scale), cacheOnly);
 		} catch (IOException e) {
 			bm = null;
 		}

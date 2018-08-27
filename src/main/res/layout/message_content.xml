@@ -12,13 +12,46 @@
         android:longClickable="true"
         android:scaleType="centerCrop"/>
 
-    <eu.siacs.conversations.ui.widget.CopyTextView
-        android:id="@+id/message_body"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:autoLink="web"
-        android:longClickable="true"
-        android:textAppearance="@style/TextAppearance.Conversations.Body1"/>
+        android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="5dp">
+
+        <View
+            android:id="@+id/message_image_quotation_bar"
+            android:layout_width="1.5dp"
+            android:layout_height="match_parent"
+            android:background="@color/green700"
+            android:layout_marginLeft="0.5dp"
+            android:layout_marginRight="10dp"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/message_image_quotation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:background="@color/black87"
+            android:scaleType="centerCrop"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+        <eu.siacs.conversations.ui.widget.CopyTextView
+            android:id="@+id/message_body"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:autoLink="web"
+            android:longClickable="true"
+            android:textAppearance="@style/TextAppearance.Conversations.Body1" />
+
+    </LinearLayout>
 
     <Button
         android:id="@+id/download_button"

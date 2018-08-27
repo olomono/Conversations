@@ -700,12 +700,25 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 	private void sendMessage() {
 		final String body = this.binding.textinput.getText().toString();
 		final Conversation conversation = this.conversation;
+		final Message quotedFileMessage = conversation.getQuotedFileMessage();
 		if (body.length() == 0 || conversation == null) {
 			return;
 		}
 		final Message message;
 		if (conversation.getCorrectingMessage() == null) {
 			message = new Message(conversation, body, conversation.getNextEncryption());
+
+			// If the current text is for a quoted message, set needed values for displaying a quoted image by getView().
+			if (quotedFileMessage != null) {
+				//TODO add values if needed
+				message.setType(Message.TYPE_IMAGE_OR_FILE_QUOTATION);
+				message.setBody(quotedFileMessage.getBody() + "\n\n" + body);
+				message.setRelativeFilePath(quotedFileMessage.getRelativeFilePath());
+				message.setRemoteMsgId(quotedFileMessage.getRemoteMsgId());
+				// Reset the currently quoted file message.
+				conversation.setQuotedFileMessage(null);
+			}
+
 			if (conversation.getMode() == Conversation.MODE_MULTI) {
 				final Jid nextCounterpart = conversation.getNextCounterpart();
 				if (nextCounterpart != null) {
@@ -714,7 +727,9 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 					message.setType(Message.TYPE_PRIVATE);
 				}
 			}
-		} else {
+		}
+
+		else {
 			message = conversation.getCorrectingMessage();
 			message.setBody(body);
 			message.setEdited(message.getUuid());
@@ -1023,7 +1038,19 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 	}
 
 	private void quoteMessage(Message message) {
-		quoteText(MessageUtils.prepareQuote(message));
+		// If the quoted message is a file message, set it for the current conversation so that it can be used by sendMessage()
+		if (message.isFileOrImage()) {
+			conversation.setQuotedFileMessage(message);
+			//TODO put focus to keyboard
+			binding.textinput.requestFocus();
+			InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+			if (inputMethodManager != null) {
+				inputMethodManager.showSoftInput(binding.textinput, InputMethodManager.SHOW_IMPLICIT);
+			}
+		}
+		else {
+			quoteText(MessageUtils.prepareQuote(message));
+		}
 	}
 
 	@Override
