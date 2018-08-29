@@ -755,15 +755,8 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 			}
 
 
-//		} else if (message.getType() == Message.TYPE_IMAGE_OR_FILE_QUOTATION) {
-//			displayImageMessage(viewHolder, message);
-
-
 		} else if (message.getType() == Message.TYPE_IMAGE_OR_FILE_QUOTATION) {
-			activity.loadBitmapForQuotedImage(message, viewHolder.messageImageQuotation);
-			viewHolder.messageImageQuotationBar.setVisibility(View.VISIBLE);
-			viewHolder.messageImageQuotation.setVisibility(View.VISIBLE);
-
+			System.out.println("Wir sind drin: " + message.getBody());
 			// TODO correct: separate URI and comment temporarily
 			String originalBody = message.getBody();
 			String body = message.getBody();
@@ -771,11 +764,33 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 			String[] bodyParts = body.split("\n\n");
 			String quotationURI = bodyParts[0];
 			String quotationComment = bodyParts[1];
-			message.setBody(quotationURI);
-			displayImageMessage(viewHolder, message);
+
+			// Find the relative file path for the quotation.
+			if (message.getRelativeFilePath() == null) {
+				Message previousMessage = message.prev();
+				while (previousMessage != null) {
+					if (previousMessage.getBody().equals(quotationURI)) {
+						message.setRelativeFilePath(previousMessage.getRelativeFilePath());
+						break;
+					}
+					previousMessage = previousMessage.prev();
+				}
+			}
+
+			// Display text message only for the quotation comment.
 			message.setBody(quotationComment);
 			displayTextMessage(viewHolder, message, darkBackground, type);
 			message.setBody(originalBody);
+
+			// Show the quoted image besides to the quotation bar.
+			activity.loadBitmapForQuotedImage(message, viewHolder.messageImageQuotation);
+			viewHolder.messageImageQuotationBar.setVisibility(View.VISIBLE);
+			viewHolder.messageImageQuotation.setVisibility(View.VISIBLE);
+
+			// Change the color of the quotation bar for non-default theme options.
+			if (type == SENT && darkBackground || type == RECEIVED && (mUseGreenBackground || darkBackground)) {
+				viewHolder.messageImageQuotationBar.setBackgroundColor(activity.getResources().getColor(R.color.white70));
+			}
 
 		} else if (message.isFileOrImage() && message.getEncryption() != Message.ENCRYPTION_PGP && message.getEncryption() != Message.ENCRYPTION_DECRYPTION_FAILED) {
 			if (message.getFileParams().width > 0 && message.getFileParams().height > 0) {

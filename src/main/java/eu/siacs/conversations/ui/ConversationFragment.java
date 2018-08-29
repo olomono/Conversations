@@ -707,6 +707,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 		final Message message;
 		if (conversation.getCorrectingMessage() == null) {
 			message = new Message(conversation, body, conversation.getNextEncryption());
+			System.out.println("Ist null: " + (quotedFileMessage == null));
 
 			// If the current text is for a quoted message, set needed values for displaying a quoted image by getView().
 			if (quotedFileMessage != null) {
@@ -716,7 +717,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 				message.setRelativeFilePath(quotedFileMessage.getRelativeFilePath());
 				message.setRemoteMsgId(quotedFileMessage.getRemoteMsgId());
 				// Reset the currently quoted file message.
-				conversation.setQuotedFileMessage(null);
+				this.conversation.setQuotedFileMessage(null);
 			}
 
 			if (conversation.getMode() == Conversation.MODE_MULTI) {
@@ -1041,7 +1042,6 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 		// If the quoted message is a file message, set it for the current conversation so that it can be used by sendMessage()
 		if (message.isFileOrImage()) {
 			conversation.setQuotedFileMessage(message);
-			//TODO put focus to keyboard
 			binding.textinput.requestFocus();
 			InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 			if (inputMethodManager != null) {
