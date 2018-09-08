@@ -425,109 +425,31 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 	}
 
 	private void displayTextMessage(final ViewHolder viewHolder, final Message message, boolean darkBackground, int type) {
-		viewHolder.download_button.setVisibility(View.GONE);
-		viewHolder.image.setVisibility(View.GONE);
-		viewHolder.audioPlayer.setVisibility(View.GONE);
-		viewHolder.messageBody.setVisibility(View.VISIBLE);
+        viewHolder.messageImageQuotationBar.setVisibility(View.GONE);
+        viewHolder.messageImageQuotation.setVisibility(View.GONE);
 
-		if (darkBackground) {
-			viewHolder.messageBody.setTextAppearance(getContext(), R.style.TextAppearance_Conversations_Body1_OnDark);
-		} else {
-			viewHolder.messageBody.setTextAppearance(getContext(), R.style.TextAppearance_Conversations_Body1);
-		}
-		viewHolder.messageBody.setHighlightColor(ContextCompat.getColor(activity, darkBackground
-				? (type == SENT || !mUseGreenBackground ? R.color.black26 : R.color.grey800) : R.color.grey500));
-		viewHolder.messageBody.setTypeface(null, Typeface.NORMAL);
-
-		if (message.getBody() != null) {
-			final String nick = UIHelper.getMessageDisplayName(message);
-			SpannableStringBuilder body = message.getMergedBody();
-			boolean hasMeCommand = message.hasMeCommand();
-			if (hasMeCommand) {
-				body = body.replace(0, Message.ME_COMMAND.length(), nick + " ");
-			}
-			if (body.length() > Config.MAX_DISPLAY_MESSAGE_CHARS) {
-				body = new SpannableStringBuilder(body, 0, Config.MAX_DISPLAY_MESSAGE_CHARS);
-				body.append("\u2026");
-			}
-			Message.MergeSeparator[] mergeSeparators = body.getSpans(0, body.length(), Message.MergeSeparator.class);
-			for (Message.MergeSeparator mergeSeparator : mergeSeparators) {
-				int start = body.getSpanStart(mergeSeparator);
-				int end = body.getSpanEnd(mergeSeparator);
-				body.setSpan(new DividerSpan(true), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-			}
-			boolean startsWithQuote = handleTextQuotes(body, darkBackground);
-			if (message.getType() != Message.TYPE_PRIVATE) {
-				if (hasMeCommand) {
-					body.setSpan(new StyleSpan(Typeface.BOLD_ITALIC), 0, nick.length(),
-							Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-				}
-			} else {
-				String privateMarker;
-				if (message.getStatus() <= Message.STATUS_RECEIVED) {
-					privateMarker = activity.getString(R.string.private_message);
-				} else {
-					final String to;
-					if (message.getCounterpart() != null) {
-						to = message.getCounterpart().getResource();
-					} else {
-						to = "";
-					}
-					privateMarker = activity.getString(R.string.private_message_to, to);
-				}
-				body.insert(0, privateMarker);
-				int privateMarkerIndex = privateMarker.length();
-				if (startsWithQuote) {
-					body.insert(privateMarkerIndex, "\n\n");
-					body.setSpan(new DividerSpan(false), privateMarkerIndex, privateMarkerIndex + 2,
-							Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-				} else {
-					body.insert(privateMarkerIndex, " ");
-				}
-				body.setSpan(new ForegroundColorSpan(getMessageTextColor(darkBackground, false)), 0, privateMarkerIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-				body.setSpan(new StyleSpan(Typeface.BOLD), 0, privateMarkerIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-				if (hasMeCommand) {
-					body.setSpan(new StyleSpan(Typeface.BOLD_ITALIC), privateMarkerIndex + 1,
-							privateMarkerIndex + 1 + nick.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-				}
-			}
-			if (message.getConversation().getMode() == Conversation.MODE_MULTI && message.getStatus() == Message.STATUS_RECEIVED) {
-				if (message.getConversation() instanceof Conversation) {
-					final Conversation conversation = (Conversation) message.getConversation();
-					Pattern pattern = NotificationService.generateNickHighlightPattern(conversation.getMucOptions().getActualNick());
-					Matcher matcher = pattern.matcher(body);
-					while (matcher.find()) {
-						body.setSpan(new StyleSpan(Typeface.BOLD), matcher.start(), matcher.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-					}
-				}
-			}
-			Matcher matcher = Emoticons.getEmojiPattern(body).matcher(body);
-			while (matcher.find()) {
-				if (matcher.start() < matcher.end()) {
-					body.setSpan(new RelativeSizeSpan(1.2f), matcher.start(), matcher.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-				}
-			}
-
-			StylingHelper.format(body, viewHolder.messageBody.getCurrentTextColor());
-			if (highlightedTerm != null) {
-				StylingHelper.highlight(activity, body, highlightedTerm, StylingHelper.isDarkText(viewHolder.messageBody));
-			}
-			MyLinkify.addLinks(body,true);
-			viewHolder.messageBody.setAutoLinkMask(0);
-			viewHolder.messageBody.setText(EmojiWrapper.transform(body));
-			viewHolder.messageBody.setTextIsSelectable(true);
-			viewHolder.messageBody.setMovementMethod(ClickableMovementMethod.getInstance());
-			listSelectionManager.onUpdate(viewHolder.messageBody, message);
-		} else {
-			viewHolder.messageBody.setText("");
-			viewHolder.messageBody.setTextIsSelectable(false);
-		}
+        constructTextMessage(viewHolder, message, darkBackground, type);
 	}
+
+    /**
+     * Displays the thumbnail of a quoted image next to a bar that indicates the quotation
+     * and underneath the comment on that image.
+     */
+    private void displayImageQuotationMessage(final ViewHolder viewHolder, final Message message, boolean darkBackground, int type) {
+        // Show the quoted image besides to the quotation bar.
+        activity.loadBitmapForQuotedImage(message, viewHolder.messageImageQuotation);
+        viewHolder.messageImageQuotationBar.setVisibility(View.VISIBLE);
+        viewHolder.messageImageQuotation.setVisibility(View.VISIBLE);
+
+        constructTextMessage(viewHolder, message, darkBackground, type);
+    }
 
 	private void displayDownloadableMessage(ViewHolder viewHolder, final Message message, String text) {
 		viewHolder.image.setVisibility(View.GONE);
 		viewHolder.messageBody.setVisibility(View.GONE);
 		viewHolder.audioPlayer.setVisibility(View.GONE);
+        viewHolder.messageImageQuotationBar.setVisibility(View.GONE);
+        viewHolder.messageImageQuotation.setVisibility(View.GONE);
 		viewHolder.download_button.setVisibility(View.VISIBLE);
 		viewHolder.download_button.setText(text);
 		viewHolder.download_button.setOnClickListener(v -> ConversationFragment.downloadFile(activity, message));
@@ -537,6 +459,8 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		viewHolder.image.setVisibility(View.GONE);
 		viewHolder.messageBody.setVisibility(View.GONE);
 		viewHolder.audioPlayer.setVisibility(View.GONE);
+        viewHolder.messageImageQuotationBar.setVisibility(View.GONE);
+        viewHolder.messageImageQuotation.setVisibility(View.GONE);
 		viewHolder.download_button.setVisibility(View.VISIBLE);
 		viewHolder.download_button.setText(activity.getString(R.string.open_x_file, UIHelper.getFileDescriptionString(activity, message)));
 		viewHolder.download_button.setOnClickListener(v -> openDownloadable(message));
@@ -546,6 +470,8 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		viewHolder.image.setVisibility(View.GONE);
 		viewHolder.messageBody.setVisibility(View.GONE);
 		viewHolder.audioPlayer.setVisibility(View.GONE);
+        viewHolder.messageImageQuotationBar.setVisibility(View.GONE);
+        viewHolder.messageImageQuotation.setVisibility(View.GONE);
 		viewHolder.download_button.setVisibility(View.VISIBLE);
 		viewHolder.download_button.setText(R.string.show_location);
 		viewHolder.download_button.setOnClickListener(v -> showLocation(message));
@@ -555,6 +481,8 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		viewHolder.image.setVisibility(View.GONE);
 		viewHolder.messageBody.setVisibility(View.GONE);
 		viewHolder.download_button.setVisibility(View.GONE);
+        viewHolder.messageImageQuotationBar.setVisibility(View.GONE);
+        viewHolder.messageImageQuotation.setVisibility(View.GONE);
 		final RelativeLayout audioPlayer = viewHolder.audioPlayer;
 		audioPlayer.setVisibility(View.VISIBLE);
 		AudioPlayer.ViewHolder.get(audioPlayer).setDarkBackground(darkBackground);
@@ -565,6 +493,8 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		viewHolder.download_button.setVisibility(View.GONE);
 		viewHolder.messageBody.setVisibility(View.GONE);
 		viewHolder.audioPlayer.setVisibility(View.GONE);
+        viewHolder.messageImageQuotationBar.setVisibility(View.GONE);
+        viewHolder.messageImageQuotation.setVisibility(View.GONE);
 		viewHolder.image.setVisibility(View.VISIBLE);
 		FileParams params = message.getFileParams();
 		double target = metrics.density * 288;
@@ -589,6 +519,113 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		activity.loadBitmap(message, viewHolder.image);
 		viewHolder.image.setOnClickListener(v -> openDownloadable(message));
 	}
+
+    /**
+     * Helps to display a text-only message or a hybrid one
+     * (e.g., a file quotation with a text comment).
+     *
+     * Only to be used in conjunction with a display*Message() method.
+     * For instance see {@link #displayImageQuotationMessage} or {@link #displayTextMessage}
+     */
+    private void constructTextMessage(final ViewHolder viewHolder, final Message message, boolean darkBackground, int type) {
+        viewHolder.download_button.setVisibility(View.GONE);
+        viewHolder.image.setVisibility(View.GONE);
+        viewHolder.audioPlayer.setVisibility(View.GONE);
+        viewHolder.messageBody.setVisibility(View.VISIBLE);
+
+        if (darkBackground) {
+            viewHolder.messageBody.setTextAppearance(getContext(), R.style.TextAppearance_Conversations_Body1_OnDark);
+        } else {
+            viewHolder.messageBody.setTextAppearance(getContext(), R.style.TextAppearance_Conversations_Body1);
+        }
+        viewHolder.messageBody.setHighlightColor(ContextCompat.getColor(activity, darkBackground
+                ? (type == SENT || !mUseGreenBackground ? R.color.black26 : R.color.grey800) : R.color.grey500));
+        viewHolder.messageBody.setTypeface(null, Typeface.NORMAL);
+
+        if (message.getBody() != null) {
+            final String nick = UIHelper.getMessageDisplayName(message);
+            SpannableStringBuilder body = message.getMergedBody();
+            boolean hasMeCommand = message.hasMeCommand();
+            if (hasMeCommand) {
+                body = body.replace(0, Message.ME_COMMAND.length(), nick + " ");
+            }
+            if (body.length() > Config.MAX_DISPLAY_MESSAGE_CHARS) {
+                body = new SpannableStringBuilder(body, 0, Config.MAX_DISPLAY_MESSAGE_CHARS);
+                body.append("\u2026");
+            }
+            Message.MergeSeparator[] mergeSeparators = body.getSpans(0, body.length(), Message.MergeSeparator.class);
+            for (Message.MergeSeparator mergeSeparator : mergeSeparators) {
+                int start = body.getSpanStart(mergeSeparator);
+                int end = body.getSpanEnd(mergeSeparator);
+                body.setSpan(new DividerSpan(true), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+            boolean startsWithQuote = handleTextQuotes(body, darkBackground);
+            if (message.getType() != Message.TYPE_PRIVATE) {
+                if (hasMeCommand) {
+                    body.setSpan(new StyleSpan(Typeface.BOLD_ITALIC), 0, nick.length(),
+                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+            } else {
+                String privateMarker;
+                if (message.getStatus() <= Message.STATUS_RECEIVED) {
+                    privateMarker = activity.getString(R.string.private_message);
+                } else {
+                    final String to;
+                    if (message.getCounterpart() != null) {
+                        to = message.getCounterpart().getResource();
+                    } else {
+                        to = "";
+                    }
+                    privateMarker = activity.getString(R.string.private_message_to, to);
+                }
+                body.insert(0, privateMarker);
+                int privateMarkerIndex = privateMarker.length();
+                if (startsWithQuote) {
+                    body.insert(privateMarkerIndex, "\n\n");
+                    body.setSpan(new DividerSpan(false), privateMarkerIndex, privateMarkerIndex + 2,
+                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                } else {
+                    body.insert(privateMarkerIndex, " ");
+                }
+                body.setSpan(new ForegroundColorSpan(getMessageTextColor(darkBackground, false)), 0, privateMarkerIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                body.setSpan(new StyleSpan(Typeface.BOLD), 0, privateMarkerIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                if (hasMeCommand) {
+                    body.setSpan(new StyleSpan(Typeface.BOLD_ITALIC), privateMarkerIndex + 1,
+                            privateMarkerIndex + 1 + nick.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+            }
+            if (message.getConversation().getMode() == Conversation.MODE_MULTI && message.getStatus() == Message.STATUS_RECEIVED) {
+                if (message.getConversation() instanceof Conversation) {
+                    final Conversation conversation = (Conversation) message.getConversation();
+                    Pattern pattern = NotificationService.generateNickHighlightPattern(conversation.getMucOptions().getActualNick());
+                    Matcher matcher = pattern.matcher(body);
+                    while (matcher.find()) {
+                        body.setSpan(new StyleSpan(Typeface.BOLD), matcher.start(), matcher.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                }
+            }
+            Matcher matcher = Emoticons.getEmojiPattern(body).matcher(body);
+            while (matcher.find()) {
+                if (matcher.start() < matcher.end()) {
+                    body.setSpan(new RelativeSizeSpan(1.2f), matcher.start(), matcher.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+            }
+
+            StylingHelper.format(body, viewHolder.messageBody.getCurrentTextColor());
+            if (highlightedTerm != null) {
+                StylingHelper.highlight(activity, body, highlightedTerm, StylingHelper.isDarkText(viewHolder.messageBody));
+            }
+            MyLinkify.addLinks(body,true);
+            viewHolder.messageBody.setAutoLinkMask(0);
+            viewHolder.messageBody.setText(EmojiWrapper.transform(body));
+            viewHolder.messageBody.setTextIsSelectable(true);
+            viewHolder.messageBody.setMovementMethod(ClickableMovementMethod.getInstance());
+            listSelectionManager.onUpdate(viewHolder.messageBody, message);
+        } else {
+            viewHolder.messageBody.setText("");
+            viewHolder.messageBody.setTextIsSelectable(false);
+        }
+    }
 
 	private void loadMoreMessages(Conversation conversation) {
 		conversation.setLastClearHistory(0, null);
@@ -756,7 +793,6 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 
 
 		} else if (message.getType() == Message.TYPE_IMAGE_OR_FILE_QUOTATION) {
-			System.out.println("Wir sind drin: " + message.getBody());
 			// TODO correct: separate URI and comment temporarily
 			String originalBody = message.getBody();
 			String body = message.getBody();
@@ -779,13 +815,8 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 
 			// Display text message only for the quotation comment.
 			message.setBody(quotationComment);
-			displayTextMessage(viewHolder, message, darkBackground, type);
+			displayImageQuotationMessage(viewHolder, message, darkBackground, type);
 			message.setBody(originalBody);
-
-			// Show the quoted image besides to the quotation bar.
-			activity.loadBitmapForQuotedImage(message, viewHolder.messageImageQuotation);
-			viewHolder.messageImageQuotationBar.setVisibility(View.VISIBLE);
-			viewHolder.messageImageQuotation.setVisibility(View.VISIBLE);
 
 			// Change the color of the quotation bar for non-default theme options.
 			if (type == SENT && darkBackground || type == RECEIVED && (mUseGreenBackground || darkBackground)) {
@@ -869,6 +900,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		}
 
 		displayStatus(viewHolder, message, type, darkBackground);
+
 
 		return view;
 	}
