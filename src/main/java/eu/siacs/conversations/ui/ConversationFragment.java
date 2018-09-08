@@ -711,11 +711,8 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 
 			// If the current text is for a quoted message, set needed values for displaying a quoted image by getView().
 			if (quotedFileMessage != null) {
-				//TODO add values if needed
-				message.setType(Message.TYPE_IMAGE_OR_FILE_QUOTATION);
 				message.setBody(quotedFileMessage.getBody() + "\n\n" + body);
 				message.setRelativeFilePath(quotedFileMessage.getRelativeFilePath());
-				message.setRemoteMsgId(quotedFileMessage.getRemoteMsgId());
 				// Reset the currently quoted file message.
 				this.conversation.setQuotedFileMessage(null);
 			}
