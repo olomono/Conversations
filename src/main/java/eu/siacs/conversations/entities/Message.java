@@ -96,6 +96,7 @@ public class Message extends AbstractEntity {
 	protected Transferable transferable = null;
 	private Message mNextMessage = null;
 	private Message mPreviousMessage = null;
+	private String messageReference = null;
 	private String axolotlFingerprint = null;
 	private String errorMessage = null;
 	private Set<ReadByMarker> readByMarkers = new HashSet<>();
@@ -817,6 +818,18 @@ public class Message extends AbstractEntity {
 		public int runtime = 0;
 	}
 
+	public void setMessageReference(String messageReference) {
+		this.messageReference = messageReference;
+	}
+
+	public String getMessageReference() {
+		return messageReference;
+	}
+
+    public boolean hasMessageReference() {
+        return this.messageReference != null;
+    }
+
 	public void setFingerprint(String fingerprint) {
 		this.axolotlFingerprint = fingerprint;
 	}
@@ -876,9 +889,4 @@ public class Message extends AbstractEntity {
 		return encryption;
 	}
 
-	public void parseForImageOrFileQuotation() {
-		if (this.type == TYPE_TEXT && this.body.contains("\n\n")) {
-			this.type = TYPE_IMAGE_OR_FILE_QUOTATION;
-		}
-	}
 }

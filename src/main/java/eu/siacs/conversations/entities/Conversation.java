@@ -12,11 +12,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import eu.siacs.conversations.Config;
@@ -24,7 +22,6 @@ import eu.siacs.conversations.crypto.OmemoSetting;
 import eu.siacs.conversations.crypto.PgpDecryptionService;
 import eu.siacs.conversations.crypto.axolotl.AxolotlService;
 import eu.siacs.conversations.utils.JidHelper;
-import eu.siacs.conversations.xmpp.InvalidJid;
 import eu.siacs.conversations.xmpp.chatstate.ChatState;
 import eu.siacs.conversations.xmpp.mam.MamReference;
 import rocks.xmpp.addr.Jid;
@@ -77,7 +74,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 	private ChatState mIncomingChatState = Config.DEFAULT_CHATSTATE;
 	private String mFirstMamReference = null;
 	private Message correctingMessage;
-	private Message quotedFileMessage = null;
+	private String messageReference = null;
 
 	public Conversation(final String name, final Account account, final Jid contactJid,
 	                    final int mode) {
@@ -299,7 +296,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 		return null;
 	}
 
-	public Message findSentMessageWithUuid(String id) {
+	public Message findMessageWithUuid(String id) {
 		synchronized (this.messages) {
 			for (Message message : this.messages) {
 				if (id.equals(message.getUuid())) {
@@ -310,7 +307,18 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 		return null;
 	}
 
-	public Message findMessageWithRemoteId(String id, Jid counterpart) {
+    public Message findMessageWithUuidOrRemoteMsgId(String id) {
+        synchronized (this.messages) {
+            for (Message message : this.messages) {
+                if (id.equals(message.getRemoteMsgId()) || id.equals(message.getUuid())) {
+                    return message;
+                }
+            }
+        }
+        return null;
+    }
+
+	public Message findMessageWithUuidOrRemoteMsgIdWithCounterpart(String id, Jid counterpart) {
 		synchronized (this.messages) {
 			for (Message message : this.messages) {
 				if (counterpart.equals(message.getCounterpart())
@@ -954,12 +962,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 		return 0;
 	}
 
-    public Message getQuotedFileMessage() {
-        return quotedFileMessage;
+    public String getMessageReference() {
+        return messageReference;
     }
 
-	public void setQuotedFileMessage(Message quotedFileMessage) {
-		this.quotedFileMessage = quotedFileMessage;
+	public void setMessageReference(String messageReference) {
+		this.messageReference = messageReference;
 	}
 
 	public interface OnMessageFound {

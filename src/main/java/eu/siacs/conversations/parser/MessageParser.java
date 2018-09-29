@@ -6,7 +6,6 @@ import android.util.Pair;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -20,7 +19,6 @@ import eu.siacs.conversations.crypto.axolotl.AxolotlService;
 import eu.siacs.conversations.crypto.axolotl.NotEncryptedForThisDeviceException;
 import eu.siacs.conversations.crypto.axolotl.XmppAxolotlMessage;
 import eu.siacs.conversations.entities.Account;
-import eu.siacs.conversations.entities.Bookmark;
 import eu.siacs.conversations.entities.Contact;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.Message;
@@ -292,6 +290,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 		final String oobUrl = oob != null ? oob.findChildContent("url") : null;
 		final String replacementId = replaceElement == null ? null : replaceElement.getAttribute("id");
 		final Element axolotlEncrypted = packet.findChild(XmppAxolotlMessage.CONTAINERTAG, AxolotlService.PEP_PREFIX);
+		final Element messageReference = packet.findChild("attach-to", Namespace.MESSAGE_ATTACHING);
 		int status;
 		final Jid counterpart;
 		final Jid to = packet.getTo();
@@ -336,7 +335,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 			return;
 		}
 
-		if ((body != null || pgpEncrypted != null || (axolotlEncrypted != null && axolotlEncrypted.hasChild("payload")) || oobUrl != null || xP1S3 != null) && !isMucStatusMessage) {
+		if ((body != null || pgpEncrypted != null || (axolotlEncrypted != null && axolotlEncrypted.hasChild("payload")) || oobUrl != null || xP1S3 != null) && !isMucStatusMessage || messageReference != null) {
 			final boolean conversationIsProbablyMuc = isTypeGroupChat || mucUserElement != null || account.getXmppConnection().getMucServersWithholdAccount().contains(counterpart.getDomain());
 			final Conversation conversation = mXmppConnectionService.findOrCreateConversation(account, counterpart.asBareJid(), conversationIsProbablyMuc, false, query, false);
 			final boolean conversationMultiMode = conversation.getMode() == Conversation.MODE_MULTI;
@@ -351,7 +350,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 					return;
 				}
 				status = Message.STATUS_RECEIVED;
-				if (remoteMsgId != null && conversation.findMessageWithRemoteId(remoteMsgId, counterpart) != null) {
+				if (remoteMsgId != null && conversation.findMessageWithUuidOrRemoteMsgIdWithCounterpart(remoteMsgId, counterpart) != null) {
 					return;
 				}
 			}
@@ -422,7 +421,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 						mXmppConnectionService.updateConversationUi();
 					}
 					if (query != null && status == Message.STATUS_SEND && remoteMsgId != null) {
-						Message previouslySent = conversation.findSentMessageWithUuid(remoteMsgId);
+						Message previouslySent = conversation.findMessageWithUuid(remoteMsgId);
 						if (previouslySent != null && previouslySent.getServerMsgId() == null && serverMsgId != null) {
 							previouslySent.setServerMsgId(serverMsgId);
 							mXmppConnectionService.databaseBackend.updateMessage(previouslySent, false);
@@ -560,6 +559,10 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 					Log.d(Config.LOGTAG, "skipping duplicate message with " + message.getCounterpart() + ". serverMsgIdUpdated=" + Boolean.toString(serverMsgIdUpdated));
 					return;
 				}
+			}
+
+			if (messageReference != null) {
+				message.setMessageReference(messageReference.getAttribute("id"));
 			}
 
 			if (query != null && query.getPagingOrder() == MessageArchiveService.PagingOrder.REVERSE) {
@@ -725,7 +728,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 			} else if (isTypeGroupChat) {
 				Conversation conversation = mXmppConnectionService.find(account, counterpart.asBareJid());
 				if (conversation != null && id != null && sender != null) {
-					Message message = conversation.findMessageWithRemoteId(id, sender);
+					Message message = conversation.findMessageWithUuidOrRemoteMsgIdWithCounterpart(id, sender);
 					if (message != null) {
 						final Jid fallback = conversation.getMucOptions().getTrueCounterpart(counterpart);
 						final Jid trueJid = getTrueCounterpart((query != null && query.safeToExtractTrueCounterpart()) ? mucUserElement : null, fallback);

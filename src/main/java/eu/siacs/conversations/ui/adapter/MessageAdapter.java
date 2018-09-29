@@ -717,9 +717,6 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 
 		boolean darkBackground = type == RECEIVED && (!isInValidSession || mUseGreenBackground) || activity.isDarkTheme();
 
-		// TODO change separator for better fitting
-		message.parseForImageOrFileQuotation();
-
 		if (type == DATE_SEPARATOR) {
 			if (UIHelper.today(message.getTimeSent())) {
 				viewHolder.status_message.setText(R.string.today);
@@ -792,37 +789,31 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 			}
 
 
-		} else if (message.getType() == Message.TYPE_IMAGE_OR_FILE_QUOTATION) {
-			// TODO correct: separate URI and comment temporarily
-			String originalBody = message.getBody();
-			String body = message.getBody();
-			// TODO corner cases
-			String[] bodyParts = body.split("\n\n");
-			String quotationURI = bodyParts[0];
-			String quotationComment = bodyParts[1];
+		} else if (message.hasMessageReference()) {
 
-			// Find the relative file path for the quotation.
-			if (message.getRelativeFilePath() == null) {
-				Message previousMessage = message.prev();
-				while (previousMessage != null) {
-					if (previousMessage.getBody().equals(quotationURI)) {
-						message.setRelativeFilePath(previousMessage.getRelativeFilePath());
-						break;
+			Message referencedMessage = ((Conversation) conversation).findMessageWithUuidOrRemoteMsgId(message.getMessageReference());
+
+			if (referencedMessage != null) {
+
+				if (referencedMessage.getType() == Message.TYPE_TEXT) {
+
+				}
+
+				if (referencedMessage.isFileOrImage()) {
+					// Find the relative file path for the quotation.
+					if (message.getRelativeFilePath() == null) {
+						message.setRelativeFilePath(referencedMessage.getRelativeFilePath());
 					}
-					previousMessage = previousMessage.prev();
+					displayImageQuotationMessage(viewHolder, message, darkBackground, type);
+				}
+
+				//TODO: handle other message types (text, file, etc.)
+
+				// Change the color of the quotation bar for non-default theme options.
+				if (type == SENT && darkBackground || type == RECEIVED && (mUseGreenBackground || darkBackground)) {
+					viewHolder.messageImageQuotationBar.setBackgroundColor(activity.getResources().getColor(R.color.white70));
 				}
 			}
-
-			// Display text message only for the quotation comment.
-			message.setBody(quotationComment);
-			displayImageQuotationMessage(viewHolder, message, darkBackground, type);
-			message.setBody(originalBody);
-
-			// Change the color of the quotation bar for non-default theme options.
-			if (type == SENT && darkBackground || type == RECEIVED && (mUseGreenBackground || darkBackground)) {
-				viewHolder.messageImageQuotationBar.setBackgroundColor(activity.getResources().getColor(R.color.white70));
-			}
-
 		} else if (message.isFileOrImage() && message.getEncryption() != Message.ENCRYPTION_PGP && message.getEncryption() != Message.ENCRYPTION_DECRYPTION_FAILED) {
 			if (message.getFileParams().width > 0 && message.getFileParams().height > 0) {
 				displayImageMessage(viewHolder, message);

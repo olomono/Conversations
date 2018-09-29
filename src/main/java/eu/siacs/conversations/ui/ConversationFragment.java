@@ -700,21 +700,21 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 	private void sendMessage() {
 		final String body = this.binding.textinput.getText().toString();
 		final Conversation conversation = this.conversation;
-		final Message quotedFileMessage = conversation.getQuotedFileMessage();
+		final String messageReference = conversation.getMessageReference();
 		if (body.length() == 0 || conversation == null) {
 			return;
 		}
 		final Message message;
 		if (conversation.getCorrectingMessage() == null) {
 			message = new Message(conversation, body, conversation.getNextEncryption());
-			System.out.println("Ist null: " + (quotedFileMessage == null));
+			System.out.println("Ist null: " + (messageReference == null));
 
+			// TODO add referencedMessage for using Message Attaching
 			// If the current text is for a quoted message, set needed values for displaying a quoted image by getView().
-			if (quotedFileMessage != null) {
-				message.setBody(quotedFileMessage.getBody() + "\n\n" + body);
-				message.setRelativeFilePath(quotedFileMessage.getRelativeFilePath());
-				// Reset the currently quoted file message.
-				this.conversation.setQuotedFileMessage(null);
+			if (messageReference != null) {
+				message.setMessageReference(messageReference);
+				// Reset the currently quoted file message so that new messages will not be sent as quotations.
+				this.conversation.setMessageReference(null);
 			}
 
 			if (conversation.getMode() == Conversation.MODE_MULTI) {
@@ -1035,18 +1035,22 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 		}
 	}
 
+	/**
+	 * Set the quoted message for the current conversation so that it can be used by sendMessage().
+	 * @param message message that should be quoted when a new message is sent.
+	 */
 	private void quoteMessage(Message message) {
-		// If the quoted message is a file message, set it for the current conversation so that it can be used by sendMessage()
-		if (message.isFileOrImage()) {
-			conversation.setQuotedFileMessage(message);
-			binding.textinput.requestFocus();
-			InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-			if (inputMethodManager != null) {
-				inputMethodManager.showSoftInput(binding.textinput, InputMethodManager.SHOW_IMPLICIT);
-			}
+		String remoteMsgId = message.getRemoteMsgId();
+		if (remoteMsgId == null) {
+			conversation.setMessageReference(message.getUuid());
+		} else {
+			conversation.setMessageReference(remoteMsgId);
 		}
-		else {
-			quoteText(MessageUtils.prepareQuote(message));
+
+		binding.textinput.requestFocus();
+		InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+		if (inputMethodManager != null) {
+			inputMethodManager.showSoftInput(binding.textinput, InputMethodManager.SHOW_IMPLICIT);
 		}
 	}
 

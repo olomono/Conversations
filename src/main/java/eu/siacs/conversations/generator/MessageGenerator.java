@@ -24,6 +24,8 @@ import eu.siacs.conversations.xmpp.chatstate.ChatState;
 import eu.siacs.conversations.xmpp.stanzas.MessagePacket;
 import rocks.xmpp.addr.Jid;
 
+import static eu.siacs.conversations.xml.Namespace.MESSAGE_ATTACHING;
+
 public class MessageGenerator extends AbstractGenerator {
 	private static final String OMEMO_FALLBACK_MESSAGE = "I sent you an OMEMO encrypted message but your client doesn’t seem to support that. Find more information on https://conversations.im/omemo";
 	private static final String PGP_FALLBACK_MESSAGE = "I sent you a PGP encrypted message but your client doesn’t seem to support that.";
@@ -32,6 +34,7 @@ public class MessageGenerator extends AbstractGenerator {
 		super(service);
 	}
 
+	// TODO option 1: send message with messageReference
 	private MessagePacket preparePacket(Message message) {
 		Conversation conversation = (Conversation) message.getConversation();
 		Account account = conversation.getAccount();
@@ -62,6 +65,10 @@ public class MessageGenerator extends AbstractGenerator {
 		packet.addChild("origin-id", Namespace.STANZA_IDS).setAttribute("id", message.getUuid());
 		if (message.edited()) {
 			packet.addChild("replace", "urn:xmpp:message-correct:0").setAttribute("id", message.getEditedId());
+		}
+
+		if (message.hasMessageReference()) {
+			packet.addChild("attach-to", MESSAGE_ATTACHING).setAttribute("id", message.getMessageReference());
 		}
 		return packet;
 	}

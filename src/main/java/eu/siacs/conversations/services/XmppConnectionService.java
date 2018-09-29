@@ -3214,7 +3214,7 @@ public class XmppConnectionService extends Service {
 		if (uuid == null) {
 			return false;
 		} else {
-			Message message = conversation.findSentMessageWithUuid(uuid);
+			Message message = conversation.findMessageWithUuid(uuid);
 			if (message != null) {
 				if (message.getServerMsgId() == null) {
 					message.setServerMsgId(serverMessageId);
