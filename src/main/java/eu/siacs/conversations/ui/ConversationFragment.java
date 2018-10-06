@@ -707,9 +707,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 		final Message message;
 		if (conversation.getCorrectingMessage() == null) {
 			message = new Message(conversation, body, conversation.getNextEncryption());
-			System.out.println("Ist null: " + (messageReference == null));
 
-			// TODO add referencedMessage for using Message Attaching
 			// If the current text is for a quoted message, set needed values for displaying a quoted image by getView().
 			if (messageReference != null) {
 				message.setMessageReference(messageReference);
@@ -1027,11 +1025,6 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 	private void quoteText(String text) {
 		if (binding.textinput.isEnabled()) {
 			binding.textinput.insertAsQuote(text);
-			binding.textinput.requestFocus();
-			InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-			if (inputMethodManager != null) {
-				inputMethodManager.showSoftInput(binding.textinput, InputMethodManager.SHOW_IMPLICIT);
-			}
 		}
 	}
 
@@ -1040,11 +1033,20 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 	 * @param message message that should be quoted when a new message is sent.
 	 */
 	private void quoteMessage(Message message) {
-		String remoteMsgId = message.getRemoteMsgId();
-		if (remoteMsgId == null) {
-			conversation.setMessageReference(message.getUuid());
+
+		// TODO determine message attaching support with disco / features for one contact AND for groups
+		// When there is at least one client that does not support message attaching, only the quotation comment is sent
+		boolean contactSupportsMessageAttaching = true;
+
+		if (contactSupportsMessageAttaching) {
+			String remoteMsgId = message.getRemoteMsgId();
+			if (remoteMsgId == null) {
+				conversation.setMessageReference(message.getUuid());
+			} else {
+				conversation.setMessageReference(remoteMsgId);
+			}
 		} else {
-			conversation.setMessageReference(remoteMsgId);
+			quoteText(MessageUtils.prepareQuote(message));
 		}
 
 		binding.textinput.requestFocus();
