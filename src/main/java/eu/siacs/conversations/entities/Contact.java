@@ -141,22 +141,26 @@ public class Contact implements ListItem, Blockable {
 	}
 
 	/**
-	 * Provides the state of supporting XEP-0367: Message Attaching.
+	 * Provides the state of supporting XEP-0367: Message Attaching by at least one resource of the contact.
 	 * @return true if at least one resource supports XEP-0367: Message Attaching
 	 */
 	public boolean supportsMessageAttaching() {
-		boolean supportsMessageAttaching = false;
+		return supportsFeatureByAtLeastOneResource(Namespace.MESSAGE_ATTACHING);
+	}
+
+	/**
+	 * Provides the state of supporting a given feature by at least one resource of the contact.
+	 *
+	 * @param featureByNamespace namespace that is used for the feature
+	 * @return true if at least one resource supports the given feature
+	 */
+	public boolean supportsFeatureByAtLeastOneResource(String featureByNamespace) {
 		for (Presence presence : presences.getPresences().values()) {
-			List<String> features = presence.getServiceDiscoveryResult().getFeatures();
-			if (!supportsMessageAttaching) {
-				for (String feature : features) {
-					if (feature.equals(Namespace.MESSAGE_ATTACHING)) {
-						supportsMessageAttaching = true;
-					}
-				}
+			if(presence.getServiceDiscoveryResult().getFeatures().contains(featureByNamespace)){
+				return true;
 			}
 		}
-		return supportsMessageAttaching;
+		return false;
 	}
 
 	public Jid getJid() {

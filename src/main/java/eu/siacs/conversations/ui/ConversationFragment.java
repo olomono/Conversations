@@ -1030,18 +1030,24 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 
 	/**
 	 * Set the quoted message for the current conversation so that it can be used by sendMessage().
+	 *
+	 * Use Message Attaching without old quoting method ("> ") when at least one resource of a chat partner supports Messages Attaching
+	 * because clients supporting Message Attaching may not know how to handle the old quoting method ("> ").
+	 * Otherwise use Message Attaching with old quoting method ("> ").
 	 * @param message message that should be quoted when a new message is sent.
 	 */
 	private void quoteMessage(Message message) {
-		// Use message attaching when there is at least one resource of a contact that supports message attaching.
 		boolean atLeastOneChatPartnerSupportsMessageAttaching = false;
+
 		if (conversation.getMucOptions().getUserCount() > 0) {
 			for (MucOptions.User user : conversation.getMucOptions().getUsers()) {
 				Contact contact = user.getContact();
-				if (!atLeastOneChatPartnerSupportsMessageAttaching && contact != null) {
-					atLeastOneChatPartnerSupportsMessageAttaching = contact.supportsMessageAttaching();
-					System.out.println(atLeastOneChatPartnerSupportsMessageAttaching);
-
+				// Either the user is not a contact or supports Message Attaching by at least one resource,
+				// Message Attaching is used exclusively.
+				// If the user is not a contact, we assume that he supports Message Attaching.
+				if (contact == null || contact.supportsMessageAttaching()){
+					atLeastOneChatPartnerSupportsMessageAttaching = true;
+					break;
 				}
 			}
 		} else {
