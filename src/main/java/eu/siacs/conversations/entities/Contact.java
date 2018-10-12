@@ -23,6 +23,7 @@ import eu.siacs.conversations.R;
 import eu.siacs.conversations.utils.JidHelper;
 import eu.siacs.conversations.utils.UIHelper;
 import eu.siacs.conversations.xml.Element;
+import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xmpp.pep.Avatar;
 import rocks.xmpp.addr.Jid;
 
@@ -137,6 +138,25 @@ public class Contact implements ListItem, Blockable {
 
 	public String getProfilePhoto() {
 		return this.photoUri;
+	}
+
+	/**
+	 * Provides the state of supporting XEP-0367: Message Attaching.
+	 * @return true if at least one resource supports XEP-0367: Message Attaching
+	 */
+	public boolean supportsMessageAttaching() {
+		boolean supportsMessageAttaching = false;
+		for (Presence presence : presences.getPresences().values()) {
+			List<String> features = presence.getServiceDiscoveryResult().getFeatures();
+			if (!supportsMessageAttaching) {
+				for (String feature : features) {
+					if (feature.equals(Namespace.MESSAGE_ATTACHING)) {
+						supportsMessageAttaching = true;
+					}
+				}
+			}
+		}
+		return supportsMessageAttaching;
 	}
 
 	public Jid getJid() {

@@ -1033,12 +1033,23 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 	 * @param message message that should be quoted when a new message is sent.
 	 */
 	private void quoteMessage(Message message) {
+		// Use message attaching when there is at least one resource of a contact that supports message attaching.
+		boolean atLeastOneChatPartnerSupportsMessageAttaching = false;
+		if (conversation.getMucOptions().getUserCount() > 0) {
+			for (MucOptions.User user : conversation.getMucOptions().getUsers()) {
+				Contact contact = user.getContact();
+				if (!atLeastOneChatPartnerSupportsMessageAttaching && contact != null) {
+					atLeastOneChatPartnerSupportsMessageAttaching = contact.supportsMessageAttaching();
+					System.out.println(atLeastOneChatPartnerSupportsMessageAttaching);
 
-		// TODO determine message attaching support with disco / features for one contact AND for groups
-		// When there is at least one client that does not support message attaching, only the quotation comment is sent
-		boolean contactSupportsMessageAttaching = true;
+				}
+			}
+		} else {
+			atLeastOneChatPartnerSupportsMessageAttaching = conversation.getContact().supportsMessageAttaching();
+			System.out.println(atLeastOneChatPartnerSupportsMessageAttaching);
+		}
 
-		if (contactSupportsMessageAttaching) {
+		if (atLeastOneChatPartnerSupportsMessageAttaching) {
 			String remoteMsgId = message.getRemoteMsgId();
 			if (remoteMsgId == null) {
 				conversation.setMessageReference(message.getUuid());

@@ -45,7 +45,16 @@ public class MessageUtils {
 
 	public static String prepareQuote(Message message) {
 		final StringBuilder builder = new StringBuilder();
-		final String body = message.getMergedBody().toString();
+		final String body;
+
+		// If the message is a file message, quote only the URL.
+		// For image messages the URL can be taken without other FileParams like the dimensions.
+		if (message.hasFileOnRemoteHost()) {
+			body = message.getFileParams().url.toString();
+		} else {
+			body = message.getMergedBody().toString();
+		}
+
 		for (String line : body.split("\n")) {
 			if (line.length() <= 0) {
 				continue;
