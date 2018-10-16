@@ -708,7 +708,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 		if (conversation.getCorrectingMessage() == null) {
 			message = new Message(conversation, body, conversation.getNextEncryption());
 
-			// If the current text is for a quoted message, set needed values for displaying a quoted image by getView().
+			// Set message reference for the message to be sent.
 			if (messageReference != null) {
 				message.setMessageReference(messageReference);
 				// Reset the currently quoted file message so that new messages will not be sent as quotations.
@@ -1031,41 +1031,22 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 	/**
 	 * Set the quoted message for the current conversation so that it can be used by sendMessage().
 	 *
-	 * Use Message Attaching without old quoting method ("> ") when at least one resource of a chat partner supports Messages Attaching
-	 * because clients supporting Message Attaching may not know how to handle the old quoting method ("> ").
-	 * Otherwise use Message Attaching with old quoting method ("> ").
-	 * @param message message that should be quoted when a new message is sent.
+	 * Use XEP-0367: Message Attaching while still supporting legacy quoting method ("> ").
+	 * @param message message that should be referenced when a new message is sent.
 	 */
 	private void quoteMessage(Message message) {
-		boolean atLeastOneChatPartnerSupportsMessageAttaching = false;
+	    // Add message reference to be used later in sendMessage().
+        String remoteMsgId = message.getRemoteMsgId();
+        if (remoteMsgId == null) {
+            conversation.setMessageReference(message.getUuid());
+        } else {
+            conversation.setMessageReference(remoteMsgId);
+        }
 
-		if (conversation.getMucOptions().getUserCount() > 0) {
-			for (MucOptions.User user : conversation.getMucOptions().getUsers()) {
-				Contact contact = user.getContact();
-				// Either the user is not a contact or supports Message Attaching by at least one resource,
-				// Message Attaching is used exclusively.
-				// If the user is not a contact, we assume that he supports Message Attaching.
-				if (contact == null || contact.supportsMessageAttaching()){
-					atLeastOneChatPartnerSupportsMessageAttaching = true;
-					break;
-				}
-			}
-		} else {
-			atLeastOneChatPartnerSupportsMessageAttaching = conversation.getContact().supportsMessageAttaching();
-			System.out.println(atLeastOneChatPartnerSupportsMessageAttaching);
-		}
+        // Add legacy quotation.
+        quoteText(MessageUtils.prepareQuote(message));
 
-		if (atLeastOneChatPartnerSupportsMessageAttaching) {
-			String remoteMsgId = message.getRemoteMsgId();
-			if (remoteMsgId == null) {
-				conversation.setMessageReference(message.getUuid());
-			} else {
-				conversation.setMessageReference(remoteMsgId);
-			}
-		} else {
-			quoteText(MessageUtils.prepareQuote(message));
-		}
-
+        // Add comment for referenced message.
 		binding.textinput.requestFocus();
 		InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 		if (inputMethodManager != null) {

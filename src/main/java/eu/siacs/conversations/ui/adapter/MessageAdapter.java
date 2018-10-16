@@ -45,6 +45,7 @@ import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.regex.Matcher;
@@ -432,11 +433,10 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 	}
 
     /**
-     * Displays the thumbnail of a quoted image next to a bar that indicates the quotation
+     * Displays the thumbnail of a referenced image next to a bar that indicates the referencing
      * and underneath the comment on that image.
      */
-    private void displayImageQuotationMessage(final ViewHolder viewHolder, final Message message, boolean darkBackground, int type) {
-        // Show the quoted image besides to the quotation bar.
+    private void displayReferencedMessageImage(final ViewHolder viewHolder, final Message message, boolean darkBackground, int type) {
         activity.loadBitmapForQuotedImage(message, viewHolder.messageImageQuotation);
         viewHolder.messageImageQuotationBar.setVisibility(View.VISIBLE);
         viewHolder.messageImageQuotation.setVisibility(View.VISIBLE);
@@ -525,7 +525,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
      * (e.g., a file quotation with a text comment).
      *
      * Only to be used in conjunction with a display*Message() method.
-     * For instance see {@link #displayImageQuotationMessage} or {@link #displayTextMessage}
+     * For instance see {@link #displayReferencedMessageImage} or {@link #displayTextMessage}
      */
     private void constructTextMessage(final ViewHolder viewHolder, final Message message, boolean darkBackground, int type) {
         viewHolder.download_button.setVisibility(View.GONE);
@@ -790,24 +790,69 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 
 
 		} else if (message.hasMessageReference()) {
-
 			Message referencedMessage = ((Conversation) conversation).findMessageWithUuidOrRemoteMsgId(message.getMessageReference());
 
+			// Use the referenced message if a message was found for the given reference.
+			// This is useful if the sending client used an ID that cannot be found locally.
 			if (referencedMessage != null) {
+				String body = message.getBody();
+				String[] bodyLines = body.split("\n");
+
+				// Delete legacy quotation if present.
+				if (body.charAt(0) == '>' || body.charAt(0) == '\u00bb') {
+
+					// If the referenced message is a file message
+					// and the first quoted line is the URL of the referenced file message,
+					// remove that line from the message's body.
+					// This is necessary as a separate case for image messages since the URL can be compared without other FileParams like the dimensions.
+					// If the referenced message is not a file message, remove all quoted lines from the message's body
+					// that are lines of the referenced message.
+					if (referencedMessage.hasFileOnRemoteHost()) {
+						String line = bodyLines[0];
+						if (UIHelper.isQuotationLine(line)) {
+							if (line.substring(1).trim().equals(referencedMessage.getFileParams().url.toString())) {
+								message.setBody(createStringWithLinesOfOutStringArray(bodyLines, 1, bodyLines.length));
+							}
+						}
+					} else {
+						String[] referencedMessageBodyLines = referencedMessage.getBody().split("\n");
+						int currentLine = 0;
+						boolean quotationEqualsReferencedMessage = true;
+
+						// Ignore each line of the body until a line is found that does not begin with a quoting symbol
+						// and take all lines after that.
+						for (String line : bodyLines) {
+							final char c = line.charAt(0);
+							if (UIHelper.isQuotationLine(line)) {
+								if (referencedMessageBodyLines.length >= currentLine && !line.substring(1).trim().equals(referencedMessageBodyLines[currentLine].trim())) {
+									quotationEqualsReferencedMessage = false;
+									break;
+								}
+							} else {
+								break;
+							}
+							currentLine++;
+						}
+
+						if (quotationEqualsReferencedMessage) {
+							message.setBody(createStringWithLinesOfOutStringArray(bodyLines, currentLine, bodyLines.length));
+						}
+					}
+				}
 
 				if (referencedMessage.getType() == Message.TYPE_TEXT) {
-
+					displayTextMessage(viewHolder, message, darkBackground, type);
 				}
 
 				if (referencedMessage.isFileOrImage()) {
-					// Find the relative file path for the quotation.
+					// Find the relative file path for the referenced image.
 					if (message.getRelativeFilePath() == null) {
 						message.setRelativeFilePath(referencedMessage.getRelativeFilePath());
 					}
-					displayImageQuotationMessage(viewHolder, message, darkBackground, type);
+					displayReferencedMessageImage(viewHolder, message, darkBackground, type);
 				}
 
-				//TODO: handle other message types (text, file, etc.)
+				//TODO: handle non-image message files
 
 				// Change the color of the quotation bar for non-default theme options.
 				if (type == SENT && darkBackground || type == RECEIVED && (mUseGreenBackground || darkBackground)) {
@@ -894,6 +939,21 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 
 
 		return view;
+	}
+
+	/**
+	 * Creates a string with newlines for each string of a given array of strings.
+	 * @param allLines string array that contains all strings
+	 * @param indexOfFirstLineToTake position (inclusive) of the first string to be taken for the newly created string
+	 * @param indexOfLastLineToTake position (exclusive) of the last string to be taken for the newly created string
+	 * @return string with the desired lines
+	 */
+	private String createStringWithLinesOfOutStringArray(String[] allLines, int indexOfFirstLineToTake, int indexOfLastLineToTake) {
+		StringBuilder takingBuilder = new StringBuilder();
+		for (String line : Arrays.copyOfRange(allLines, indexOfFirstLineToTake, indexOfLastLineToTake)) {
+			takingBuilder.append(line + "\n");
+		}
+		return takingBuilder.toString();
 	}
 
 	private void promptOpenKeychainInstall(View view) {

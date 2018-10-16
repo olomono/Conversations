@@ -140,29 +140,6 @@ public class Contact implements ListItem, Blockable {
 		return this.photoUri;
 	}
 
-	/**
-	 * Provides the state of supporting XEP-0367: Message Attaching by at least one resource of the contact.
-	 * @return true if at least one resource supports XEP-0367: Message Attaching
-	 */
-	public boolean supportsMessageAttaching() {
-		return supportsFeatureByAtLeastOneResource(Namespace.MESSAGE_ATTACHING);
-	}
-
-	/**
-	 * Provides the state of supporting a given feature by at least one resource of the contact.
-	 *
-	 * @param featureByNamespace namespace that is used for the feature
-	 * @return true if at least one resource supports the given feature
-	 */
-	public boolean supportsFeatureByAtLeastOneResource(String featureByNamespace) {
-		for (Presence presence : presences.getPresences().values()) {
-			if(presence.getServiceDiscoveryResult().getFeatures().contains(featureByNamespace)){
-				return true;
-			}
-		}
-		return false;
-	}
-
 	public Jid getJid() {
 		return jid;
 	}
