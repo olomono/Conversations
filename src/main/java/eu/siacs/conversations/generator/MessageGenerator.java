@@ -34,7 +34,6 @@ public class MessageGenerator extends AbstractGenerator {
 		super(service);
 	}
 
-	// TODO option 1: send message with messageReference
 	private MessagePacket preparePacket(Message message) {
 		Conversation conversation = (Conversation) message.getConversation();
 		Account account = conversation.getAccount();
@@ -67,6 +66,7 @@ public class MessageGenerator extends AbstractGenerator {
 			packet.addChild("replace", "urn:xmpp:message-correct:0").setAttribute("id", message.getEditedId());
 		}
 
+		// message that has a message reference for XEP-0367: Message Attaching
 		if (message.hasMessageReference()) {
 			packet.addChild("attach-to", MESSAGE_ATTACHING).setAttribute("id", message.getMessageReference());
 		}
