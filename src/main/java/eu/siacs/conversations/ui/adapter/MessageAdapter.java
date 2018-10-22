@@ -931,6 +931,8 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 				if (type == SENT && darkBackground || type == RECEIVED && (mUseGreenBackground || darkBackground)) {
 					viewHolder.messageReferenceBar.setBackgroundColor(activity.getResources().getColor(R.color.white70));
 				}
+			} else {
+				// TODO handle the case that no message was found for the given message reference
 			}
 		} else if (message.isFileOrImage() && message.getEncryption() != Message.ENCRYPTION_PGP && message.getEncryption() != Message.ENCRYPTION_DECRYPTION_FAILED) {
 			if (message.isImage()) {
