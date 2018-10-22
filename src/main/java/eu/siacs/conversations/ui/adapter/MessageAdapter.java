@@ -811,7 +811,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 						String line = bodyLines[0];
 						if (UIHelper.isQuotationLine(line)) {
 							if (line.substring(1).trim().equals(referencedMessage.getFileParams().url.toString())) {
-								message.setBody(createStringWithLinesOfOutStringArray(bodyLines, 1, bodyLines.length));
+								message.setBody(createStringWithLinesOutOfStringArray(bodyLines, 1, bodyLines.length));
 							}
 						}
 					} else {
@@ -835,7 +835,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 						}
 
 						if (quotationEqualsReferencedMessage) {
-							message.setBody(createStringWithLinesOfOutStringArray(bodyLines, currentLine, bodyLines.length));
+							message.setBody(createStringWithLinesOutOfStringArray(bodyLines, currentLine, bodyLines.length));
 						}
 					}
 				}
@@ -948,7 +948,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 	 * @param indexOfLastLineToTake position (exclusive) of the last string to be taken for the newly created string
 	 * @return string with the desired lines
 	 */
-	private String createStringWithLinesOfOutStringArray(String[] allLines, int indexOfFirstLineToTake, int indexOfLastLineToTake) {
+	private String createStringWithLinesOutOfStringArray(String[] allLines, int indexOfFirstLineToTake, int indexOfLastLineToTake) {
 		StringBuilder takingBuilder = new StringBuilder();
 		for (String line : Arrays.copyOfRange(allLines, indexOfFirstLineToTake, indexOfLastLineToTake)) {
 			takingBuilder.append(line + "\n");
