@@ -603,6 +603,18 @@ public class Message extends AbstractEntity {
 		return this.counterparts;
 	}
 
+	public boolean isText() {
+		return type == Message.TYPE_TEXT;
+	}
+
+	public boolean isImage() {
+		return getFileParams().width > 0 && getFileParams().height > 0;
+	}
+
+	public boolean isAudio() {
+		return getFileParams().runtime > 0;
+	}
+
 	public static class MergeSeparator {
 	}
 

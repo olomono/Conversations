@@ -47,6 +47,7 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -426,30 +427,90 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 	}
 
 	private void displayTextMessage(final ViewHolder viewHolder, final Message message, boolean darkBackground, int type) {
-        viewHolder.messageImageQuotationBar.setVisibility(View.GONE);
-        viewHolder.messageImageQuotation.setVisibility(View.GONE);
+        viewHolder.messageReferenceBar.setVisibility(View.GONE);
+		viewHolder.messageReferenceImageThumbnail.setVisibility(View.GONE);
+		viewHolder.messageReferenceText.setVisibility(View.GONE);
 
-        constructTextMessage(viewHolder, message, darkBackground, type);
+		constructTextMessage(viewHolder, message, darkBackground, type);
+	}
+
+	/**
+	 * Displays the text of a referenced message next to a bar that indicates the referencing
+	 * and underneath the comment on that text.
+	 */
+	private void displayReferencingTextMessage(final ViewHolder viewHolder, final Message message, final Message referencedMessage, boolean darkBackground, int type) {
+		viewHolder.messageReferenceText.setText(referencedMessage.getBody());
+		viewHolder.messageReferenceBar.setVisibility(View.VISIBLE);
+		viewHolder.messageReferenceImageThumbnail.setVisibility(View.GONE);
+		viewHolder.messageReferenceText.setVisibility(View.VISIBLE);
+
+		constructTextMessage(viewHolder, message, darkBackground, type);
 	}
 
     /**
      * Displays the thumbnail of a referenced image next to a bar that indicates the referencing
      * and underneath the comment on that image.
      */
-    private void displayReferencedMessageImage(final ViewHolder viewHolder, final Message message, boolean darkBackground, int type) {
-        activity.loadBitmapForQuotedImage(message, viewHolder.messageImageQuotation);
-        viewHolder.messageImageQuotationBar.setVisibility(View.VISIBLE);
-        viewHolder.messageImageQuotation.setVisibility(View.VISIBLE);
+    private void displayReferencingImageMessage(final ViewHolder viewHolder, final Message message, boolean darkBackground, int type) {
+        activity.loadBitmapForQuotedImage(message, viewHolder.messageReferenceImageThumbnail);
+        viewHolder.messageReferenceBar.setVisibility(View.VISIBLE);
+        viewHolder.messageReferenceImageThumbnail.setVisibility(View.VISIBLE);
+		viewHolder.messageReferenceText.setVisibility(View.GONE);
 
-        constructTextMessage(viewHolder, message, darkBackground, type);
+		constructTextMessage(viewHolder, message, darkBackground, type);
     }
+
+	/**
+	 * Displays a tag of a referenced audio file next to a bar that indicates the referencing
+	 * and underneath the comment on that audio file.
+	 */
+	private void displayReferencingAudioMessage(final ViewHolder viewHolder, final Message message, final Message referencedMessage, boolean darkBackground, int type) {
+
+		final int runTime = referencedMessage.getFileParams().runtime;
+		final String audioTag = activity.getString(R.string.reference_tag_audio);
+		final String duration = String.format(Locale.ENGLISH, "%d:%02d", runTime / 60000, Math.min(Math.round((runTime % 60000) / 1000f),59));
+
+		viewHolder.messageReferenceText.setText(audioTag + " ("+ duration +")");
+		viewHolder.messageReferenceBar.setVisibility(View.VISIBLE);
+		viewHolder.messageReferenceImageThumbnail.setVisibility(View.GONE);
+		viewHolder.messageReferenceText.setVisibility(View.VISIBLE);
+
+		constructTextMessage(viewHolder, message, darkBackground, type);
+	}
+
+	/**
+	 * Displays a tag of a referenced file next to a bar that indicates the referencing
+	 * and underneath the comment on that file.
+	 */
+	private void displayReferencingFileMessage(final ViewHolder viewHolder, final Message message, boolean darkBackground, int type) {
+		viewHolder.messageReferenceText.setText(activity.getString(R.string.reference_tag_file));
+		viewHolder.messageReferenceBar.setVisibility(View.VISIBLE);
+		viewHolder.messageReferenceImageThumbnail.setVisibility(View.GONE);
+		viewHolder.messageReferenceText.setVisibility(View.VISIBLE);
+
+		constructTextMessage(viewHolder, message, darkBackground, type);
+	}
+
+	/**
+	 * Displays a tag of a referenced location message next to a bar that indicates the referencing
+	 * and underneath the comment on that location.
+	 */
+	private void displayReferencingLocationMessage(final ViewHolder viewHolder, final Message message, boolean darkBackground, int type) {
+		viewHolder.messageReferenceText.setText(activity.getString(R.string.reference_tag_location));
+		viewHolder.messageReferenceBar.setVisibility(View.VISIBLE);
+		viewHolder.messageReferenceImageThumbnail.setVisibility(View.GONE);
+		viewHolder.messageReferenceText.setVisibility(View.VISIBLE);
+
+		constructTextMessage(viewHolder, message, darkBackground, type);
+	}
 
 	private void displayDownloadableMessage(ViewHolder viewHolder, final Message message, String text) {
 		viewHolder.image.setVisibility(View.GONE);
 		viewHolder.messageBody.setVisibility(View.GONE);
 		viewHolder.audioPlayer.setVisibility(View.GONE);
-        viewHolder.messageImageQuotationBar.setVisibility(View.GONE);
-        viewHolder.messageImageQuotation.setVisibility(View.GONE);
+        viewHolder.messageReferenceBar.setVisibility(View.GONE);
+        viewHolder.messageReferenceImageThumbnail.setVisibility(View.GONE);
+		viewHolder.messageReferenceText.setVisibility(View.GONE);
 		viewHolder.download_button.setVisibility(View.VISIBLE);
 		viewHolder.download_button.setText(text);
 		viewHolder.download_button.setOnClickListener(v -> ConversationFragment.downloadFile(activity, message));
@@ -459,8 +520,9 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		viewHolder.image.setVisibility(View.GONE);
 		viewHolder.messageBody.setVisibility(View.GONE);
 		viewHolder.audioPlayer.setVisibility(View.GONE);
-        viewHolder.messageImageQuotationBar.setVisibility(View.GONE);
-        viewHolder.messageImageQuotation.setVisibility(View.GONE);
+        viewHolder.messageReferenceBar.setVisibility(View.GONE);
+        viewHolder.messageReferenceImageThumbnail.setVisibility(View.GONE);
+		viewHolder.messageReferenceText.setVisibility(View.GONE);
 		viewHolder.download_button.setVisibility(View.VISIBLE);
 		viewHolder.download_button.setText(activity.getString(R.string.open_x_file, UIHelper.getFileDescriptionString(activity, message)));
 		viewHolder.download_button.setOnClickListener(v -> openDownloadable(message));
@@ -470,8 +532,9 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		viewHolder.image.setVisibility(View.GONE);
 		viewHolder.messageBody.setVisibility(View.GONE);
 		viewHolder.audioPlayer.setVisibility(View.GONE);
-        viewHolder.messageImageQuotationBar.setVisibility(View.GONE);
-        viewHolder.messageImageQuotation.setVisibility(View.GONE);
+        viewHolder.messageReferenceBar.setVisibility(View.GONE);
+        viewHolder.messageReferenceImageThumbnail.setVisibility(View.GONE);
+		viewHolder.messageReferenceText.setVisibility(View.GONE);
 		viewHolder.download_button.setVisibility(View.VISIBLE);
 		viewHolder.download_button.setText(R.string.show_location);
 		viewHolder.download_button.setOnClickListener(v -> showLocation(message));
@@ -481,8 +544,9 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		viewHolder.image.setVisibility(View.GONE);
 		viewHolder.messageBody.setVisibility(View.GONE);
 		viewHolder.download_button.setVisibility(View.GONE);
-        viewHolder.messageImageQuotationBar.setVisibility(View.GONE);
-        viewHolder.messageImageQuotation.setVisibility(View.GONE);
+        viewHolder.messageReferenceBar.setVisibility(View.GONE);
+        viewHolder.messageReferenceImageThumbnail.setVisibility(View.GONE);
+		viewHolder.messageReferenceText.setVisibility(View.GONE);
 		final RelativeLayout audioPlayer = viewHolder.audioPlayer;
 		audioPlayer.setVisibility(View.VISIBLE);
 		AudioPlayer.ViewHolder.get(audioPlayer).setDarkBackground(darkBackground);
@@ -493,8 +557,9 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		viewHolder.download_button.setVisibility(View.GONE);
 		viewHolder.messageBody.setVisibility(View.GONE);
 		viewHolder.audioPlayer.setVisibility(View.GONE);
-        viewHolder.messageImageQuotationBar.setVisibility(View.GONE);
-        viewHolder.messageImageQuotation.setVisibility(View.GONE);
+        viewHolder.messageReferenceBar.setVisibility(View.GONE);
+        viewHolder.messageReferenceImageThumbnail.setVisibility(View.GONE);
+		viewHolder.messageReferenceText.setVisibility(View.GONE);
 		viewHolder.image.setVisibility(View.VISIBLE);
 		FileParams params = message.getFileParams();
 		double target = metrics.density * 288;
@@ -525,7 +590,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
      * (e.g., a file quotation with a text comment).
      *
      * Only to be used in conjunction with a display*Message() method.
-     * For instance see {@link #displayReferencedMessageImage} or {@link #displayTextMessage}
+     * For instance see {@link #displayReferencingImageMessage} or {@link #displayTextMessage}
      */
     private void constructTextMessage(final ViewHolder viewHolder, final Message message, boolean darkBackground, int type) {
         viewHolder.download_button.setVisibility(View.GONE);
@@ -670,8 +735,9 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 					viewHolder.indicator = view.findViewById(R.id.security_indicator);
 					viewHolder.edit_indicator = view.findViewById(R.id.edit_indicator);
 					viewHolder.image = view.findViewById(R.id.message_image);
-					viewHolder.messageImageQuotationBar = view.findViewById(R.id.message_image_quotation_bar);
-					viewHolder.messageImageQuotation = view.findViewById(R.id.message_image_quotation);
+					viewHolder.messageReferenceBar = view.findViewById(R.id.message_reference_bar);
+					viewHolder.messageReferenceImageThumbnail = view.findViewById(R.id.message_reference_image_thumbnail);
+					viewHolder.messageReferenceText = view.findViewById(R.id.message_reference_text);
 					viewHolder.messageBody = view.findViewById(R.id.message_body);
 					viewHolder.time = view.findViewById(R.id.message_time);
 					viewHolder.indicatorReceived = view.findViewById(R.id.indicator_received);
@@ -685,8 +751,9 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 					viewHolder.indicator = view.findViewById(R.id.security_indicator);
 					viewHolder.edit_indicator = view.findViewById(R.id.edit_indicator);
 					viewHolder.image = view.findViewById(R.id.message_image);
-					viewHolder.messageImageQuotationBar = view.findViewById(R.id.message_image_quotation_bar);
-					viewHolder.messageImageQuotation = view.findViewById(R.id.message_image_quotation);
+					viewHolder.messageReferenceBar = view.findViewById(R.id.message_reference_bar);
+					viewHolder.messageReferenceImageThumbnail = view.findViewById(R.id.message_reference_image_thumbnail);
+					viewHolder.messageReferenceText = view.findViewById(R.id.message_reference_text);
 					viewHolder.messageBody = view.findViewById(R.id.message_body);
 					viewHolder.time = view.findViewById(R.id.message_time);
 					viewHolder.indicatorReceived = view.findViewById(R.id.indicator_received);
@@ -840,29 +907,35 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 					}
 				}
 
-				if (referencedMessage.getType() == Message.TYPE_TEXT) {
-					displayTextMessage(viewHolder, message, darkBackground, type);
+				if (referencedMessage.isText()) {
+					displayReferencingTextMessage(viewHolder, message, referencedMessage, darkBackground, type);
 				}
 
 				if (referencedMessage.isFileOrImage()) {
-					// Find the relative file path for the referenced image.
-					if (message.getRelativeFilePath() == null) {
-						message.setRelativeFilePath(referencedMessage.getRelativeFilePath());
+					if (referencedMessage.isImage()) {
+						// Find the relative file path for the referenced image.
+						if (message.getRelativeFilePath() == null) {
+							message.setRelativeFilePath(referencedMessage.getRelativeFilePath());
+						}
+						displayReferencingImageMessage(viewHolder, message, darkBackground, type);
+					} else if (referencedMessage.isAudio()) {
+						displayReferencingAudioMessage(viewHolder, message, referencedMessage, darkBackground, type);
+					} else if (referencedMessage.isGeoUri()) {
+						displayReferencingLocationMessage(viewHolder, message, darkBackground, type);
+					} else {
+						displayReferencingFileMessage(viewHolder, message, darkBackground, type);
 					}
-					displayReferencedMessageImage(viewHolder, message, darkBackground, type);
 				}
-
-				//TODO: handle non-image message files
 
 				// Change the color of the quotation bar for non-default theme options.
 				if (type == SENT && darkBackground || type == RECEIVED && (mUseGreenBackground || darkBackground)) {
-					viewHolder.messageImageQuotationBar.setBackgroundColor(activity.getResources().getColor(R.color.white70));
+					viewHolder.messageReferenceBar.setBackgroundColor(activity.getResources().getColor(R.color.white70));
 				}
 			}
 		} else if (message.isFileOrImage() && message.getEncryption() != Message.ENCRYPTION_PGP && message.getEncryption() != Message.ENCRYPTION_DECRYPTION_FAILED) {
-			if (message.getFileParams().width > 0 && message.getFileParams().height > 0) {
+			if (message.isImage()) {
 				displayImageMessage(viewHolder, message);
-			} else if (message.getFileParams().runtime > 0) {
+			} else if (message.isAudio()) {
 				displayAudioMessage(viewHolder, message, darkBackground);
 			} else {
 				displayOpenableMessage(viewHolder, message);
@@ -1119,11 +1192,12 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		protected ImageView indicatorReceived;
 		protected TextView time;
 		protected CopyTextView messageBody;
-		protected ImageView messageImageQuotation;
+		protected ImageView messageReferenceImageThumbnail;
+		protected TextView messageReferenceText;
 		protected ImageView contact_picture;
 		protected TextView status_message;
 		protected TextView encryption;
-		protected View messageImageQuotationBar;
+		protected View messageReferenceBar;
 	}
 
 	static class AsyncDrawable extends BitmapDrawable {
