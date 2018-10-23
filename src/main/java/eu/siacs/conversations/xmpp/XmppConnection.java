@@ -600,7 +600,7 @@ public class XmppConnection implements Runnable {
 							mXmppConnectionService.markMessage(account,
 									message.getTo().asBareJid(),
 									message.getId(),
-									Message.STATUS_UNSEND);
+									Message.STATUS_UNSENT);
 						}
 						sendPacket(packet);
 					}

@@ -234,7 +234,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 			case Message.STATUS_WAITING:
 				info = getContext().getString(R.string.waiting);
 				break;
-			case Message.STATUS_UNSEND:
+			case Message.STATUS_UNSENT:
 				Transferable d = message.getTransferable();
 				if (d != null) {
 					info = getContext().getString(R.string.sending_file, d.getProgress());

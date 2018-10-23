@@ -140,7 +140,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 		synchronized (this.messages) {
 			for (final Message message : this.messages) {
 				final int s = message.getStatus();
-				if ((s == Message.STATUS_UNSEND || s == Message.STATUS_WAITING) && message.getUuid().equals(uuid)) {
+				if ((s == Message.STATUS_UNSENT || s == Message.STATUS_WAITING) && message.getUuid().equals(uuid)) {
 					return message;
 				}
 			}
@@ -255,7 +255,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 		final ArrayList<Message> results = new ArrayList<>();
 		synchronized (this.messages) {
 			for (Message message : this.messages) {
-				if (message.getType() != Message.TYPE_IMAGE && message.getStatus() == Message.STATUS_UNSEND) {
+				if (message.getType() != Message.TYPE_IMAGE && message.getStatus() == Message.STATUS_UNSENT) {
 					results.add(message);
 				}
 			}
@@ -269,7 +269,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 		synchronized (this.messages) {
 			for (Message message : this.messages) {
 				if (id.equals(message.getUuid())
-						|| (message.getStatus() >= Message.STATUS_SEND
+						|| (message.getStatus() >= Message.STATUS_SENT
 						&& id.equals(message.getRemoteMsgId()))) {
 					return message;
 				}
@@ -694,7 +694,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 		synchronized (this.messages) {
 			for (int i = this.messages.size() - 1; i >= 0; --i) {
 				Message message = this.messages.get(i);
-				if (message.getStatus() == Message.STATUS_UNSEND || message.getStatus() == Message.STATUS_SEND) {
+				if (message.getStatus() == Message.STATUS_UNSENT || message.getStatus() == Message.STATUS_SENT) {
 					String otherBody;
 					if (message.hasFileOnRemoteHost()) {
 						otherBody = message.getFileParams().url.toString();

@@ -97,7 +97,7 @@ public class ExportLogsService extends Service {
 						case Message.STATUS_RECEIVED:
 							jid = getMessageCounterpart(message);
 							break;
-						case Message.STATUS_SEND:
+						case Message.STATUS_SENT:
 						case Message.STATUS_SEND_RECEIVED:
 						case Message.STATUS_SEND_DISPLAYED:
 							jid = accountJid.asBareJid().toString();

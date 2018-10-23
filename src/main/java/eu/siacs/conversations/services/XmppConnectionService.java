@@ -251,7 +251,7 @@ public class XmppConnectionService extends Service {
                 if (conversation.getAccount() == account) {
                     Message message = conversation.findUnsentMessageWithUuid(uuid);
                     if (message != null) {
-                        message.setStatus(Message.STATUS_SEND);
+                        message.setStatus(Message.STATUS_SENT);
                         message.setErrorMessage(null);
                         databaseBackend.updateMessage(message, false);
                         return true;
@@ -1238,9 +1238,9 @@ public class XmppConnectionService extends Service {
             if (packet != null) {
                 if (account.getXmppConnection().getFeatures().sm()
                         || (conversation.getMode() == Conversation.MODE_MULTI && message.getCounterpart().isBareJid())) {
-                    message.setStatus(Message.STATUS_UNSEND);
+                    message.setStatus(Message.STATUS_UNSENT);
                 } else {
-                    message.setStatus(Message.STATUS_SEND);
+                    message.setStatus(Message.STATUS_SENT);
                 }
             }
         } else {
@@ -1280,9 +1280,9 @@ public class XmppConnectionService extends Service {
         if (resend) {
             if (packet != null && addToConversation) {
                 if (account.getXmppConnection().getFeatures().sm() || mucMessage) {
-                    markMessage(message, Message.STATUS_UNSEND);
+                    markMessage(message, Message.STATUS_UNSENT);
                 } else {
-                    markMessage(message, Message.STATUS_SEND);
+                    markMessage(message, Message.STATUS_SENT);
                 }
             }
         } else {
@@ -1553,7 +1553,7 @@ public class XmppConnectionService extends Service {
 			if (!getFileBackend().isFileAvailable(message)) {
 				message.setTransferable(new TransferablePlaceholder(Transferable.STATUS_DELETED));
 				final int s = message.getStatus();
-				if (s == Message.STATUS_WAITING || s == Message.STATUS_OFFERED || s == Message.STATUS_UNSEND) {
+				if (s == Message.STATUS_WAITING || s == Message.STATUS_OFFERED || s == Message.STATUS_UNSENT) {
 					markMessage(message, Message.STATUS_SEND_FAILED);
 				}
 			}
@@ -1569,7 +1569,7 @@ public class XmppConnectionService extends Service {
 					if (!file.exists()) {
 						message.setTransferable(new TransferablePlaceholder(Transferable.STATUS_DELETED));
 						final int s = message.getStatus();
-						if (s == Message.STATUS_WAITING || s == Message.STATUS_OFFERED || s == Message.STATUS_UNSEND) {
+						if (s == Message.STATUS_WAITING || s == Message.STATUS_OFFERED || s == Message.STATUS_UNSENT) {
 							markMessage(message, Message.STATUS_SEND_FAILED);
 						} else {
 							updateConversationUi();

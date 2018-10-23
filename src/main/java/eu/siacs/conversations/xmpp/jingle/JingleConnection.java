@@ -601,7 +601,7 @@ public class JingleConnection implements Transferable {
 		mergeCandidates(JingleCandidate.parse(content.socks5transport()
 				.getChildren()));
 		this.mJingleStatus = JINGLE_STATUS_ACCEPTED;
-		mXmppConnectionService.markMessage(message, Message.STATUS_UNSEND);
+		mXmppConnectionService.markMessage(message, Message.STATUS_UNSENT);
 		this.connectNextCandidate();
 		return true;
 	}

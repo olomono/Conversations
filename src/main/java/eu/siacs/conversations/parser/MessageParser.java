@@ -317,7 +317,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 		boolean isMucStatusMessage = InvalidJid.hasValidFrom(packet) && from.isBareJid() && mucUserElement != null && mucUserElement.hasChild("status");
 		boolean selfAddressed;
 		if (packet.fromAccount(account)) {
-			status = Message.STATUS_SEND;
+			status = Message.STATUS_SENT;
 			selfAddressed = to == null || account.getJid().asBareJid().equals(to.asBareJid());
 			if (selfAddressed) {
 				counterpart = from;
@@ -420,7 +420,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 					if (query == null && extractChatState(mXmppConnectionService.find(account, counterpart.asBareJid()), isTypeGroupChat, packet)) {
 						mXmppConnectionService.updateConversationUi();
 					}
-					if (query != null && status == Message.STATUS_SEND && remoteMsgId != null) {
+					if (query != null && status == Message.STATUS_SENT && remoteMsgId != null) {
 						Message previouslySent = conversation.findMessageWithUuid(remoteMsgId);
 						if (previouslySent != null && previouslySent.getServerMsgId() == null && serverMsgId != null) {
 							previouslySent.setServerMsgId(serverMsgId);
@@ -467,7 +467,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 					trueCounterpart = fallback;
 				}
 				if (trueCounterpart != null && trueCounterpart.asBareJid().equals(account.getJid().asBareJid())) {
-					status = isTypeGroupChat ? Message.STATUS_SEND_RECEIVED : Message.STATUS_SEND;
+					status = isTypeGroupChat ? Message.STATUS_SEND_RECEIVED : Message.STATUS_SENT;
 				}
 				message.setStatus(status);
 				message.setTrueCounterpart(trueCounterpart);
@@ -575,7 +575,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 			}
 
 			if (query == null || query.isCatchup()) { //either no mam or catchup
-				if (status == Message.STATUS_SEND || status == Message.STATUS_SEND_RECEIVED) {
+				if (status == Message.STATUS_SENT || status == Message.STATUS_SEND_RECEIVED) {
 					mXmppConnectionService.markRead(conversation);
 					if (query == null) {
 						activateGracePeriod(account);

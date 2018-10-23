@@ -5,7 +5,6 @@ import android.util.Log;
 import android.util.Pair;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -155,7 +154,7 @@ public class HttpUploadConnection implements Transferable {
 			}
 		});
 		message.setTransferable(this);
-		mXmppConnectionService.markMessage(message, Message.STATUS_UNSEND);
+		mXmppConnectionService.markMessage(message, Message.STATUS_UNSENT);
 	}
 
 	private void upload() {

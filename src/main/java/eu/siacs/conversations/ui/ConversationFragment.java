@@ -1134,7 +1134,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 				downloadFile.setTitle(activity.getString(R.string.download_x_file, UIHelper.getFileDescriptionString(activity, m)));
 			}
 			boolean waitingOfferedSending = m.getStatus() == Message.STATUS_WAITING
-					|| m.getStatus() == Message.STATUS_UNSEND
+					|| m.getStatus() == Message.STATUS_UNSENT
 					|| m.getStatus() == Message.STATUS_OFFERED;
 			if ((t != null && !deleted) || waitingOfferedSending && m.needsUploading()) {
 				cancelTransmission.setVisible(true);
