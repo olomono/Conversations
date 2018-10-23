@@ -62,6 +62,7 @@ public class Message extends AbstractEntity {
 	public static final String OOB = "oob";
 	public static final String EDITED = "edited";
 	public static final String REMOTE_MSG_ID = "remoteMsgId";
+	public static final String MESSAGE_REFERENCE = "messageReference";
 	public static final String SERVER_MSG_ID = "serverMsgId";
 	public static final String RELATIVE_FILE_PATH = "relativeFilePath";
 	public static final String FINGERPRINT = "axolotl_fingerprint";
@@ -128,6 +129,7 @@ public class Message extends AbstractEntity {
 				null,
 				null,
 				null,
+				null,
 				true,
 				null,
 				false,
@@ -139,7 +141,7 @@ public class Message extends AbstractEntity {
 	protected Message(final Conversational conversation, final String uuid, final String conversationUUid, final Jid counterpart,
 	                final Jid trueCounterpart, final String body, final long timeSent,
 	                final int encryption, final int status, final int type, final boolean carbon,
-	                final String remoteMsgId, final String relativeFilePath,
+	                final String remoteMsgId, final String messageReference, final String relativeFilePath,
 	                final String serverMsgId, final String fingerprint, final boolean read,
 	                final String edited, final boolean oob, final String errorMessage, final Set<ReadByMarker> readByMarkers,
 	                final boolean markable) {
@@ -155,6 +157,7 @@ public class Message extends AbstractEntity {
 		this.type = type;
 		this.carbon = carbon;
 		this.remoteMsgId = remoteMsgId;
+		this.messageReference = messageReference;
 		this.relativeFilePath = relativeFilePath;
 		this.serverMsgId = serverMsgId;
 		this.axolotlFingerprint = fingerprint;
@@ -203,6 +206,7 @@ public class Message extends AbstractEntity {
 				cursor.getInt(cursor.getColumnIndex(TYPE)),
 				cursor.getInt(cursor.getColumnIndex(CARBON)) > 0,
 				cursor.getString(cursor.getColumnIndex(REMOTE_MSG_ID)),
+				cursor.getString(cursor.getColumnIndex(MESSAGE_REFERENCE)),
 				cursor.getString(cursor.getColumnIndex(RELATIVE_FILE_PATH)),
 				cursor.getString(cursor.getColumnIndex(SERVER_MSG_ID)),
 				cursor.getString(cursor.getColumnIndex(FINGERPRINT)),
@@ -251,6 +255,7 @@ public class Message extends AbstractEntity {
 		values.put(TYPE, type);
 		values.put(CARBON, carbon ? 1 : 0);
 		values.put(REMOTE_MSG_ID, remoteMsgId);
+        values.put(MESSAGE_REFERENCE, messageReference);
 		values.put(RELATIVE_FILE_PATH, relativeFilePath);
 		values.put(SERVER_MSG_ID, serverMsgId);
 		values.put(FINGERPRINT, axolotlFingerprint);
@@ -363,6 +368,18 @@ public class Message extends AbstractEntity {
 	public void setRemoteMsgId(String id) {
 		this.remoteMsgId = id;
 	}
+
+    public void setMessageReference(String messageReference) {
+        this.messageReference = messageReference;
+    }
+
+    public String getMessageReference() {
+        return messageReference;
+    }
+
+    public boolean hasMessageReference() {
+        return this.messageReference != null;
+    }
 
 	public String getServerMsgId() {
 		return this.serverMsgId;
@@ -555,6 +572,8 @@ public class Message extends AbstractEntity {
 	public boolean mergeable(final Message message) {
 		return message != null &&
 				(message.getType() == Message.TYPE_TEXT &&
+						!message.hasMessageReference() &&
+						!this.hasMessageReference() &&
 						this.getTransferable() == null &&
 						message.getTransferable() == null &&
 						message.getEncryption() != Message.ENCRYPTION_PGP &&
@@ -605,7 +624,7 @@ public class Message extends AbstractEntity {
 		return type == Message.TYPE_TEXT;
 	}
 
-	public boolean isImage() {
+	public boolean isImageOrVideo() {
 		return getFileParams().width > 0 && getFileParams().height > 0;
 	}
 
@@ -826,18 +845,6 @@ public class Message extends AbstractEntity {
 		public int height = 0;
 		public int runtime = 0;
 	}
-
-	public void setMessageReference(String messageReference) {
-		this.messageReference = messageReference;
-	}
-
-	public String getMessageReference() {
-		return messageReference;
-	}
-
-    public boolean hasMessageReference() {
-        return this.messageReference != null;
-    }
 
 	public void setFingerprint(String fingerprint) {
 		this.axolotlFingerprint = fingerprint;

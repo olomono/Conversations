@@ -40,7 +40,7 @@
             <include layout="@layout/message_content"/>
 
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="left"
                 android:orientation="horizontal"
@@ -51,9 +51,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:gravity="center_vertical"
                     android:layout_marginRight="4sp"
-                    android:textAppearance="@style/TextAppearance.Conversations.Caption.OnDark.Bold"/>
+                    android:gravity="center_vertical"
+                    android:textAppearance="@style/TextAppearance.Conversations.Caption.OnDark.Bold" />
 
                 <ImageView
                     android:id="@+id/security_indicator"
@@ -82,7 +82,7 @@
                     android:layout_gravity="center_vertical"
                     android:gravity="center_vertical"
                     android:text="@string/sending"
-                    android:textAppearance="@style/TextAppearance.Conversations.Caption"/>
+                    android:textAppearance="@style/TextAppearance.Conversations.Caption" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

@@ -887,7 +887,7 @@ public abstract class XmppActivity extends ActionBarActivity {
 		loadBitmap(message, imageView, BITMAP_SCALE, true);
 	}
 
-	public void loadBitmapForQuotedImage(Message message, ImageView imageView) {
+	public void loadBitmapForReferenceImageMessage(Message message, ImageView imageView) {
 		loadBitmap(message, imageView, BITMAP_SCALE_FOR_QUOTED_IMAGE, false);
 	}
 

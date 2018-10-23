@@ -290,18 +290,26 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 		final String oobUrl = oob != null ? oob.findChildContent("url") : null;
 		final String replacementId = replaceElement == null ? null : replaceElement.getAttribute("id");
 		final Element axolotlEncrypted = packet.findChild(XmppAxolotlMessage.CONTAINERTAG, AxolotlService.PEP_PREFIX);
-		final Element messageReference = packet.findChild("attach-to", Namespace.MESSAGE_ATTACHING);
 		int status;
 		final Jid counterpart;
 		final Jid to = packet.getTo();
 		final Jid from = packet.getFrom();
 		final Element originId = packet.findChild("origin-id", Namespace.STANZA_IDS);
 		final String remoteMsgId;
+		final Element messageReferenceElement = packet.findChild("attach-to", Namespace.MESSAGE_ATTACHING);
+		final String messageReference;
 		if (originId != null && originId.getAttribute("id") != null) {
 			remoteMsgId = originId.getAttribute("id");
 		} else {
 			remoteMsgId = packet.getId();
 		}
+
+		if (messageReferenceElement != null) {
+			messageReference = messageReferenceElement.getAttribute("id");
+		} else {
+			messageReference = null;
+		}
+
 		boolean notify = false;
 
 		if (from == null || !InvalidJid.isValid(from) || !InvalidJid.isValid(to)) {
@@ -445,6 +453,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 
 			message.setCounterpart(counterpart);
 			message.setRemoteMsgId(remoteMsgId);
+			message.setMessageReference(messageReference);
 			message.setServerMsgId(serverMsgId);
 			message.setCarbon(isCarbon);
 			message.setTime(timestamp);
@@ -498,6 +507,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 							replacedMessage.setBody(message.getBody());
 							replacedMessage.setEdited(replacedMessage.getRemoteMsgId());
 							replacedMessage.setRemoteMsgId(remoteMsgId);
+							replacedMessage.setMessageReference(messageReference);
 							if (replacedMessage.getServerMsgId() == null || message.getServerMsgId() != null) {
 								replacedMessage.setServerMsgId(message.getServerMsgId());
 							}
@@ -559,10 +569,6 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 					Log.d(Config.LOGTAG, "skipping duplicate message with " + message.getCounterpart() + ". serverMsgIdUpdated=" + Boolean.toString(serverMsgIdUpdated));
 					return;
 				}
-			}
-
-			if (messageReference != null) {
-				message.setMessageReference(messageReference.getAttribute("id"));
 			}
 
 			if (query != null && query.getPagingOrder() == MessageArchiveService.PagingOrder.REVERSE) {
