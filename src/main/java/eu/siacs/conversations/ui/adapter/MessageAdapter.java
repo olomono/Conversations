@@ -891,7 +891,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 						// and take all lines after that.
 						for (String line : bodyLines) {
 							if (UIHelper.isQuotationLine(line)) {
-								if (referencedMessageBodyLines.length >= currentLine && !line.substring(1).trim().equals(referencedMessageBodyLines[currentLine].trim())) {
+								if (currentLine >= referencedMessageBodyLines.length || !line.substring(1).trim().equals(referencedMessageBodyLines[currentLine].trim())) {
 									quotationEqualsReferencedMessage = false;
 									break;
 								}
