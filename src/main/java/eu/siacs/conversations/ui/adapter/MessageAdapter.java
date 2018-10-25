@@ -912,6 +912,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 
 			} else {
 				// TODO handle the case that no message was found for the given message reference
+                displayTextMessage(viewHolder, message, darkBackground, type);
 			}
 		} else if (message.isFileOrImage() && message.getEncryption() != Message.ENCRYPTION_PGP && message.getEncryption() != Message.ENCRYPTION_DECRYPTION_FAILED) {
 			if (message.isImageOrVideo()) {
