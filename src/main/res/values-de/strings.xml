@@ -721,7 +721,4 @@
   <string name="providing_a_name_is_optional">Angabe eines Namens ist optional</string>
   <string name="create_dialog_group_chat_name">Gruppenchatname</string>
   <string name="conference_destroyed">Dieser Gruppenchat wurde zerstört</string>
-  <string name="reference_tag_file">Datei</string>
-  <string name="reference_tag_audio">Sprache</string>
-  <string name="reference_tag_location">Standort</string>
 </resources>

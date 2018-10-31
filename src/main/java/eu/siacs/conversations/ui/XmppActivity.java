@@ -87,8 +87,8 @@ public abstract class XmppActivity extends ActionBarActivity {
 	protected static final int REQUEST_CHOOSE_PGP_ID = 0x0103;
 	protected static final int REQUEST_BATTERY_OP = 0x49ff;
 
-	private static final int BITMAP_SCALE = 288;
-	private static final int BITMAP_SCALE_FOR_QUOTED_IMAGE = 100;
+	public static final int BITMAP_SCALE = 260;
+	public static final int BITMAP_SCALE_FOR_QUOTED_IMAGE = 60;
 
 	public XmppConnectionService xmppConnectionService;
 	public boolean xmppConnectionServiceBound = false;
@@ -887,7 +887,7 @@ public abstract class XmppActivity extends ActionBarActivity {
 		loadBitmap(message, imageView, BITMAP_SCALE, true);
 	}
 
-	public void loadBitmapForReferenceImageMessage(Message message, ImageView imageView) {
+	public void loadBitmapForReferencedImageMessage(Message message, ImageView imageView) {
 		loadBitmap(message, imageView, BITMAP_SCALE_FOR_QUOTED_IMAGE, false);
 	}
 
