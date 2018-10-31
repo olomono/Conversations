@@ -74,8 +74,6 @@
   <string name="sharing_files_please_wait">Διαμοιρασμός φακέλων. Παρακαλώ περιμένετε...</string>
   <string name="action_clear_history">Καθαρισμός ιστορικού</string>
   <string name="clear_conversation_history">Καθαρισμός ιστορικού Συζήτησης</string>
-  <string name="clear_histor_msg">Θέλετε να σβήσετε όλα τα μηνύματα αυτής της Συζήτησης;\n\n<b>Προειδοποίηση:</b> Αυτό δεν θα επηρεάσει τα μηνύματα που είναι αποθηκευμένα σε άλλες συσκευές ή άλλους διακομιστές.</string>
-  <string name="delete_messages">Διαγραφή μηνυμάτων</string>
   <string name="also_end_conversation">Τέλος συζήτησης</string>
   <string name="choose_presence">Επιλογή συσκευής</string>
   <string name="send_unencrypted_message">Αποστολή κρυπτογραφημένου μηνύματος</string>
@@ -102,11 +100,7 @@
   <string name="pref_accept_files">Αποδοχή αρχείων</string>
   <string name="pref_accept_files_summary">Αυτόματη αποδοχή αρχείων μικρότερα από...</string>
   <string name="pref_attachments">Επισυναπτόμμενα</string>
-  <string name="pref_return_to_previous">Γρήγορος Διαμοιρασμός</string>
-  <string name="pref_return_to_previous_summary">Άμεση επιστροφή στην προηγούμενη δραστηριότητα αντί της εκκίνησης συζήτησης μετά από διαμοιρασμό δεδομένων</string>
   <string name="pref_notification_settings">Ειδοποίηση</string>
-  <string name="pref_notifications">Ειδοποιήσεις</string>
-  <string name="pref_notifications_summary">Ειδοποίηση όταν λαμβάνεται ένα νέο μήνυμα</string>
   <string name="pref_vibrate">Δόνηση</string>
   <string name="pref_vibrate_summary">Δόνηση όταν δέχεστε νέο μήνυμα</string>
   <string name="pref_led">Ειδοποίηση LED</string>
@@ -121,7 +115,6 @@
   <string name="pref_confirm_messages">Επιβεβαίωση μηνυμάτων</string>
   <string name="pref_confirm_messages_summary">Να επιτρέπεται οι επαφές σας να γνωρίζουν ότι δεχτήκατε διαβάσατε τα μηνύματα τους </string>
   <string name="pref_ui_options">Προφίλ χρήστη</string>
-  <string name="openpgp_error">Το OpenKeychain ανέφερε κάποιο σφάλμα</string>
   <string name="accept">Αποδοχή</string>
   <string name="error">Έχει συμβεί κάποιο σφάλμα</string>
   <string name="your_account">Ο λογαριασμός σας</string>

@@ -156,6 +156,9 @@ public class Contact implements ListItem, Blockable {
 		if (isBlocked()) {
 			tags.add(new Tag(context.getString(R.string.blocked), 0xff2e2f3b));
 		}
+		if (showInPhoneBook()) {
+			tags.add(new Tag(context.getString(R.string.phone_book), 0xFF1E88E5));
+		}
 		return tags;
 	}
 
@@ -309,13 +312,16 @@ public class Contact implements ListItem, Blockable {
 		}
 	}
 
-	public void setPgpKeyId(long keyId) {
+	public boolean setPgpKeyId(long keyId) {
+		final long previousKeyId = getPgpKeyId();
 		synchronized (this.keys) {
 			try {
 				this.keys.put("pgp_keyid", keyId);
+				return previousKeyId != keyId;
 			} catch (final JSONException ignored) {
 			}
 		}
+		return false;
 	}
 
 	public void setOption(int option) {
@@ -334,6 +340,10 @@ public class Contact implements ListItem, Blockable {
 		return (this.getOption(Contact.Options.IN_ROSTER) && (!this
 				.getOption(Contact.Options.DIRTY_DELETE)))
 				|| (this.getOption(Contact.Options.DIRTY_PUSH));
+	}
+
+	public boolean showInPhoneBook() {
+		return systemAccount != null && !systemAccount.trim().isEmpty();
 	}
 
 	public void parseSubscriptionFromElement(Element item) {
@@ -421,8 +431,12 @@ public class Contact implements ListItem, Blockable {
 		}
 	}
 
-	public String getAvatar() {
+	public String getAvatarFilename() {
 		return avatar == null ? null : avatar.getFilename();
+	}
+
+	public Avatar getAvatar() {
+		return avatar;
 	}
 
 	public boolean mutualPresenceSubscription() {

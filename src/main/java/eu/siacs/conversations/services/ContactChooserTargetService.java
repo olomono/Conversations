@@ -12,11 +12,13 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.service.chooser.ChooserTarget;
 import android.service.chooser.ChooserTargetService;
+import android.support.v4.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import eu.siacs.conversations.entities.Conversation;
+import eu.siacs.conversations.ui.ConversationsActivity;
 import eu.siacs.conversations.ui.ShareWithActivity;
 
 @TargetApi(Build.VERSION_CODES.M)
@@ -32,7 +34,6 @@ public class ContactChooserTargetService extends ChooserTargetService implements
 	public List<ChooserTarget> onGetChooserTargets(ComponentName targetActivityName, IntentFilter matchedFilter) {
 		Intent intent = new Intent(this, XmppConnectionService.class);
 		intent.setAction("contact_chooser");
-		startService(intent);
 		bindService(intent, this, Context.BIND_AUTO_CREATE);
 		ArrayList<ChooserTarget> chooserTargets = new ArrayList<>();
 		try {
@@ -42,7 +43,7 @@ public class ContactChooserTargetService extends ChooserTargetService implements
 				return chooserTargets;
 			}
 			mXmppConnectionService.populateWithOrderedConversations(conversations, false);
-			final ComponentName componentName = new ComponentName(this, ShareWithActivity.class);
+			final ComponentName componentName = new ComponentName(this, ConversationsActivity.class);
 			final int pixel = (int) (48 * getResources().getDisplayMetrics().density);
 			for(Conversation conversation : conversations) {
 				if (conversation.sentMessagesCount() == 0) {
@@ -52,7 +53,7 @@ public class ContactChooserTargetService extends ChooserTargetService implements
 				final Icon icon = Icon.createWithBitmap(mXmppConnectionService.getAvatarService().get(conversation, pixel));
 				final float score = 1 - (1.0f / MAX_TARGETS) * chooserTargets.size();
 				final Bundle extras = new Bundle();
-				extras.putString("uuid", conversation.getUuid());
+				extras.putString(ConversationsActivity.EXTRA_CONVERSATION, conversation.getUuid());
 				chooserTargets.add(new ChooserTarget(name, icon, score, componentName, extras));
 				if (chooserTargets.size() >= MAX_TARGETS) {
 					break;

@@ -63,8 +63,6 @@
   <string name="preparing_image">Pripravujem obrázok na prenos</string>
   <string name="action_clear_history">Vymazať históriu</string>
   <string name="clear_conversation_history">Vymazať históriu konverzácií</string>
-  <string name="clear_histor_msg">Chcete vymazať všetky správy v tejto konverzácii?\n\n<b>Varovanie:</b> Toto neovplyvní správy uložené v iných zariadeniach alebo serveroch.</string>
-  <string name="delete_messages">Vymazať správy</string>
   <string name="also_end_conversation">Neskôr ukončiť konverzáciu</string>
   <string name="send_unencrypted_message">Poslať nezašifrovanú správu</string>
   <string name="send_omemo_message">Poslať OMEMO šifrovanú správu</string>
@@ -85,13 +83,10 @@
   <string name="pref_general">Všeobecné</string>
   <string name="pref_accept_files">Prijať súbory</string>
   <string name="pref_accept_files_summary">Automaticky prijať súbory menšie ako…</string>
-  <string name="pref_notifications">Upozornenia</string>
-  <string name="pref_notifications_summary">Upozorniť pri prijatí novej správy</string>
   <string name="pref_vibrate">Vibrovať</string>
   <string name="pref_never_send_crash">Neodosielať detaily o zlyhaní aplikácie</string>
   <string name="pref_never_send_crash_summary">Zaslaním detailov o dôvode zlyhania pomáhate ďalšiemu vývoju aplikácie Conversations</string>
   <string name="pref_confirm_messages">Potvrdzovať správy</string>
-  <string name="openpgp_error">OpenKeychain nahlásil chybu</string>
   <string name="accept">Prijať</string>
   <string name="error">Došlo k chybe</string>
   <string name="your_account">Váš účet</string>

@@ -77,8 +77,9 @@
     <string name="sharing_files_please_wait">Sharing files. Please wait…</string>
     <string name="action_clear_history">Clear history</string>
     <string name="clear_conversation_history">Clear Conversation History</string>
-    <string name="clear_histor_msg">Do you want to delete all messages within this Conversation?\n\n<b>Warning:</b> This will not influence messages stored on other devices or servers.</string>
-    <string name="delete_messages">Delete messages</string>
+    <string name="clear_histor_msg">Are you sure you want to delete all messages within this conversation?\n\n<b>Warning:</b> This will not delete copies of those messages that are stored on other devices or servers.</string>
+    <string name="delete_file_dialog">Delete file</string>
+    <string name="delete_file_dialog_msg">Are you sure you want to delete this file?\n\n<b>Warning:</b> This will not delete copies of this file that are stored on other devices or servers. </string>
     <string name="also_end_conversation">End this conversation afterwards</string>
     <string name="choose_presence">Choose device</string>
     <string name="send_unencrypted_message">Send unencrypted message</string>
@@ -105,11 +106,7 @@
     <string name="pref_accept_files">Accept files</string>
     <string name="pref_accept_files_summary">Automatically accept files smaller than…</string>
     <string name="pref_attachments">Attachments</string>
-    <string name="pref_return_to_previous">Quick Sharing</string>
-    <string name="pref_return_to_previous_summary">Immediately return to previous activity instead of opening the conversation after sharing something</string>
     <string name="pref_notification_settings">Notification</string>
-    <string name="pref_notifications">Notifications</string>
-    <string name="pref_notifications_summary">Notify when a new message arrives</string>
     <string name="pref_vibrate">Vibrate</string>
     <string name="pref_vibrate_summary">Vibrate when a new message arrives</string>
     <string name="pref_led">LED Notification</string>
@@ -124,9 +121,11 @@
     <string name="pref_confirm_messages">Confirm Messages</string>
     <string name="pref_confirm_messages_summary">Let your contacts know when you have received and read their messages</string>
     <string name="pref_ui_options">UI</string>
-    <string name="openpgp_error">OpenKeychain reported an error</string>
+    <string name="openpgp_error">OpenKeychain reported an error.</string>
+    <string name="bad_key_for_encryption">Bad key for encryption.</string>
     <string name="accept">Accept</string>
     <string name="error">An error has occurred</string>
+    <string name="recording_error">Error</string>
     <string name="your_account">Your account</string>
     <string name="send_presence_updates">Send presence updates</string>
     <string name="receive_presence_updates">Receive presence updates</string>
@@ -155,6 +154,7 @@
     <string name="account_status_policy_violation">Policy violation</string>
     <string name="account_status_incompatible_server">Incompatible server</string>
     <string name="account_status_stream_error">Stream error</string>
+    <string name="account_status_stream_opening_error">Stream opening error</string>
     <string name="encryption_choice_unencrypted">Unencrypted</string>
     <string name="encryption_choice_otr">OTR</string>
     <string name="encryption_choice_pgp">OpenPGP</string>
@@ -494,8 +494,8 @@
     <string name="notify_only_when_highlighted">Notify only when mentioned</string>
     <string name="notify_never">Notifications disabled</string>
     <string name="notify_paused">Notifications paused</string>
-    <string name="pref_picture_compression">Compress Pictures</string>
-    <string name="pref_picture_compression_summary">Resize and compress pictures</string>
+    <string name="pref_picture_compression">Image Compression</string>
+    <string name="pref_picture_compression_summary">Resize and compress images</string>
     <string name="always">Always</string>
     <string name="automatically">Automatically</string>
     <string name="battery_optimizations_enabled">Battery optimizations enabled</string>
@@ -562,6 +562,7 @@
     <string name="allow">Allow</string>
     <string name="no_permission_to_access_x">No permission to access %s</string>
     <string name="remote_server_not_found">Remote server not found</string>
+    <string name="remote_server_timeout">Remote server timeout</string>
     <string name="unable_to_update_account">Unable to update account</string>
     <string name="report_jid_as_spammer">Report this JID as sending unwanted messages.</string>
     <string name="pref_delete_omemo_identities">Delete OMEMO identities</string>
@@ -649,7 +650,6 @@
     <string name="yesterday">Yesterday</string>
     <string name="pref_validate_hostname">Validate hostname with DNSSEC</string>
     <string name="pref_validate_hostname_summary">Server certificates that contain the validated hostname are considered verified</string>
-    <string name="network_is_unreachable">Network is unreachable</string>
     <string name="certificate_does_not_contain_jid">Certificate does not contain a Jabber ID</string>
     <string name="server_info_partial">partial</string>
     <string name="attach_record_video">Record video</string>
@@ -724,5 +724,29 @@
     <string name="providing_a_name_is_optional">Providing a name is optional</string>
     <string name="create_dialog_group_chat_name">Group chat name</string>
     <string name="conference_destroyed">This group chat has been destroyed</string>
-
+    <string name="phone_book">Address book</string>
+    <string name="unable_to_save_recording">Unable to save recording</string>
+    <string name="foreground_service_channel_name">Foreground service</string>
+    <string name="foreground_service_channel_description">This notification category is used to display a permanent notification indicating that Conversations is running.</string>
+    <string name="notification_group_status_information">Status Information</string>
+    <string name="error_channel_name">Connectivity Problems</string>
+    <string name="error_channel_description">This notification category is used to display a notification in case there is a problem connecting to an account.</string>
+    <string name="notification_group_messages">Messages</string>
+    <string name="messages_channel_name">Messages</string>
+    <string name="silent_messages_channel_name">Silent messages</string>
+    <string name="silent_messages_channel_description">This notification group is used to display notifications that should not trigger any sound. For example when being active on another device (Grace Period).</string>
+    <string name="pref_more_notification_settings">Notification Settings</string>
+    <string name="pref_more_notification_settings_summary">Importance, Sound, Vibrate</string>
+    <string name="video_compression_channel_name">Video compression</string>
+    <string name="view_media">View media</string>
+    <string name="media_browser">Media browser</string>
+    <string name="export_channel_name">History export</string>
+    <string name="security_violation_not_attaching_file">File omitted due to security violation.</string>
+    <string name="pref_video_compression">Video Quality</string>
+    <string name="pref_video_compression_summary">Lower quality means smaller files</string>
+    <string name="video_360p">Medium (360p)</string>
+    <string name="video_720p">High (720p)</string>
+    <string name="cancelled">cancelled</string>
+    <string name="already_drafting_message">You are already drafting a message.</string>
 </resources>
+

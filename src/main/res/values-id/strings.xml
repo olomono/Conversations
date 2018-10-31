@@ -68,8 +68,6 @@
   <string name="sharing_files_please_wait">Membagikan berkas. Mohon tunggu…</string>
   <string name="action_clear_history">Bersihkan riwayat</string>
   <string name="clear_conversation_history">Hapus Riwayat Percakapan</string>
-  <string name="clear_histor_msg">Apakah Anda ingin menghapus semua pesan dalam Percakapan ini\n\n<b>Peringatan:</b>ini tidak akan mempengaruhi pesan yang disimpan pada perangkat atau server lain.</string>
-  <string name="delete_messages">Hapus pesan</string>
   <string name="send_unencrypted_message">Kirim pesan tak-terenkripsi</string>
   <string name="send_pgp_message">Kirim pesan terenskripsi OpenPGP</string>
   <string name="your_nick_has_been_changed">Nick kamu telah dirubah</string>
@@ -90,10 +88,7 @@
   <string name="pref_accept_files">Terima berkas</string>
   <string name="pref_accept_files_summary">Otomatis menerima berkas lebih kecil dari...</string>
   <string name="pref_attachments">Lampiran</string>
-  <string name="pref_return_to_previous">Bagikan Cepat</string>
   <string name="pref_notification_settings">Notif</string>
-  <string name="pref_notifications">Notifikasi</string>
-  <string name="pref_notifications_summary">Notifikasikan jika pesan baru tiba</string>
   <string name="pref_vibrate">Getar</string>
   <string name="pref_vibrate_summary">Aktifkan getar ketika pesan masuk</string>
   <string name="pref_led">Notifikasi LED</string>
@@ -104,7 +99,6 @@
   <string name="pref_never_send_crash_summary">Dengan mengirimkan kesalahan Anda membantu pengembangan Aplikasi Conversations</string>
   <string name="pref_confirm_messages">Konfirmasi Pesan</string>
   <string name="pref_ui_options">UI</string>
-  <string name="openpgp_error">OpenKeychain melaporkan kesalahan</string>
   <string name="accept">Terima</string>
   <string name="error">Sebuah kesalahan terjadi</string>
   <string name="your_account">Akun anda</string>
@@ -341,8 +335,6 @@
   </plurals>
   <string name="sync_with_contacts">Sinkronkan dengan kontak</string>
   <string name="notify_on_all_messages">Tampilkan notifikasi untuk semua pesan</string>
-  <string name="pref_picture_compression">Kompres Gambar</string>
-  <string name="pref_picture_compression_summary">Rubah ukuran dan kompres gambar</string>
   <string name="always">Selalu</string>
   <string name="automatically">Secara otomatis</string>
   <string name="battery_optimizations_enabled">Pengoptimalan baterai diaktifkan</string>

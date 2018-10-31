@@ -11,12 +11,12 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -31,6 +31,7 @@ import org.openintents.openpgp.util.OpenPgpUtils;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -48,9 +49,15 @@ import eu.siacs.conversations.entities.MucOptions.User;
 import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.services.XmppConnectionService.OnConversationUpdate;
 import eu.siacs.conversations.services.XmppConnectionService.OnMucRosterUpdate;
+import eu.siacs.conversations.ui.adapter.MediaAdapter;
+import eu.siacs.conversations.ui.interfaces.OnMediaLoaded;
+import eu.siacs.conversations.ui.util.Attachment;
+import eu.siacs.conversations.ui.util.GridManager;
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil;
+import eu.siacs.conversations.ui.util.MucDetailsContextMenuHelper;
 import eu.siacs.conversations.ui.util.MyLinkify;
 import eu.siacs.conversations.ui.util.SoftKeyboardUtils;
+import eu.siacs.conversations.utils.Compatibility;
 import eu.siacs.conversations.utils.EmojiWrapper;
 import eu.siacs.conversations.utils.StringUtils;
 import eu.siacs.conversations.utils.StylingHelper;
@@ -61,7 +68,7 @@ import rocks.xmpp.addr.Jid;
 import static eu.siacs.conversations.entities.Bookmark.printableValue;
 import static eu.siacs.conversations.utils.StringUtils.changed;
 
-public class ConferenceDetailsActivity extends XmppActivity implements OnConversationUpdate, OnMucRosterUpdate, XmppConnectionService.OnAffiliationChanged, XmppConnectionService.OnRoleChanged, XmppConnectionService.OnConfigurationPushed, TextWatcher {
+public class ConferenceDetailsActivity extends XmppActivity implements OnConversationUpdate, OnMucRosterUpdate, XmppConnectionService.OnAffiliationChanged, XmppConnectionService.OnRoleChanged, XmppConnectionService.OnConfigurationPushed, TextWatcher, OnMediaLoaded {
     public static final String ACTION_VIEW_MUC = "view_muc";
 
     private static final float INACTIVE_ALPHA = 0.4684f; //compromise between dark and light theme
@@ -75,6 +82,7 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
         }
     };
     private ActivityMucDetailsBinding binding;
+    private MediaAdapter mMediaAdapter;
     private String uuid = null;
     private User mSelectedUser = null;
 
@@ -216,6 +224,7 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
         return null;
     }
 
+
     @Override
     public void onConversationUpdate() {
         refreshUi();
@@ -270,6 +279,9 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
         this.binding.mucEditTitle.addTextChangedListener(this);
         this.binding.mucEditSubject.addTextChangedListener(this);
         this.binding.mucEditSubject.addTextChangedListener(new StylingHelper.MessageEditorStyler(this.binding.mucEditSubject));
+        mMediaAdapter = new MediaAdapter(this,R.dimen.media_size);
+        this.binding.media.setAdapter(mMediaAdapter);
+        GridManager.setupLayoutManager(this, this.binding.media, R.dimen.media_size);
     }
 
     @Override
@@ -279,6 +291,7 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
         if (this.mTheme != theme) {
             recreate();
         }
+        binding.mediaWrapper.setVisibility(Compatibility.hasStoragePermission(this) ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -415,7 +428,6 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
         if (tag instanceof User) {
             getMenuInflater().inflate(R.menu.muc_details_context, menu);
             final User user = (User) tag;
-            final User self = mConversation.getMucOptions().getSelf();
             this.mSelectedUser = user;
             String name;
             final Contact contact = user.getContact();
@@ -427,130 +439,29 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
                 name = user.getName();
             }
             menu.setHeaderTitle(name);
-            if (user.getRealJid() != null) {
-                MenuItem showContactDetails = menu.findItem(R.id.action_contact_details);
-                MenuItem startConversation = menu.findItem(R.id.start_conversation);
-                MenuItem giveMembership = menu.findItem(R.id.give_membership);
-                MenuItem removeMembership = menu.findItem(R.id.remove_membership);
-                MenuItem giveAdminPrivileges = menu.findItem(R.id.give_admin_privileges);
-                MenuItem removeAdminPrivileges = menu.findItem(R.id.remove_admin_privileges);
-                MenuItem removeFromRoom = menu.findItem(R.id.remove_from_room);
-                MenuItem banFromConference = menu.findItem(R.id.ban_from_conference);
-                MenuItem invite = menu.findItem(R.id.invite);
-                startConversation.setVisible(true);
-                if (contact != null && contact.showInRoster()) {
-                    showContactDetails.setVisible(!contact.isSelf());
-                }
-                if (user.getRole() == MucOptions.Role.NONE) {
-                    invite.setVisible(true);
-                }
-                if (self.getAffiliation().ranks(MucOptions.Affiliation.ADMIN) &&
-                        self.getAffiliation().outranks(user.getAffiliation())) {
-                    if (mAdvancedMode) {
-                        if (user.getAffiliation() == MucOptions.Affiliation.NONE) {
-                            giveMembership.setVisible(true);
-                        } else {
-                            removeMembership.setVisible(true);
-                        }
-                        if (!Config.DISABLE_BAN) {
-                            banFromConference.setVisible(true);
-                        }
-                    } else {
-                        if (!Config.DISABLE_BAN || mConversation.getMucOptions().membersOnly()) {
-                            removeFromRoom.setVisible(true);
-                        }
-                    }
-                    if (user.getAffiliation() != MucOptions.Affiliation.ADMIN) {
-                        giveAdminPrivileges.setVisible(true);
-                    } else {
-                        removeAdminPrivileges.setVisible(true);
-                    }
-                }
-            } else {
-                MenuItem sendPrivateMessage = menu.findItem(R.id.send_private_message);
-                sendPrivateMessage.setVisible(user.getRole().ranks(MucOptions.Role.VISITOR));
-            }
-
+            MucDetailsContextMenuHelper.configureMucDetailsContextMenu(this, menu, mConversation, user);
         }
         super.onCreateContextMenu(menu, v, menuInfo);
     }
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        Jid jid = mSelectedUser.getRealJid();
-        switch (item.getItemId()) {
-            case R.id.action_contact_details:
-                Contact contact = mSelectedUser.getContact();
-                if (contact != null) {
-                    switchToContactDetails(contact);
-                }
-                return true;
-            case R.id.start_conversation:
-                startConversation(mSelectedUser);
-                return true;
-            case R.id.give_admin_privileges:
-                xmppConnectionService.changeAffiliationInConference(mConversation, jid, MucOptions.Affiliation.ADMIN, this);
-                return true;
-            case R.id.give_membership:
-                xmppConnectionService.changeAffiliationInConference(mConversation, jid, MucOptions.Affiliation.MEMBER, this);
-                return true;
-            case R.id.remove_membership:
-                xmppConnectionService.changeAffiliationInConference(mConversation, jid, MucOptions.Affiliation.NONE, this);
-                return true;
-            case R.id.remove_admin_privileges:
-                xmppConnectionService.changeAffiliationInConference(mConversation, jid, MucOptions.Affiliation.MEMBER, this);
-                return true;
-            case R.id.remove_from_room:
-                removeFromRoom(mSelectedUser);
-                return true;
-            case R.id.ban_from_conference:
-                xmppConnectionService.changeAffiliationInConference(mConversation, jid, MucOptions.Affiliation.OUTCAST, this);
-                if (mSelectedUser.getRole() != MucOptions.Role.NONE) {
-                    xmppConnectionService.changeRoleInConference(mConversation, mSelectedUser.getName(), MucOptions.Role.NONE, this);
-                }
-                return true;
-            case R.id.send_private_message:
-                if (mConversation.getMucOptions().allowPm()) {
-                    privateMsgInMuc(mConversation, mSelectedUser.getName());
-                } else {
-                    Toast.makeText(this, R.string.private_messages_are_disabled, Toast.LENGTH_SHORT).show();
-                }
-                return true;
-            case R.id.invite:
-                xmppConnectionService.directInvite(mConversation, jid);
-                return true;
-            default:
-                return super.onContextItemSelected(item);
+        if (!MucDetailsContextMenuHelper.onContextItemSelected(item, mSelectedUser, mConversation, this)) {
+            return super.onContextItemSelected(item);
         }
+        return true;
     }
 
-    private void removeFromRoom(final User user) {
-        if (mConversation.getMucOptions().membersOnly()) {
-            xmppConnectionService.changeAffiliationInConference(mConversation, user.getRealJid(), MucOptions.Affiliation.NONE, this);
-            if (user.getRole() != MucOptions.Role.NONE) {
-                xmppConnectionService.changeRoleInConference(mConversation, mSelectedUser.getName(), MucOptions.Role.NONE, ConferenceDetailsActivity.this);
-            }
-        } else {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(R.string.ban_from_conference);
-            builder.setMessage(getString(R.string.removing_from_public_conference, user.getName()));
-            builder.setNegativeButton(R.string.cancel, null);
-            builder.setPositiveButton(R.string.ban_now, (dialog, which) -> {
-                xmppConnectionService.changeAffiliationInConference(mConversation, user.getRealJid(), MucOptions.Affiliation.OUTCAST, ConferenceDetailsActivity.this);
-                if (user.getRole() != MucOptions.Role.NONE) {
-                    xmppConnectionService.changeRoleInConference(mConversation, mSelectedUser.getName(), MucOptions.Role.NONE, ConferenceDetailsActivity.this);
-                }
-            });
-            builder.create().show();
-        }
+    @Override
+    public void onMediaLoaded(List<Attachment> attachments) {
+        runOnUiThread(() -> {
+            int limit = GridManager.getCurrentColumnCount(binding.media);
+            mMediaAdapter.setAttachments(attachments.subList(0, Math.min(limit,attachments.size())));
+            binding.mediaWrapper.setVisibility(attachments.size() > 0 ? View.VISIBLE : View.GONE);
+        });
+
     }
 
-    protected void startConversation(User user) {
-        if (user.getRealJid() != null) {
-            Conversation conversation = xmppConnectionService.findOrCreateConversation(this.mConversation.getAccount(), user.getRealJid().asBareJid(), false, true);
-            switchToConversation(conversation);
-        }
-    }
 
     protected void saveAsBookmark() {
         xmppConnectionService.saveConversationAsBookmark(mConversation, mConversation.getMucOptions().getName());
@@ -577,6 +488,11 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
         if (uuid != null) {
             this.mConversation = xmppConnectionService.findConversationByUuid(uuid);
             if (this.mConversation != null) {
+                if (Compatibility.hasStoragePermission(this)) {
+                    final int limit = GridManager.getCurrentColumnCount(this.binding.media);
+                    xmppConnectionService.getAttachments(this.mConversation, limit, this);
+                    this.binding.showMedia.setOnClickListener((v) -> MediaBrowserActivity.launch(this, mConversation));
+                }
                 updateView();
             }
         }

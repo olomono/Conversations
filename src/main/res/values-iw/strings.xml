@@ -65,8 +65,6 @@
   <string name="preparing_image">מכין תמונה לשליחה</string>
   <string name="action_clear_history">נקה היסטוריה</string>
   <string name="clear_conversation_history">נקה היסטוריית שיחה</string>
-  <string name="clear_histor_msg">האם ברצונך למחוק את כל ההודעות בשיחה זאת?\n\n<b>אזהרה:</b> פעולה זו לא תשפיע על הודעות מאוחסנות על מכשירים או שרתים אחרים.</string>
-  <string name="delete_messages">מחק הודעות</string>
   <string name="also_end_conversation">סיים את השיחה לאחר מכן</string>
   <string name="send_unencrypted_message">שלח הודעה בלתי מוצפנת</string>
   <string name="send_omemo_message">של הודעה בהצפנת OMEMO</string>
@@ -88,13 +86,10 @@
   <string name="pref_general">כללי</string>
   <string name="pref_accept_files">קבל קבצים</string>
   <string name="pref_accept_files_summary">קבל אוטומטית קבצים שגודלם קטן מ…</string>
-  <string name="pref_notifications">התראות</string>
-  <string name="pref_notifications_summary">תודיע כאשר הודעה חדשה מגיעה</string>
   <string name="pref_vibrate">הרטט</string>
   <string name="pref_never_send_crash">לעולם אל תשלח דיווחי קריסה</string>
   <string name="pref_never_send_crash_summary">על ידי שליחת עקבות מחסנית אתה עוזר להתקדמות הפיתוח של Conversations</string>
   <string name="pref_confirm_messages">אשר הודעות</string>
-  <string name="openpgp_error">אפליקציית OpenKeychain דיווחה על שגיאה</string>
   <string name="accept">קבל</string>
   <string name="error">אירעה שגיאה</string>
   <string name="your_account">החשבון שלך</string>

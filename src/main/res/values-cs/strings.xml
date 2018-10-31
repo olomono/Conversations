@@ -68,8 +68,6 @@
   <string name="sharing_files_please_wait">Sdílení souborů. Chvíli strpení...</string>
   <string name="action_clear_history">Smazat historii</string>
   <string name="clear_conversation_history">Smaže historii konverzací</string>
-  <string name="clear_histor_msg">Chcete smazat všechny zprávy v této konverzaci?\n\n<b>Varování:</b> Toto neovlivní zprávy uložené na jiných přístrojích nebo serverech.</string>
-  <string name="delete_messages">Smazat zprávy</string>
   <string name="also_end_conversation">Poté ukončit tuto konverzaci</string>
   <string name="choose_presence">Vybrat přístroj</string>
   <string name="send_unencrypted_message">Odeslat nešifrovanou zprávu</string>
@@ -95,11 +93,7 @@
   <string name="pref_accept_files">Přijímat soubory</string>
   <string name="pref_accept_files_summary">Automaticky přijímat soubory menší než…</string>
   <string name="pref_attachments">Přílohy</string>
-  <string name="pref_return_to_previous">Rychlé sdílení</string>
-  <string name="pref_return_to_previous_summary">Okamžitě se vrátit k předchozí aktivitě místo otevření konverzace po nasdílení</string>
   <string name="pref_notification_settings">Upozornění</string>
-  <string name="pref_notifications">Upozornění</string>
-  <string name="pref_notifications_summary">Upozornit při přijetí nové zprávy</string>
   <string name="pref_vibrate">Vibrovat</string>
   <string name="pref_vibrate_summary">Vibrovat při přijetí nové zprávy</string>
   <string name="pref_led">LED upozornění</string>
@@ -113,7 +107,6 @@
   <string name="pref_never_send_crash_summary">Zasláním detailů o důvodu selhání pomůžete dalšímu vývoji aplikace Konverzace</string>
   <string name="pref_confirm_messages">Potvrzovat zprávy</string>
   <string name="pref_ui_options">UI</string>
-  <string name="openpgp_error">OpenKeychain nahlásil chybu</string>
   <string name="accept">Přijmout</string>
   <string name="error">Došlo k chybě</string>
   <string name="your_account">Váš účet</string>
@@ -421,8 +414,6 @@
   <string name="notify_on_all_messages">Upozorňovat na všechny zprávy</string>
   <string name="notify_never">Upozornění vypnuta</string>
   <string name="notify_paused">Upozornění pozastavena</string>
-  <string name="pref_picture_compression">Komprimovat obrázky</string>
-  <string name="pref_picture_compression_summary">Upravit velikost a komprimovat obrázky</string>
   <string name="always">Vždy</string>
   <string name="automatically">Automaticky</string>
   <string name="battery_optimizations_enabled">Povolena optimalizace využití baterie</string>

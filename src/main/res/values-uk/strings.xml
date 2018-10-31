@@ -68,8 +68,6 @@
   <string name="sharing_files_please_wait">Поширюю файли. Зачекайте, будь ласка…</string>
   <string name="action_clear_history">Очистити історію</string>
   <string name="clear_conversation_history">Очистити історію розмов</string>
-  <string name="clear_histor_msg">Бажаєте видалити всі повідомлення з цієї розмови?\n\n<b>Увага:</b> Це не вплине на повідомлення, які знаходяться на інших пристроях або серверах.</string>
-  <string name="delete_messages">Видалити повідомлення</string>
   <string name="also_end_conversation">Завершити цю розмову опісля</string>
   <string name="choose_presence">Вибрати пристрій</string>
   <string name="send_unencrypted_message">Відправити незашифроване повідомлення</string>
@@ -96,11 +94,7 @@
   <string name="pref_accept_files">Приймати файли</string>
   <string name="pref_accept_files_summary">Автоматично приймати файли менші за…</string>
   <string name="pref_attachments">Вкладення</string>
-  <string name="pref_return_to_previous">Швидко поділитися</string>
-  <string name="pref_return_to_previous_summary">Негайно повертатися до попередньої діяльності замість відкриття розмови після того, як чимось поділитися</string>
   <string name="pref_notification_settings">Сповіщення</string>
-  <string name="pref_notifications">Сповіщення</string>
-  <string name="pref_notifications_summary">Сповіщати, коли приходять нові повідомлення</string>
   <string name="pref_vibrate">Вібрувати</string>
   <string name="pref_vibrate_summary">Вібрувати, коли приходять нові повідомлення</string>
   <string name="pref_led">Індикація LED</string>
@@ -115,7 +109,6 @@
   <string name="pref_confirm_messages">Повідомлення-підтвердження</string>
   <string name="pref_confirm_messages_summary">Дайте знати вашим контактам, коли ви отримали й прочитали повідомлення</string>
   <string name="pref_ui_options">Інтерфейс користувача</string>
-  <string name="openpgp_error">OpenKeychain відзвітував про помилку</string>
   <string name="accept">Прийняти</string>
   <string name="error">Сталася помилка</string>
   <string name="your_account">Ваш обліковий запис</string>
@@ -439,8 +432,6 @@
   <string name="notify_only_when_highlighted">Повідомляти, лише якщо згадують</string>
   <string name="notify_never">Сповіщення вимкнено</string>
   <string name="notify_paused">Сповіщення призупинено</string>
-  <string name="pref_picture_compression">Стискати зображення</string>
-  <string name="pref_picture_compression_summary">Змінювати розмір та стискати зображення</string>
   <string name="always">Завжди</string>
   <string name="automatically">Автоматично</string>
   <string name="battery_optimizations_enabled">Оптимізацію батареї задіяно</string>
@@ -559,7 +550,6 @@
   <string name="yesterday">Учора</string>
   <string name="pref_validate_hostname">Перевіряти адресу з допомогою DNSSEC</string>
   <string name="pref_validate_hostname_summary">Сертифікати, які містять завірену адресу, вважаються засвідченими</string>
-  <string name="network_is_unreachable">Мережа недоступна.</string>
   <string name="certificate_does_not_contain_jid">Сертифікат не містить ідентифікатора Jabber ID</string>
   <string name="server_info_partial">частково</string>
 </resources>

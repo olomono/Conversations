@@ -62,7 +62,7 @@
   <string name="save">Gardar</string>
   <string name="ok">OK</string>
   <string name="crash_report_title">Conversations deteuse.</string>
-  <string name="crash_report_message">Enviando volcados de pilas axudas ao desenrolo de Conversations\n<b>Aviso:</b> Isto empregará a túa conta XMPP para enviar o volcado de pila ao desenrolador.</string>
+  <string name="crash_report_message">Enviando volcados de pilas axudas ao desenvolvemento de Conversations\n<b>Aviso:</b> Isto empregará a túa conta XMPP para enviar o volcado de pila ao desenvolvedor.</string>
   <string name="send_now">Enviar agora</string>
   <string name="send_never">Non preguntar de novo</string>
   <string name="problem_connecting_to_account">Erro na conexión á conta</string>
@@ -77,8 +77,9 @@
   <string name="sharing_files_please_wait">Compartindo ficheiros. Por favor agarde...</string>
   <string name="action_clear_history">Limpar historial</string>
   <string name="clear_conversation_history">Limpar historial de conversa</string>
-  <string name="clear_histor_msg">¿Queres borrar todas as mensaxes desta conversa?\n\n<b>Ollo:</b> Isto non afectará ás mensaxes gardadas noutros dispositivos ou servidores.</string>
-  <string name="delete_messages">Borrar mensaxes</string>
+  <string name="clear_histor_msg">Está segura de querer eliminar todas as mensaxes de esta conversación¿\n\n<b>Aviso:</b> Esto non eliminará as copias de esas mensaxes que están gardadas en outros dispositivos ou servidores.</string>
+  <string name="delete_file_dialog">Eliminar ficheiro</string>
+  <string name="delete_file_dialog_msg">Está segura de querer eliminar este ficheiro?\n\n<b>Aviso:</b> Esto non eliminará as copias de este ficheiro que están gardadas en outros dispositivos ou servidores.</string>
   <string name="also_end_conversation">Finalizar esta conversación tras o proceso</string>
   <string name="choose_presence">Escoller dispositivo</string>
   <string name="send_unencrypted_message">Enviar mensaxe non cifrada</string>
@@ -105,11 +106,7 @@
   <string name="pref_accept_files">Aceptar ficheiros</string>
   <string name="pref_accept_files_summary">De forma automática aceptar ficheiros menores de…</string>
   <string name="pref_attachments">Engadidos</string>
-  <string name="pref_return_to_previous">Compartición rápida</string>
-  <string name="pref_return_to_previous_summary">Voltar inmediatamente a actividade anterior no lugar de abrir a conversa despois de compartir algo</string>
   <string name="pref_notification_settings">Notificación</string>
-  <string name="pref_notifications">Notificacións</string>
-  <string name="pref_notifications_summary">Notifica cuando chega unha nova mensaxe</string>
   <string name="pref_vibrate">Vibrar</string>
   <string name="pref_vibrate_summary">Vibra cando chega unha nova mensaxe</string>
   <string name="pref_led">Notificación LED</string>
@@ -120,13 +117,13 @@
   <string name="pref_notification_grace_period_summary">O tempo que Conversations permanece silente despois de ver actividade en outro dispositivo</string>
   <string name="pref_advanced_options">Avanzado</string>
   <string name="pref_never_send_crash">Nunca enviar informe de erros</string>
-  <string name="pref_never_send_crash_summary">Enviando volcados de pilas axudas al desenrolo de Conversations</string>
+  <string name="pref_never_send_crash_summary">Enviando volcados de pilas axudas ao desenvolvemento de Conversations</string>
   <string name="pref_confirm_messages">Confirmación de mensaxes</string>
   <string name="pref_confirm_messages_summary">Permitir aos seus contactos saber si recibeu e leu as súas mensaxes</string>
   <string name="pref_ui_options">Interface</string>
-  <string name="openpgp_error">OpenKeychain reportou un erro</string>
   <string name="accept">Aceptar</string>
   <string name="error">Produciuse un erro</string>
+  <string name="recording_error">Fallo</string>
   <string name="your_account">A túa conta</string>
   <string name="send_presence_updates">Enviar actualizacións de presencia</string>
   <string name="receive_presence_updates">Recibir actualizacións de presencia</string>
@@ -155,6 +152,7 @@
   <string name="account_status_policy_violation">Violación da política</string>
   <string name="account_status_incompatible_server">Servidor incompatible</string>
   <string name="account_status_stream_error">Erro de fluxo</string>
+  <string name="account_status_stream_opening_error">Fallo ao abrir o fluxo</string>
   <string name="encryption_choice_unencrypted">Non cifrado</string>
   <string name="encryption_choice_otr">OTR</string>
   <string name="encryption_choice_pgp">OpenPGP</string>
@@ -328,6 +326,7 @@
   <string name="file_deleted">Este ficheiro eliminouse</string>
   <string name="no_application_found_to_open_file">Non se atopou un aplicativo para abrir o ficheiro</string>
   <string name="no_application_found_to_open_link">Non se atopou ningunha aplicación para abrir a ligazón</string>
+  <string name="no_application_found_to_view_contact">Non se atopou aplicación para ver o contacto</string>
   <string name="pref_show_dynamic_tags">Etiquetas dinámicas</string>
   <string name="pref_show_dynamic_tags_summary">Mostrar etiquetas de só lectura baixo os contactos</string>
   <string name="enable_notifications">Habilitar notificacións</string>
@@ -493,8 +492,8 @@
   <string name="notify_only_when_highlighted">Notificar só cando é mencionada</string>
   <string name="notify_never">Notificacións deshabilitadas</string>
   <string name="notify_paused">Notificacións pausadas</string>
-  <string name="pref_picture_compression">Comprimir imaxes</string>
-  <string name="pref_picture_compression_summary">Redimensionar e comprimir imaxes</string>
+  <string name="pref_picture_compression">Compresión de imaxes</string>
+  <string name="pref_picture_compression_summary">Escalar e comprimir imaxes</string>
   <string name="always">Sempre</string>
   <string name="automatically">Automáticamente</string>
   <string name="battery_optimizations_enabled">Optimizacións de batería habilitadas</string>
@@ -533,6 +532,7 @@
   <string name="choose_participants">Escoller participantes</string>
   <string name="creating_conference">Creando unha conversa en grupo...</string>
   <string name="invite_again">Invitar de novo</string>
+  <string name="gp_disable">Desactivar</string>
   <string name="gp_short">Corto</string>
   <string name="gp_medium">Medio</string>
   <string name="gp_long">Longo</string>
@@ -559,6 +559,7 @@
   <string name="allow">Permitir</string>
   <string name="no_permission_to_access_x">Se permiso para acceder %s</string>
   <string name="remote_server_not_found">Non se atopa o servidor remoto</string>
+  <string name="remote_server_timeout">Espera do servidor remoto</string>
   <string name="unable_to_update_account">Non se puido actualizar a conta</string>
   <string name="report_jid_as_spammer">Informe de este JID como emisor de mensaxes non desexadas.</string>
   <string name="pref_delete_omemo_identities">Borrar identidades OMEMO</string>
@@ -646,7 +647,6 @@
   <string name="yesterday">Onte</string>
   <string name="pref_validate_hostname">Validar servidor con DNSSEC</string>
   <string name="pref_validate_hostname_summary">Certificados de servidor que conteñen o servidor validado son considerados de verificados</string>
-  <string name="network_is_unreachable">Non se pode acceder a rede</string>
   <string name="certificate_does_not_contain_jid">O certificado non contén un ID Jabber</string>
   <string name="server_info_partial">parcial</string>
   <string name="attach_record_video">Gravar vídeo</string>
@@ -721,4 +721,27 @@
   <string name="providing_a_name_is_optional">Proporcionar un nome é optativo</string>
   <string name="create_dialog_group_chat_name">Nome da conversa de grupo</string>
   <string name="conference_destroyed">Esta conversa de grupo foi destruída</string>
+  <string name="phone_book">Axenda de direccións</string>
+  <string name="unable_to_save_recording">Non se puido gardar a gravación</string>
+  <string name="foreground_service_channel_name">Servizo en segundo plano</string>
+  <string name="foreground_service_channel_description">Esta categoría de notificacións utilízase para mostrar unha notificación permanente indicando que Conversations está a funcionar.</string>
+  <string name="notification_group_status_information">Información do estado</string>
+  <string name="error_channel_name">Problemas de conexión</string>
+  <string name="error_channel_description">Esta categoría de conexión utilízase para mostrar unha notificación en caso de que houbese un problema ao conectar a conta.</string>
+  <string name="notification_group_messages">Mensaxes</string>
+  <string name="messages_channel_name">Mensaxes</string>
+  <string name="silent_messages_channel_name">Mensaxes acalados</string>
+  <string name="silent_messages_channel_description">Este grupo de notificacións é utilizado para mostrar notificacións que non debería activar ningún son. Por exemplo, cando está activo en outro dispositivo (Período de Graza).</string>
+  <string name="pref_more_notification_settings">Axustes das notificacións</string>
+  <string name="pref_more_notification_settings_summary">Importancia, Son, Vibrar</string>
+  <string name="video_compression_channel_name">Compresión de vídeo</string>
+  <string name="view_media">Ver medios</string>
+  <string name="media_browser">Navegador de medios</string>
+  <string name="export_channel_name">Exportar historial</string>
+  <string name="security_violation_not_attaching_file">Ficheiro omitido debido a transgresión da seguridade.</string>
+  <string name="pref_video_compression">Calidade de vídeo</string>
+  <string name="pref_video_compression_summary">Menor calidade significa ficheiros máis pequenos</string>
+  <string name="video_360p">Media (360p)</string>
+  <string name="video_720p">Alta (720p)</string>
+  <string name="cancelled">cancelada</string>
 </resources>

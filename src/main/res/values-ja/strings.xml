@@ -74,8 +74,6 @@
   <string name="sharing_files_please_wait">フィルを共有しています。しばらくお待ちください…</string>
   <string name="action_clear_history">履歴をクリア</string>
   <string name="clear_conversation_history">会話履歴をクリア</string>
-  <string name="clear_histor_msg">この会話のすべてのメッセージを削除しますか?\n\n<b>警告:</b> これは、他のデバイスやサーバーに保存されているメッセージには影響しません。</string>
-  <string name="delete_messages">メッセージを削除</string>
   <string name="also_end_conversation">その後、この会話を終了</string>
   <string name="choose_presence">デバイスを選択</string>
   <string name="send_unencrypted_message">暗号化されていないメッセージを送信</string>
@@ -102,11 +100,7 @@
   <string name="pref_accept_files">ファイルを受取</string>
   <string name="pref_accept_files_summary">自動的に小さいファイルを受取…</string>
   <string name="pref_attachments">添付ファイル</string>
-  <string name="pref_return_to_previous">クイック共有</string>
-  <string name="pref_return_to_previous_summary">共有した後で、会話を開く代わりに、すぐに前のアクティビティに戻ります</string>
   <string name="pref_notification_settings">通知</string>
-  <string name="pref_notifications">通知</string>
-  <string name="pref_notifications_summary">新しいメッセージが到着したときに通知します</string>
   <string name="pref_vibrate">振動</string>
   <string name="pref_vibrate_summary">新しいメッセージが届いたときに振動します</string>
   <string name="pref_led">LED 通知</string>
@@ -121,7 +115,6 @@
   <string name="pref_confirm_messages">メッセージの確認</string>
   <string name="pref_confirm_messages_summary">あなたがメッセージを受信して読んだときに、連絡先に知らせます</string>
   <string name="pref_ui_options">UI</string>
-  <string name="openpgp_error">OpenKeychain がエラーを報告しました</string>
   <string name="accept">受付</string>
   <string name="error">エラーが発生しました</string>
   <string name="your_account">あなたのアカウント</string>
@@ -467,8 +460,6 @@
   <string name="notify_only_when_highlighted">メンションされたときにのみ通知</string>
   <string name="notify_never">通知は無効</string>
   <string name="notify_paused">通知は一時停止</string>
-  <string name="pref_picture_compression">写真を圧縮</string>
-  <string name="pref_picture_compression_summary">写真のサイズ変更と圧縮</string>
   <string name="always">常に</string>
   <string name="automatically">自動</string>
   <string name="battery_optimizations_enabled">バッテリー最適化が有効</string>
@@ -609,7 +600,6 @@
   <string name="yesterday">昨日</string>
   <string name="pref_validate_hostname">DNSSEC でホスト名を検証</string>
   <string name="pref_validate_hostname_summary">検証されたホスト名を含むサーバー証明書は検証済みと見なされます</string>
-  <string name="network_is_unreachable">ネットワークが到達できません</string>
   <string name="certificate_does_not_contain_jid">証明書に Jabber ID が含まれていません</string>
   <string name="server_info_partial">一時的</string>
   <string name="attach_record_video">ビデオを録画</string>

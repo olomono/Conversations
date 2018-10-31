@@ -77,8 +77,9 @@
   <string name="sharing_files_please_wait">Condivisione file. Attendere prego...</string>
   <string name="action_clear_history">Pulisci la cronologia</string>
   <string name="clear_conversation_history">Pulisci la cronologia della conversazione</string>
-  <string name="clear_histor_msg">Vuoi cancellare tutti i messaggi di questa Conversazione?\n\n<b>Attenzione:</b> Questo non influenzerà i messaggi presenti su altri dispositivi o server.</string>
-  <string name="delete_messages">Elimina messaggi</string>
+  <string name="clear_histor_msg">Sei sicuro di voler eliminare tutti i messaggi di questa conversazione?\n\n<b>Attenzione:</b> non verranno eliminate copie di questi messaggi memorizzati in altri dispositivi o server.</string>
+  <string name="delete_file_dialog">Elimina file</string>
+  <string name="delete_file_dialog_msg">Sei sicuro di voler eliminare questo file?\n\n<b>Attenzione:</b> non verranno eliminate copie di questo file memorizzate in altri dispositivi o server. </string>
   <string name="also_end_conversation">Termina questa conversazione successivamente</string>
   <string name="choose_presence">Scegli un dispositivo</string>
   <string name="send_unencrypted_message">Invia messaggio non cifrato</string>
@@ -105,11 +106,7 @@
   <string name="pref_accept_files">Accetta i file</string>
   <string name="pref_accept_files_summary">Accetta automaticamente i file più piccoli di…</string>
   <string name="pref_attachments">Allegati</string>
-  <string name="pref_return_to_previous">Condivisione rapida</string>
-  <string name="pref_return_to_previous_summary">Torna subito all\'attività precedente invece di aprire la conversazione dopo avere condiviso qualcosa</string>
   <string name="pref_notification_settings">Notifiche</string>
-  <string name="pref_notifications">Notifiche</string>
-  <string name="pref_notifications_summary">Notifica quando arriva un nuovo messaggio</string>
   <string name="pref_vibrate">Vibra</string>
   <string name="pref_vibrate_summary">Vibra quando arriva un nuovo messaggio</string>
   <string name="pref_led">Notifica LED</string>
@@ -124,9 +121,9 @@
   <string name="pref_confirm_messages">Conferma messaggi</string>
   <string name="pref_confirm_messages_summary">Fai sapere ai tuoi contatti quando hai ricevuto e letto i loro messaggi</string>
   <string name="pref_ui_options">Interfaccia utente</string>
-  <string name="openpgp_error">OpenKeychain ha riportato un errore</string>
   <string name="accept">Accetta</string>
   <string name="error">Si è verificato un errore</string>
+  <string name="recording_error">Errore</string>
   <string name="your_account">Il tuo account</string>
   <string name="send_presence_updates">Invia aggiornamenti della presenza</string>
   <string name="receive_presence_updates">Ricevi aggiornamenti della presenza</string>
@@ -155,6 +152,7 @@
   <string name="account_status_policy_violation">Violazione della policy</string>
   <string name="account_status_incompatible_server">Server non compatibile</string>
   <string name="account_status_stream_error">Errore di stream</string>
+  <string name="account_status_stream_opening_error">Errore apertura flusso</string>
   <string name="encryption_choice_unencrypted">Non cifrato</string>
   <string name="encryption_choice_otr">OTR</string>
   <string name="encryption_choice_pgp">OpenPGP</string>
@@ -284,6 +282,7 @@
   <string name="toast_message_omemo_fingerprint">impronta OMEMO copiata negli appunti|</string>
   <string name="conference_banned">Sei stato bandito da questa chat di gruppo</string>
   <string name="conference_members_only">Questa chat di gruppo è solo per membri</string>
+  <string name="conference_resource_constraint">Risorse limitate</string>
   <string name="conference_kicked">Sei stato buttato fuori da questa chat di gruppo</string>
   <string name="conference_shutdown">La chat di gruppo è stata chiusa</string>
   <string name="conference_unknown_error">Non sei più in questa chat di gruppo</string>
@@ -327,6 +326,7 @@
   <string name="file_deleted">Il file è stato eliminato</string>
   <string name="no_application_found_to_open_file">Nessuna applicazione trovata per aprire il file</string>
   <string name="no_application_found_to_open_link">Nessuna applicazione trovata per aprire il link</string>
+  <string name="no_application_found_to_view_contact">Nessuna applicazione trovata per vedere il contatto</string>
   <string name="pref_show_dynamic_tags">Tag dinamici</string>
   <string name="pref_show_dynamic_tags_summary">Mostra tag in sola lettura sotto i contatti</string>
   <string name="enable_notifications">Attiva le notifiche</string>
@@ -492,8 +492,8 @@
   <string name="notify_only_when_highlighted">Notifica solo quando menzionato</string>
   <string name="notify_never">Notifiche disattivate</string>
   <string name="notify_paused">Notifiche in pausa</string>
-  <string name="pref_picture_compression">Comprimi immagini</string>
-  <string name="pref_picture_compression_summary">Ridimensiona e comprimi immagini</string>
+  <string name="pref_picture_compression">Compressione immagini</string>
+  <string name="pref_picture_compression_summary">Ridimensiona e comprimi le immagini</string>
   <string name="always">Sempre</string>
   <string name="automatically">Automaticamente</string>
   <string name="battery_optimizations_enabled">Ottimizzazioni batteria attivate</string>
@@ -532,6 +532,7 @@
   <string name="choose_participants">Scegli i partecipanti</string>
   <string name="creating_conference">Creazione chat di gruppo...</string>
   <string name="invite_again">Invita di nuovo</string>
+  <string name="gp_disable">Disattiva</string>
   <string name="gp_short">Breve</string>
   <string name="gp_medium">Medio</string>
   <string name="gp_long">Lungo</string>
@@ -558,6 +559,7 @@
   <string name="allow">Consenti</string>
   <string name="no_permission_to_access_x">Nessuna autorizzazione per accedere a %s</string>
   <string name="remote_server_not_found">Server remoto non trovato</string>
+  <string name="remote_server_timeout">Scadenza server remoto</string>
   <string name="unable_to_update_account">Impossibile aggiornare l\'account</string>
   <string name="report_jid_as_spammer">Questo JID invia messaggi non richiesti.</string>
   <string name="pref_delete_omemo_identities">Elimina identità OMEMO</string>
@@ -645,7 +647,6 @@
   <string name="yesterday">Ieri</string>
   <string name="pref_validate_hostname">Convalida hostname con DNSSEC</string>
   <string name="pref_validate_hostname_summary">I certificati dei server che contengono l\'hostname convalidato sono considerati verificati</string>
-  <string name="network_is_unreachable">Rete non raggiungibile</string>
   <string name="certificate_does_not_contain_jid">Il certificato non contiene un ID Jabber</string>
   <string name="server_info_partial">parziale</string>
   <string name="attach_record_video">Registra un video</string>
@@ -720,4 +721,27 @@
   <string name="providing_a_name_is_optional">Il nome è facoltativo</string>
   <string name="create_dialog_group_chat_name">Nome chat di gruppo</string>
   <string name="conference_destroyed">Questa chat di gruppo è stata distrutta</string>
+  <string name="phone_book">Rubrica</string>
+  <string name="unable_to_save_recording">Impossibile salvare la registrazione</string>
+  <string name="foreground_service_channel_name">Servizio in primo piano</string>
+  <string name="foreground_service_channel_description">Questa categoria di notifiche è usata per mostrare una notifica permanente per indicare che Conversations è in esecuzione.</string>
+  <string name="notification_group_status_information">Informazioni di stato</string>
+  <string name="error_channel_name">Problemi di connettività</string>
+  <string name="error_channel_description">Questa categoria di notifiche è usata per mostrare un notifica in caso si verifichi un problema nella connessione ad un account.</string>
+  <string name="notification_group_messages">Messaggi</string>
+  <string name="messages_channel_name">Messaggi</string>
+  <string name="silent_messages_channel_name">Messaggi silenziosi</string>
+  <string name="silent_messages_channel_description">Questo gruppo di notifiche è usato per mostrare notifiche che non devono riprodurre alcun suono. Ad esempio mentre si è attivi su un altro dispositivo (Periodo di grazia).</string>
+  <string name="pref_more_notification_settings">Impostazioni di notifica</string>
+  <string name="pref_more_notification_settings_summary">Importanza, suono, vibrazione</string>
+  <string name="video_compression_channel_name">Compressione video</string>
+  <string name="view_media">Vedi i media</string>
+  <string name="media_browser">Browser multimediale</string>
+  <string name="export_channel_name">Esportazione cronologia</string>
+  <string name="security_violation_not_attaching_file">File omesso per violazione di sicurezza.</string>
+  <string name="pref_video_compression">Qualità video</string>
+  <string name="pref_video_compression_summary">Una qualità inferiore comporta file più piccoli</string>
+  <string name="video_360p">Media (360p)</string>
+  <string name="video_720p">Alta (720p)</string>
+  <string name="cancelled">annullato</string>
 </resources>
