@@ -462,7 +462,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		info = UIHelper.getMessageDisplayName(referencedMessage);
 
 		// Replace the name of the author with a standard identifier for the user if the user is the author of the referenced message.
-		if (info.equals(message.getConversation().getJid().getLocal()) || info.equals(((Conversation) referencedMessage.getConversation()).getMucOptions().getSelf().getName())) {
+		if (info.equals(((Conversation) referencedMessage.getConversation()).getMucOptions().getSelf().getName())) {
 			info = activity.getString(R.string.me);
 		}
 
