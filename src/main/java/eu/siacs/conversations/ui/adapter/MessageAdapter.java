@@ -444,7 +444,6 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		viewHolder.messageReferenceContainer.setVisibility(View.GONE);
 		viewHolder.messageReferenceBar.setVisibility(View.GONE);
 		viewHolder.messageReferenceInfo.setVisibility(View.GONE);
-		viewHolder.messageReferenceDivider.setVisibility(View.GONE);
 		viewHolder.messageReferenceText.setVisibility(View.GONE);
 		viewHolder.messageReferenceIcon.setVisibility(View.GONE);
 		viewHolder.messageReferenceImageThumbnail.setVisibility(View.GONE);
@@ -485,7 +484,6 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 				setMessageReferenceIcon(nonDefaultMessageBubbleColor, viewHolder.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_location_offline), activity.getDrawable(R.drawable.ic_send_location_offline_white));
 
 			} else if (referencedMessage.isText()) {
-				viewHolder.messageReferenceDivider.setVisibility(View.VISIBLE);
 				viewHolder.messageReferenceText.setVisibility(View.VISIBLE);
 				viewHolder.messageReferenceText.setText(referencedMessage.getBody());
 			} else {
@@ -498,7 +496,6 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		if (nonDefaultMessageBubbleColor) {
 			viewHolder.messageReferenceContainer.setBackground(activity.getResources().getDrawable(R.drawable.message_reference_background_white));
 			viewHolder.messageReferenceBar.setBackgroundColor(activity.getResources().getColor(R.color.white70));
-			viewHolder.messageReferenceDivider.setBackgroundColor(activity.getResources().getColor(R.color.white87));
 			viewHolder.messageReferenceInfo.setTextAppearance(getContext(), R.style.TextAppearance_Conversations_Caption_OnDark);
 			viewHolder.messageReferenceText.setTextAppearance(getContext(), R.style.TextAppearance_Conversations_MessageReferenceText_OnDark);
 		}
@@ -771,7 +768,6 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 					viewHolder.messageReferenceContainer = view.findViewById(R.id.message_reference_container);
 					viewHolder.messageReferenceBar = view.findViewById(R.id.message_reference_bar);
 					viewHolder.messageReferenceInfo = view.findViewById(R.id.message_reference_info);
-					viewHolder.messageReferenceDivider = view.findViewById(R.id.message_reference_divider);
 					viewHolder.messageReferenceText = view.findViewById(R.id.message_reference_text);
 					viewHolder.messageReferenceIcon = view.findViewById(R.id.message_reference_icon);
 					viewHolder.messageReferenceImageThumbnail = view.findViewById(R.id.message_reference_image_thumbnail);
@@ -791,7 +787,6 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 					viewHolder.messageReferenceContainer = view.findViewById(R.id.message_reference_container);
 					viewHolder.messageReferenceBar = view.findViewById(R.id.message_reference_bar);
 					viewHolder.messageReferenceInfo = view.findViewById(R.id.message_reference_info);
-					viewHolder.messageReferenceDivider = view.findViewById(R.id.message_reference_divider);
 					viewHolder.messageReferenceText = view.findViewById(R.id.message_reference_text);
 					viewHolder.messageReferenceIcon = view.findViewById(R.id.message_reference_icon);
 					viewHolder.messageReferenceImageThumbnail = view.findViewById(R.id.message_reference_image_thumbnail);
@@ -1200,7 +1195,6 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		protected CopyTextView messageBody;
 		protected LinearLayout messageReferenceContainer;
 		protected TextView messageReferenceInfo;
-		protected View messageReferenceDivider;
 		protected TextView messageReferenceText;
 		protected ImageView messageReferenceIcon;
 		protected ImageView messageReferenceImageThumbnail;

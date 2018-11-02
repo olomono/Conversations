@@ -47,14 +47,6 @@
                 android:textAppearance="@style/TextAppearance.Conversations.Caption"
                 android:visibility="gone" />
 
-            <View
-                android:id="@+id/message_reference_divider"
-                android:layout_width="0.1dp"
-                android:layout_height="match_parent"
-                android:background="@color/grey700"
-                android:visibility="gone"
-                />
-
             <TextView
                 android:id="@+id/message_reference_text"
                 android:layout_width="wrap_content"
