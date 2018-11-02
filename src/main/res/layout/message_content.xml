@@ -63,6 +63,7 @@
                 android:paddingHorizontal="10dp"
                 android:ellipsize="end"
                 android:maxLines="2"
+                android:textAppearance="@style/TextAppearance.Conversations.MessageReferenceText"
                 android:visibility="gone" />
 
             <com.makeramen.roundedimageview.RoundedImageView

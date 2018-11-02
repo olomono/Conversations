@@ -499,6 +499,8 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 			viewHolder.messageReferenceContainer.setBackground(activity.getResources().getDrawable(R.drawable.message_reference_background_white));
 			viewHolder.messageReferenceBar.setBackgroundColor(activity.getResources().getColor(R.color.white70));
 			viewHolder.messageReferenceDivider.setBackgroundColor(activity.getResources().getColor(R.color.white87));
+			viewHolder.messageReferenceInfo.setTextAppearance(getContext(), R.style.TextAppearance_Conversations_Caption_OnDark);
+			viewHolder.messageReferenceText.setTextAppearance(getContext(), R.style.TextAppearance_Conversations_MessageReferenceText_OnDark);
 		}
 		
 		viewHolder.messageReferenceContainer.setVisibility(View.VISIBLE);
