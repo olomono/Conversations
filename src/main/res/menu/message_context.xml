@@ -5,21 +5,22 @@
         android:id="@+id/share_with"
         android:title="@string/share_with"
         android:visible="false"/>
-
     <item
         android:id="@+id/copy_message"
         android:title="@string/copy_to_clipboard"
         android:visible="false"/>
-
     <item
         android:id="@+id/copy_link"
         android:title="@string/copy_link"
         android:visible="false"/>
     <item
+        android:id="@+id/comment_message"
+        android:title="@string/comment"
+        android:visible="false"/>
+    <item
         android:id="@+id/quote_message"
         android:title="@string/quote"
         android:visible="false"/>
-
     <item
         android:id="@+id/retry_decryption"
         android:title="@string/retry_decryption"

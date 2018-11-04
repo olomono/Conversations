@@ -3,29 +3,29 @@ package eu.siacs.conversations.ui;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.FragmentManager;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.databinding.DataBindingUtil;
-import android.net.Uri;
-import android.os.Build;
-import android.preference.PreferenceManager;
-import android.provider.MediaStore;
-import android.support.annotation.IdRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.StringRes;
-import android.support.v7.app.AlertDialog;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender.SendIntentException;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.databinding.DataBindingUtil;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
+import android.provider.MediaStore;
+import android.support.annotation.IdRes;
+import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 import android.support.v13.view.inputmethod.InputConnectionCompat;
 import android.support.v13.view.inputmethod.InputContentInfoCompat;
+import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.util.Log;
@@ -47,6 +47,7 @@ import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.CheckBox;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.TextView.OnEditorActionListener;
@@ -93,6 +94,8 @@ import eu.siacs.conversations.ui.util.DateSeparator;
 import eu.siacs.conversations.ui.util.EditMessageActionModeCallback;
 import eu.siacs.conversations.ui.util.ListViewUtils;
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil;
+import eu.siacs.conversations.ui.util.MessageReferenceUtils;
+import eu.siacs.conversations.ui.util.MessageViewHolder;
 import eu.siacs.conversations.ui.util.MucDetailsContextMenuHelper;
 import eu.siacs.conversations.ui.util.PendingItem;
 import eu.siacs.conversations.ui.util.PresenceSelector;
@@ -202,6 +205,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             });
         }
     };
+
     private OnScrollListener mOnScrollListener = new OnScrollListener() {
 
         @Override
@@ -724,7 +728,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             return;
         }
         final Editable text = this.binding.textinput.getText();
-        final String body = text == null ? "" : text.toString();
+        String body = text == null ? "" : text.toString();
         final Conversation conversation = this.conversation;
         if (body.length() == 0 || conversation == null) {
             return;
@@ -740,8 +744,13 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             final String messageReference = conversation.getMessageReference();
             if (messageReference != null) {
                 message.setMessageReference(messageReference);
-                // Reset the currently quoted file message so that new messages will not be sent as quotations.
+                message.setBody(conversation.getMessageReferenceQuote() + body);
+
+                // Reset the currently referenced message so that new non-referencing messages will not be sent as referencing messages.
                 this.conversation.setMessageReference(null);
+
+                // Hide the whole area where the referenced message was displayed.
+                MessageReferenceUtils.hideMessageReference(conversation.getMessageReferenceViewHolder());
             }
 
             if (conversation.getMode() == Conversation.MODE_MULTI) {
@@ -797,6 +806,8 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         final boolean multi = conversation.getMode() == Conversation.MODE_MULTI;
         if (conversation.getCorrectingMessage() != null) {
             this.binding.textinput.setHint(R.string.send_corrected_message);
+        } else if (conversation.getMessageReference() != null) {
+            this.binding.textinput.setHint(R.string.comment);
         } else if (multi && conversation.getNextCounterpart() != null) {
             this.binding.textinput.setHint(getString(
                     R.string.send_private_message_to,
@@ -1070,19 +1081,28 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         return binding.getRoot();
     }
 
-	private void quoteText(String text) {
-		if (binding.textinput.isEnabled()) {
-			binding.textinput.insertAsQuote(text);
-		}
-	}
+    private void quoteText(String text) {
+        if (binding.textinput.isEnabled()) {
+            binding.textinput.insertAsQuote(text);
+        }
+    }
+
+    private void quoteMessage(Message message) {
+        quoteText(MessageUtils.prepareQuote(message));
+        binding.textinput.requestFocus();
+        InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (inputMethodManager != null) {
+            inputMethodManager.showSoftInput(binding.textinput, InputMethodManager.SHOW_IMPLICIT);
+        }
+    }
 
 	/**
-	 * Set the quoted message for the current conversation so that it can be used by sendMessage().
+	 * Set the message reference for the current conversation so that it can be used by sendMessage().
 	 *
 	 * Use XEP-0367: Message Attaching while still supporting legacy quoting method ("> ").
 	 * @param message message that should be referenced when a new message is sent.
 	 */
-	private void quoteMessage(Message message) {
+	private void commentMessage(Message message) {
 	    // Add message reference to be used later in sendMessage().
         String remoteMsgId = message.getRemoteMsgId();
         if (remoteMsgId == null) {
@@ -1091,8 +1111,65 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             conversation.setMessageReference(remoteMsgId);
         }
 
-        // Add legacy quotation.
-        quoteText(MessageUtils.prepareQuote(message));
+        updateChatMsgHint();
+        boolean darkBackground = activity.isDarkTheme();
+        MessageViewHolder viewHolder = new MessageViewHolder();
+
+        // Show a preview of the referenced message.
+        viewHolder.setMessageReferenceContainer(binding.messageReferencePreview.messageReferenceContainer);
+        viewHolder.setMessageReferenceBar(binding.messageReferencePreview.messageReferenceBar);
+        viewHolder.setMessageReferenceInfo(binding.messageReferencePreview.messageReferenceInfo);
+        viewHolder.setMessageReferenceText(binding.messageReferencePreview.messageReferenceText);
+        viewHolder.setMessageReferenceIcon(binding.messageReferencePreview.messageReferenceIcon);
+        viewHolder.setMessageReferenceImageThumbnail(binding.messageReferencePreview.messageReferenceImageThumbnail);
+
+        if (message.isImageOrVideo()) {
+            activity.loadBitmapForReferencedImageMessage(message, viewHolder.getMessageReferenceImageThumbnail());
+            // TODO clear the background right to the image thumbnail
+            viewHolder.getMessageReferenceImageThumbnail().setScaleType(ImageView.ScaleType.FIT_START);
+            viewHolder.getMessageReferenceImageThumbnail().setVisibility(View.VISIBLE);
+        } else {
+            if (message.isAudio()) {
+                viewHolder.getMessageReferenceIcon().setVisibility(View.VISIBLE);
+                MessageReferenceUtils.setMessageReferenceIcon(darkBackground, viewHolder.getMessageReferenceIcon(), activity.getDrawable(R.drawable.ic_send_voice_offline), activity.getDrawable(R.drawable.ic_send_voice_offline_white));
+            } else if (message.isGeoUri()) {
+                viewHolder.getMessageReferenceIcon().setVisibility(View.VISIBLE);
+                MessageReferenceUtils.setMessageReferenceIcon(darkBackground, viewHolder.getMessageReferenceIcon(), activity.getDrawable(R.drawable.ic_send_location_offline), activity.getDrawable(R.drawable.ic_send_location_offline_white));
+
+            } else if (message.isText()) {
+                viewHolder.getMessageReferenceText().setVisibility(View.VISIBLE);
+                viewHolder.getMessageReferenceText().setText(MessageReferenceUtils.extractFirstTwoLinesOfBody(message));
+            } else {
+                viewHolder.getMessageReferenceIcon().setVisibility(View.VISIBLE);
+                // default icon
+                MessageReferenceUtils.setMessageReferenceIcon(darkBackground, viewHolder.getMessageReferenceIcon(), activity.getDrawable(R.drawable.ic_send_file_offline), activity.getDrawable(R.drawable.ic_send_file_offline_white));
+            }
+        }
+
+        viewHolder.getMessageReferenceContainer().setBackground(activity.getDrawable(R.drawable.message_reference_background_light_grey));
+
+        if (darkBackground) {
+            viewHolder.getMessageReferenceContainer().setBackground(activity.getResources().getDrawable(R.drawable.message_reference_background_dark_grey));
+            viewHolder.getMessageReferenceBar().setBackgroundColor(activity.getResources().getColor(R.color.white70));
+            viewHolder.getMessageReferenceInfo().setTextAppearance(getContext(), R.style.TextAppearance_Conversations_Caption_OnDark);
+            viewHolder.getMessageReferenceText().setTextAppearance(getContext(), R.style.TextAppearance_Conversations_MessageReferenceText_OnDark);
+        }
+
+        viewHolder.getMessageReferenceContainer().setVisibility(View.VISIBLE);
+        viewHolder.getMessageReferenceBar().setVisibility(View.VISIBLE);
+        viewHolder.getMessageReferenceInfo().setText(MessageReferenceUtils.createInfo(activity, getContext(), message));
+        viewHolder.getMessageReferenceInfo().setVisibility(View.VISIBLE);
+
+        // Set the viewHolder for the message reference area to make all views "gone" after sending the message with sendMessage().
+        conversation.setMessageReferenceViewHolder(viewHolder);
+
+        // Set the legacy quotation so that it can be used as the first part of the body for the message to be sent.
+        conversation.setMessageReferenceQuote(MessageUtils.createQuote(MessageUtils.prepareQuote(message)) + "\n");
+
+        // Jump to the referenced message when the message reference container is clicked.
+        viewHolder.getMessageReferenceContainer().setOnClickListener(v -> {
+            ((Conversation) message.getConversation()).getConversationFragment().setSelection(messageListAdapter.getPosition(message), false);
+        });
 
         // Add comment for referenced message.
 		binding.textinput.requestFocus();
@@ -1133,6 +1210,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             menu.setHeaderTitle(R.string.message_options);
             MenuItem copyMessage = menu.findItem(R.id.copy_message);
             MenuItem copyLink = menu.findItem(R.id.copy_link);
+            MenuItem commentMessage = menu.findItem(R.id.comment_message);
             MenuItem quoteMessage = menu.findItem(R.id.quote_message);
             MenuItem retryDecryption = menu.findItem(R.id.retry_decryption);
             MenuItem correctMessage = menu.findItem(R.id.correct_message);
@@ -1144,9 +1222,10 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             MenuItem deleteFile = menu.findItem(R.id.delete_file);
             MenuItem showErrorMessage = menu.findItem(R.id.show_error_message);
             if (!encrypted && !m.treatAsDownloadable()) {
-                quoteMessage.setVisible(MessageUtils.prepareQuote(m).length() > 0);
+                commentMessage.setVisible(MessageUtils.prepareQuote(m).length() > 0);
             }
             if (!m.isFileOrImage() && !encrypted && !m.isGeoUri() && !m.treatAsDownloadable()) {
+                quoteMessage.setVisible(MessageUtils.prepareQuote(m).length() > 0);
                 copyMessage.setVisible(true);
                 String body = m.getMergedBody().toString();
                 if (ShareUtil.containsXmppUri(body)) {
@@ -1215,6 +1294,9 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                 return true;
             case R.id.copy_link:
                 ShareUtil.copyLinkToClipboard(activity, selectedMessage);
+                return true;
+            case R.id.comment_message:
+                commentMessage(selectedMessage);
                 return true;
             case R.id.quote_message:
                 quoteMessage(selectedMessage);
@@ -1943,6 +2025,11 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             return false;
         }
         this.conversation = conversation;
+
+        // Add this object to the conversation so that it can be used inside of MessageAdapter
+        // by the onClickListener of messageReferenceContainer.
+        conversation.setConversationFragment(this);
+
         //once we set the conversation all is good and it will automatically do the right thing in onStart()
         if (this.activity == null || this.binding == null) {
             return false;
@@ -2019,7 +2106,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         this.binding.unreadCountCustomView.setVisibility(View.GONE);
     }
 
-    private void setSelection(int pos, boolean jumpToBottom) {
+    public void setSelection(int pos, boolean jumpToBottom) {
         ListViewUtils.setSelection(this.binding.messagesView, pos, jumpToBottom);
         this.binding.messagesView.post(() -> ListViewUtils.setSelection(this.binding.messagesView, pos, jumpToBottom));
         this.binding.messagesView.post(this::fireReadEvent);

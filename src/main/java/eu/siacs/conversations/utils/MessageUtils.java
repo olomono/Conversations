@@ -59,7 +59,6 @@ public class MessageUtils {
 			if (line.length() <= 0) {
 				continue;
 			}
-			final char c = line.charAt(0);
 			if (UIHelper.isQuotationLine(line)) {
 				continue;
 			}
@@ -69,6 +68,10 @@ public class MessageUtils {
 			builder.append(line.trim());
 		}
 		return builder.toString();
+	}
+
+	public static String createQuote(String text) {
+		return text.replaceAll("(\n *){2,}", "\n").replaceAll("(^|\n)", "$1> ").replaceAll("\n$", "");
 	}
 
 	public static boolean treatAsDownloadable(final String body, final boolean oob) {

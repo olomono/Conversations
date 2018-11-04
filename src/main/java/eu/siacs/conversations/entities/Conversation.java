@@ -21,6 +21,8 @@ import eu.siacs.conversations.Config;
 import eu.siacs.conversations.crypto.OmemoSetting;
 import eu.siacs.conversations.crypto.PgpDecryptionService;
 import eu.siacs.conversations.crypto.axolotl.AxolotlService;
+import eu.siacs.conversations.ui.ConversationFragment;
+import eu.siacs.conversations.ui.util.MessageViewHolder;
 import eu.siacs.conversations.utils.JidHelper;
 import eu.siacs.conversations.xmpp.chatstate.ChatState;
 import eu.siacs.conversations.xmpp.mam.MamReference;
@@ -75,8 +77,11 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 	private String mFirstMamReference = null;
 	private Message correctingMessage;
 	private String messageReference = null;
+    private String messageReferenceQuote;
+    private MessageViewHolder messageReferenceViewHolder;
+    private ConversationFragment conversationFragment;
 
-	public Conversation(final String name, final Account account, final Jid contactJid,
+    public Conversation(final String name, final Account account, final Jid contactJid,
 	                    final int mode) {
 		this(java.util.UUID.randomUUID().toString(), name, null, account
 						.getUuid(), contactJid, System.currentTimeMillis(),
@@ -969,6 +974,30 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
 	public void setMessageReference(String messageReference) {
 		this.messageReference = messageReference;
+	}
+
+    public String getMessageReferenceQuote() {
+        return messageReferenceQuote;
+    }
+
+    public void setMessageReferenceQuote(String messageReferenceQuote) {
+        this.messageReferenceQuote = messageReferenceQuote;
+    }
+
+    public MessageViewHolder getMessageReferenceViewHolder() {
+		return messageReferenceViewHolder;
+	}
+
+	public void setMessageReferenceViewHolder(MessageViewHolder messageReferenceViewHolder) {
+		this.messageReferenceViewHolder = messageReferenceViewHolder;
+	}
+
+	public ConversationFragment getConversationFragment() {
+		return conversationFragment;
+	}
+
+	public void setConversationFragment(ConversationFragment conversationFragment) {
+		this.conversationFragment = conversationFragment;
 	}
 
 	public interface OnMessageFound {

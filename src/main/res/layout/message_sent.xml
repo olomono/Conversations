@@ -9,8 +9,6 @@
                 android:paddingRight="8dp"
                 android:paddingTop="3dp">
 
-
-
     <LinearLayout
         android:id="@+id/message_photo_box"
         android:orientation="vertical"
@@ -30,8 +28,6 @@
             android:layout_width="48dp"
         />
     </LinearLayout>
-
-
 
     <LinearLayout
         android:id="@+id/message_box"
