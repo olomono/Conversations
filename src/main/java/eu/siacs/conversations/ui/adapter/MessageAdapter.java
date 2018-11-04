@@ -938,7 +938,8 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 						}
 
 						if (quotationEqualsReferencedMessage) {
-							message.setBody(createStringWithLinesOutOfStringArray(bodyLines, currentLine, bodyLines.length));
+							message.setBody(MessageReferenceUtils.createStringWithLinesOutOfStringArray(bodyLines, currentLine, bodyLines.length));
+							activity.xmppConnectionService.updateMessage(message);
 						}
 					}
 				}
