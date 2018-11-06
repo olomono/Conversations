@@ -2,6 +2,7 @@ package eu.siacs.conversations.ui.util;
 
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -15,6 +16,7 @@ public class MessageViewHolder {
     private RelativeLayout audioPlayer;
     private LinearLayout messageBox;
     private Button downloadButton;
+    private ImageButton messageReferencePreviewCancelButton;
     private ImageView image;
     private ImageView indicator;
     private ImageView indicatorReceived;
@@ -68,6 +70,14 @@ public class MessageViewHolder {
 
     public void setDownloadButton(Button downloadButton) {
         this.downloadButton = downloadButton;
+    }
+
+    public ImageButton getMessageReferencePreviewCancelButton() {
+        return messageReferencePreviewCancelButton;
+    }
+
+    public void setMessageReferencePreviewCancelButton(ImageButton messageReferencePreviewCancelButton) {
+        this.messageReferencePreviewCancelButton = messageReferencePreviewCancelButton;
     }
 
     public ImageView getImage() {

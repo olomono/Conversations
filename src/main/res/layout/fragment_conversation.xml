@@ -49,12 +49,29 @@
             android:visibility="gone"
             app:backgroundColor="?attr/unread_count" />
 
-        <include layout="@layout/message_reference"
-            android:id="@+id/message_reference_preview"
+        <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_above="@id/textsend" />
+            android:id="@+id/message_reference_preview_container"
+            android:layout_above="@id/textsend">
+
+            <include layout="@layout/message_reference"
+                android:id="@+id/message_reference_preview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"/>
+
+            <ImageButton
+                android:id="@+id/message_reference_preview_cancel_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentTop="true"
+                android:alpha="?attr/delete_icon_alpha"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="?attr/icon_cancel"
+                android:visibility="gone"/>
+        </RelativeLayout>
 
         <RelativeLayout
             android:id="@+id/textsend"

@@ -25,6 +25,9 @@ public class MessageReferenceUtils {
         viewHolder.getMessageReferenceText().setVisibility(View.GONE);
         viewHolder.getMessageReferenceIcon().setVisibility(View.GONE);
         viewHolder.getMessageReferenceImageThumbnail().setVisibility(View.GONE);
+        if (viewHolder.getMessageReferencePreviewCancelButton() != null) {
+            viewHolder.getMessageReferencePreviewCancelButton().setVisibility(View.GONE);
+        }
     }
 
     /**

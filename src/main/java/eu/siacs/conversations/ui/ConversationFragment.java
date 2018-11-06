@@ -1122,6 +1122,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         viewHolder.setMessageReferenceText(binding.messageReferencePreview.messageReferenceText);
         viewHolder.setMessageReferenceIcon(binding.messageReferencePreview.messageReferenceIcon);
         viewHolder.setMessageReferenceImageThumbnail(binding.messageReferencePreview.messageReferenceImageThumbnail);
+        viewHolder.setMessageReferencePreviewCancelButton(binding.messageReferencePreviewCancelButton);
 
         if (message.isImageOrVideo()) {
             activity.loadBitmapForReferencedImageMessage(message, viewHolder.getMessageReferenceImageThumbnail());
@@ -1159,6 +1160,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         viewHolder.getMessageReferenceBar().setVisibility(View.VISIBLE);
         viewHolder.getMessageReferenceInfo().setText(MessageReferenceUtils.createInfo(activity, getContext(), message));
         viewHolder.getMessageReferenceInfo().setVisibility(View.VISIBLE);
+        viewHolder.getMessageReferencePreviewCancelButton().setVisibility(View.VISIBLE);
 
         // Set the viewHolder for the message reference area to make all views "gone" after sending the message with sendMessage().
         conversation.setMessageReferenceViewHolder(viewHolder);
