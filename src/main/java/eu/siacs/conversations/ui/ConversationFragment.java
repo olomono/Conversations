@@ -1121,9 +1121,8 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             binding.messageReferencePreview.messageReferenceImageThumbnail.setScaleType(ImageView.ScaleType.FIT_START);
             binding.messageReferencePreview.messageReferenceImageThumbnail.setVisibility(View.VISIBLE);
         }
-
-        binding.messageReferencePreview.messageReferencePreviewCancelButton.setVisibility(View.VISIBLE);
         */
+        binding.messageReferencePreview.messageReferencePreviewCancelButton.setVisibility(View.VISIBLE);
 
         // Set the legacy quotation so that it can be used as the first part of the body for the message to be sent.
         conversation.setMessageReferenceQuote(MessageUtils.createQuote(MessageUtils.prepareQuote(message)) + "\n");

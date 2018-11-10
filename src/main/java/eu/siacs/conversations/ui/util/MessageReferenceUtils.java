@@ -25,11 +25,7 @@ public class MessageReferenceUtils {
         messageReferenceBinding.messageReferenceText.setVisibility(View.GONE);
         messageReferenceBinding.messageReferenceIcon.setVisibility(View.GONE);
         messageReferenceBinding.messageReferenceImageThumbnail.setVisibility(View.GONE);
-        /*
-        if (messageReferenceBinding.messageReferencePreviewCancelButton != null) {
-            messageReferenceBinding.messageReferencePreviewCancelButton.setVisibility(View.GONE);
-        }
-        */
+        messageReferenceBinding.messageReferencePreviewCancelButton.setVisibility(View.GONE);
     }
 
     /**
@@ -85,10 +81,24 @@ public class MessageReferenceUtils {
         messageReferenceBinding.messageReferenceInfo.setText(MessageReferenceUtils.createInfo(activity, context, referencedMessage));
         messageReferenceBinding.messageReferenceContainer.setVisibility(View.VISIBLE);
 
-        // Jump to the referenced message when the message reference container is clicked.
-        messageReferenceBinding.messageReferenceContainer.setOnClickListener(v -> {
-            ((Conversation) message.getConversation()).getConversationFragment().setSelection(position, false);
-        });
+        // Cancel the referencing of a message.
+        if (messageReferencePreview) {
+            messageReferenceBinding.messageReferencePreviewCancelButton.setOnClickListener(v -> {
+                hideMessageReference(messageReferenceBinding);
+                ((Conversation) referencedMessage.getConversation()).setMessageReference(null);
+                ((Conversation) referencedMessage.getConversation()).getConversationFragment().updateChatMsgHint();
+            });
+
+            // Jump to the referenced message when the message reference preview is clicked.
+            messageReferenceBinding.messageReferenceContainer.setOnClickListener(v -> {
+                ((Conversation) referencedMessage.getConversation()).getConversationFragment().setSelection(position, false);
+            });
+        } else {
+            // Jump to the referenced message when the message reference is clicked.
+            messageReferenceBinding.messageReferenceContainer.setOnClickListener(v -> {
+                ((Conversation) message.getConversation()).getConversationFragment().setSelection(position, false);
+            });
+        }
     }
 
     /**
