@@ -437,56 +437,11 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 	 * and underneath the comment on that message.
 	 */
 	private void displayReferencingMessage(final ViewHolder viewHolder, final Message message, final Message referencedMessage, boolean darkBackground, int type) {
-		if (referencedMessage.isImageOrVideo()) {
-			displayReferencedImageMessage(viewHolder, message, referencedMessage);
-		} else {
-			if (referencedMessage.isAudio()) {
-				viewHolder.messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
-				MessageReferenceUtils.setMessageReferenceIcon(darkBackground, viewHolder.messageReferenceBinding.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_voice_offline), activity.getDrawable(R.drawable.ic_send_voice_offline_white));
-			} else if (referencedMessage.isGeoUri()) {
-				viewHolder.messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
-				MessageReferenceUtils.setMessageReferenceIcon(darkBackground, viewHolder.messageReferenceBinding.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_location_offline), activity.getDrawable(R.drawable.ic_send_location_offline_white));
-
-			} else if (referencedMessage.isText()) {
-				viewHolder.messageReferenceBinding.messageReferenceText.setVisibility(View.VISIBLE);
-				viewHolder.messageReferenceBinding.messageReferenceText.setText(MessageReferenceUtils.extractFirstTwoLinesOfBody(referencedMessage));
-			} else {
-				viewHolder.messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
-				// default icon
-				MessageReferenceUtils.setMessageReferenceIcon(darkBackground, viewHolder.messageReferenceBinding.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_file_offline), activity.getDrawable(R.drawable.ic_send_file_offline_white));
-			}
-		}
-
-		if (darkBackground) {
-			viewHolder.messageReferenceBinding.messageReferenceContainer.setBackground(activity.getResources().getDrawable(R.drawable.message_reference_background_white));
-			viewHolder.messageReferenceBinding.messageReferenceBar.setBackgroundColor(activity.getResources().getColor(R.color.white70));
-			viewHolder.messageReferenceBinding.messageReferenceInfo.setTextAppearance(getContext(), R.style.TextAppearance_Conversations_Caption_OnDark);
-			viewHolder.messageReferenceBinding.messageReferenceText.setTextAppearance(getContext(), R.style.TextAppearance_Conversations_MessageReferenceText_OnDark);
-		}
-
-		viewHolder.messageReferenceBinding.messageReferenceInfo.setText(MessageReferenceUtils.createInfo(activity, getContext(), referencedMessage));
-		viewHolder.messageReferenceBinding.messageReferenceContainer.setVisibility(View.VISIBLE);
-
-		// Jump to the referenced message when the message reference container is clicked.
-		viewHolder.messageReferenceBinding.messageReferenceContainer.setOnClickListener(v -> {
-			((Conversation) message.getConversation()).getConversationFragment().setSelection(getPosition(referencedMessage), false);
-		});
+		// Show the message reference area.
+		MessageReferenceUtils.displayMessageReference(activity, getContext(), getPosition(referencedMessage), viewHolder.messageReferenceBinding, message, referencedMessage, darkBackground, false);
 
 		// Show the comment on the referenced message.
 		constructTextMessage(viewHolder, message, darkBackground, type);
-	}
-
-	/**
-	 * Displays a thumbnail for the image or video of the referenced message.
-	 */
-	private void displayReferencedImageMessage(final ViewHolder viewHolder, final Message message, final Message referencedMessage) {
-		// Find the relative file path for the referenced image or video.
-		if (message.getRelativeFilePath() == null) {
-			message.setRelativeFilePath(referencedMessage.getRelativeFilePath());
-		}
-
-		activity.loadBitmapForReferencedImageMessage(message, viewHolder.messageReferenceBinding.messageReferenceImageThumbnail);
-		viewHolder.messageReferenceBinding.messageReferenceImageThumbnail.setVisibility(View.VISIBLE);
 	}
 
 	private void displayDownloadableMessage(ViewHolder viewHolder, final Message message, String text) {

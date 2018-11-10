@@ -18,6 +18,7 @@ public class MessageReferenceUtils {
 
     /**
      * Hide the whole area where a referenced message would be displayed.
+     * @param messageReferenceBinding data binding that holds the message reference views
      */
     public static void hideMessageReference(MessageReferenceBinding messageReferenceBinding) {
         messageReferenceBinding.messageReferenceContainer.setVisibility(View.GONE);
@@ -29,6 +30,65 @@ public class MessageReferenceUtils {
             messageReferenceBinding.messageReferencePreviewCancelButton.setVisibility(View.GONE);
         }
         */
+    }
+
+    /**
+     * Displays the message reference area.
+     * @param position position of the given message in the array
+     * @param messageReferenceBinding binding that was created for the messageReference
+     * @param message message that has a messageReference
+     * @param referencedMessage message that is referenced by the given message
+     * @param darkBackground true if the background (message bubble) of the given message is dark
+     * @param messageReferencePreview true if the messageReference is used as a preview for sending a new message with that messageReference
+     */
+    public static void displayMessageReference(final XmppActivity activity, final Context context, final int position, final MessageReferenceBinding messageReferenceBinding, final Message message, final Message referencedMessage, boolean darkBackground, boolean messageReferencePreview) {
+        if (referencedMessage.isImageOrVideo()) {
+            displayReferencedImageMessage(activity, messageReferenceBinding, message, referencedMessage);
+        } else {
+            if (referencedMessage.isAudio()) {
+                messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
+                MessageReferenceUtils.setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_voice_offline), activity.getDrawable(R.drawable.ic_send_voice_offline_white));
+            } else if (referencedMessage.isGeoUri()) {
+                messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
+                MessageReferenceUtils.setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_location_offline), activity.getDrawable(R.drawable.ic_send_location_offline_white));
+
+            } else if (referencedMessage.isText()) {
+                messageReferenceBinding.messageReferenceText.setVisibility(View.VISIBLE);
+                messageReferenceBinding.messageReferenceText.setText(MessageReferenceUtils.extractFirstTwoLinesOfBody(referencedMessage));
+            } else {
+                messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
+                // default icon
+                MessageReferenceUtils.setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_file_offline), activity.getDrawable(R.drawable.ic_send_file_offline_white));
+            }
+        }
+
+        if (darkBackground) {
+            // Use different backgrounds depending on the usage of a message bubble.
+            // A messageReference (MessageAdapter) of a normal message is inside of a message bubble.
+            // A messageReferencePreview (ConversationFragment) is not inside a message bubble.
+            int background;
+            if (!messageReferencePreview) {
+                background = R.drawable.message_reference_background_white;
+            } else {
+                background = R.drawable.message_reference_background_dark_grey;
+            }
+            messageReferenceBinding.messageReferenceContainer.setBackground(activity.getResources().getDrawable(background));
+
+            messageReferenceBinding.messageReferenceBar.setBackgroundColor(activity.getResources().getColor(R.color.white70));
+            messageReferenceBinding.messageReferenceInfo.setTextAppearance(context, R.style.TextAppearance_Conversations_Caption_OnDark);
+            messageReferenceBinding.messageReferenceText.setTextAppearance(context, R.style.TextAppearance_Conversations_MessageReferenceText_OnDark);
+        } else if (messageReferencePreview) {
+            // Set a different background if the messageReference is for a preview.
+            messageReferenceBinding.messageReferenceContainer.setBackground(activity.getResources().getDrawable(R.drawable.message_reference_background_light_grey));
+        }
+
+        messageReferenceBinding.messageReferenceInfo.setText(MessageReferenceUtils.createInfo(activity, context, referencedMessage));
+        messageReferenceBinding.messageReferenceContainer.setVisibility(View.VISIBLE);
+
+        // Jump to the referenced message when the message reference container is clicked.
+        messageReferenceBinding.messageReferenceContainer.setOnClickListener(v -> {
+            ((Conversation) message.getConversation()).getConversationFragment().setSelection(position, false);
+        });
     }
 
     /**
@@ -67,6 +127,26 @@ public class MessageReferenceUtils {
         } else {
             messageReferenceIcon.setBackground(defaultDrawable);
         }
+    }
+
+    /**
+     * Displays a thumbnail for the image or video of the referenced message.
+     * The normal message is used for showing the image thumbnail if a message exists
+     * which is the case when this method is called by MessageAdapter.
+     * Otherwise use the referenced message which is the case when this method is called by ConversationFragment.
+     */
+    public static void displayReferencedImageMessage(final XmppActivity activity, final MessageReferenceBinding messageReferenceBinding, Message message, final Message referencedMessage) {
+        if (message != null) {
+            // Find the relative file path for the referenced image or video.
+            if (message.getRelativeFilePath() == null) {
+                message.setRelativeFilePath(referencedMessage.getRelativeFilePath());
+            }
+        } else {
+            message = referencedMessage;
+        }
+
+        activity.loadBitmapForReferencedImageMessage(message, messageReferenceBinding.messageReferenceImageThumbnail);
+        messageReferenceBinding.messageReferenceImageThumbnail.setVisibility(View.VISIBLE);
     }
 
     /**

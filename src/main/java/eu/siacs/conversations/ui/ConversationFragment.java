@@ -1113,52 +1113,20 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         updateChatMsgHint();
         boolean darkBackground = activity.isDarkTheme();
 
+        MessageReferenceUtils.displayMessageReference(activity, getContext(), messageListAdapter.getPosition(message), binding.messageReferencePreview, null, message, darkBackground, true);
+
+        /*
         if (message.isImageOrVideo()) {
-            activity.loadBitmapForReferencedImageMessage(message, binding.messageReferencePreview.messageReferenceImageThumbnail);
             // TODO clear the background right to the image thumbnail
             binding.messageReferencePreview.messageReferenceImageThumbnail.setScaleType(ImageView.ScaleType.FIT_START);
             binding.messageReferencePreview.messageReferenceImageThumbnail.setVisibility(View.VISIBLE);
-        } else {
-            if (message.isAudio()) {
-                binding.messageReferencePreview.messageReferenceIcon.setVisibility(View.VISIBLE);
-                MessageReferenceUtils.setMessageReferenceIcon(darkBackground, binding.messageReferencePreview.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_voice_offline), activity.getDrawable(R.drawable.ic_send_voice_offline_white));
-            } else if (message.isGeoUri()) {
-                binding.messageReferencePreview.messageReferenceIcon.setVisibility(View.VISIBLE);
-                MessageReferenceUtils.setMessageReferenceIcon(darkBackground, binding.messageReferencePreview.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_location_offline), activity.getDrawable(R.drawable.ic_send_location_offline_white));
-
-            } else if (message.isText()) {
-                binding.messageReferencePreview.messageReferenceText.setVisibility(View.VISIBLE);
-                binding.messageReferencePreview.messageReferenceText.setText(MessageReferenceUtils.extractFirstTwoLinesOfBody(message));
-            } else {
-                binding.messageReferencePreview.messageReferenceIcon.setVisibility(View.VISIBLE);
-                // default icon
-                MessageReferenceUtils.setMessageReferenceIcon(darkBackground, binding.messageReferencePreview.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_file_offline), activity.getDrawable(R.drawable.ic_send_file_offline_white));
-            }
         }
 
-        binding.messageReferencePreview.messageReferenceContainer.setBackground(activity.getDrawable(R.drawable.message_reference_background_light_grey));
-
-        if (darkBackground) {
-            binding.messageReferencePreview.messageReferenceContainer.setBackground(activity.getResources().getDrawable(R.drawable.message_reference_background_dark_grey));
-            binding.messageReferencePreview.messageReferenceBar.setBackgroundColor(activity.getResources().getColor(R.color.white70));
-            binding.messageReferencePreview.messageReferenceInfo.setTextAppearance(getContext(), R.style.TextAppearance_Conversations_Caption_OnDark);
-            binding.messageReferencePreview.messageReferenceText.setTextAppearance(getContext(), R.style.TextAppearance_Conversations_MessageReferenceText_OnDark);
-        }
-
-        binding.messageReferencePreview.messageReferenceInfo.setText(MessageReferenceUtils.createInfo(activity, getContext(), message));
-        binding.messageReferencePreview.messageReferenceContainer.setVisibility(View.VISIBLE);
-
-        /*
         binding.messageReferencePreview.messageReferencePreviewCancelButton.setVisibility(View.VISIBLE);
         */
 
         // Set the legacy quotation so that it can be used as the first part of the body for the message to be sent.
         conversation.setMessageReferenceQuote(MessageUtils.createQuote(MessageUtils.prepareQuote(message)) + "\n");
-
-        // Jump to the referenced message when the message reference container is clicked.
-        binding.messageReferencePreview.messageReferenceContainer.setOnClickListener(v -> {
-            ((Conversation) message.getConversation()).getConversationFragment().setSelection(messageListAdapter.getPosition(message), false);
-        });
 
         // Add comment for referenced message.
 		binding.textinput.requestFocus();
