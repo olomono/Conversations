@@ -95,7 +95,6 @@ import eu.siacs.conversations.ui.util.EditMessageActionModeCallback;
 import eu.siacs.conversations.ui.util.ListViewUtils;
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil;
 import eu.siacs.conversations.ui.util.MessageReferenceUtils;
-import eu.siacs.conversations.ui.util.MessageViewHolder;
 import eu.siacs.conversations.ui.util.MucDetailsContextMenuHelper;
 import eu.siacs.conversations.ui.util.PendingItem;
 import eu.siacs.conversations.ui.util.PresenceSelector;
@@ -123,7 +122,6 @@ import static eu.siacs.conversations.ui.util.SoftKeyboardUtils.hideSoftKeyboard;
 
 
 public class ConversationFragment extends XmppFragment implements EditMessage.KeyboardListener {
-
 
     public static final int REQUEST_SEND_MESSAGE = 0x0201;
     public static final int REQUEST_DECRYPT_PGP = 0x0202;
@@ -750,7 +748,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                 this.conversation.setMessageReference(null);
 
                 // Hide the whole area where the referenced message was displayed.
-                MessageReferenceUtils.hideMessageReference(conversation.getMessageReferenceViewHolder());
+                MessageReferenceUtils.hideMessageReference(binding.messageReferencePreview);
             }
 
             if (conversation.getMode() == Conversation.MODE_MULTI) {
@@ -1097,13 +1095,14 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
     }
 
 	/**
-	 * Set the message reference for the current conversation so that it can be used by sendMessage().
+	 * Set the message reference for the current conversation so that it can be used by sendMessage()
+     * and show a preview of the referenced message.
 	 *
 	 * Use XEP-0367: Message Attaching while still supporting legacy quoting method ("> ").
 	 * @param message message that should be referenced when a new message is sent.
 	 */
 	private void commentMessage(Message message) {
-	    // Add message reference to be used later in sendMessage().
+	    // Add a message reference to be used later in sendMessage().
         String remoteMsgId = message.getRemoteMsgId();
         if (remoteMsgId == null) {
             conversation.setMessageReference(message.getUuid());
@@ -1113,63 +1112,51 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 
         updateChatMsgHint();
         boolean darkBackground = activity.isDarkTheme();
-        MessageViewHolder viewHolder = new MessageViewHolder();
-
-        // Show a preview of the referenced message.
-        viewHolder.setMessageReferenceContainer(binding.messageReferencePreview.messageReferenceContainer);
-        viewHolder.setMessageReferenceBar(binding.messageReferencePreview.messageReferenceBar);
-        viewHolder.setMessageReferenceInfo(binding.messageReferencePreview.messageReferenceInfo);
-        viewHolder.setMessageReferenceText(binding.messageReferencePreview.messageReferenceText);
-        viewHolder.setMessageReferenceIcon(binding.messageReferencePreview.messageReferenceIcon);
-        viewHolder.setMessageReferenceImageThumbnail(binding.messageReferencePreview.messageReferenceImageThumbnail);
-        viewHolder.setMessageReferencePreviewCancelButton(binding.messageReferencePreviewCancelButton);
 
         if (message.isImageOrVideo()) {
-            activity.loadBitmapForReferencedImageMessage(message, viewHolder.getMessageReferenceImageThumbnail());
+            activity.loadBitmapForReferencedImageMessage(message, binding.messageReferencePreview.messageReferenceImageThumbnail);
             // TODO clear the background right to the image thumbnail
-            viewHolder.getMessageReferenceImageThumbnail().setScaleType(ImageView.ScaleType.FIT_START);
-            viewHolder.getMessageReferenceImageThumbnail().setVisibility(View.VISIBLE);
+            binding.messageReferencePreview.messageReferenceImageThumbnail.setScaleType(ImageView.ScaleType.FIT_START);
+            binding.messageReferencePreview.messageReferenceImageThumbnail.setVisibility(View.VISIBLE);
         } else {
             if (message.isAudio()) {
-                viewHolder.getMessageReferenceIcon().setVisibility(View.VISIBLE);
-                MessageReferenceUtils.setMessageReferenceIcon(darkBackground, viewHolder.getMessageReferenceIcon(), activity.getDrawable(R.drawable.ic_send_voice_offline), activity.getDrawable(R.drawable.ic_send_voice_offline_white));
+                binding.messageReferencePreview.messageReferenceIcon.setVisibility(View.VISIBLE);
+                MessageReferenceUtils.setMessageReferenceIcon(darkBackground, binding.messageReferencePreview.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_voice_offline), activity.getDrawable(R.drawable.ic_send_voice_offline_white));
             } else if (message.isGeoUri()) {
-                viewHolder.getMessageReferenceIcon().setVisibility(View.VISIBLE);
-                MessageReferenceUtils.setMessageReferenceIcon(darkBackground, viewHolder.getMessageReferenceIcon(), activity.getDrawable(R.drawable.ic_send_location_offline), activity.getDrawable(R.drawable.ic_send_location_offline_white));
+                binding.messageReferencePreview.messageReferenceIcon.setVisibility(View.VISIBLE);
+                MessageReferenceUtils.setMessageReferenceIcon(darkBackground, binding.messageReferencePreview.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_location_offline), activity.getDrawable(R.drawable.ic_send_location_offline_white));
 
             } else if (message.isText()) {
-                viewHolder.getMessageReferenceText().setVisibility(View.VISIBLE);
-                viewHolder.getMessageReferenceText().setText(MessageReferenceUtils.extractFirstTwoLinesOfBody(message));
+                binding.messageReferencePreview.messageReferenceText.setVisibility(View.VISIBLE);
+                binding.messageReferencePreview.messageReferenceText.setText(MessageReferenceUtils.extractFirstTwoLinesOfBody(message));
             } else {
-                viewHolder.getMessageReferenceIcon().setVisibility(View.VISIBLE);
+                binding.messageReferencePreview.messageReferenceIcon.setVisibility(View.VISIBLE);
                 // default icon
-                MessageReferenceUtils.setMessageReferenceIcon(darkBackground, viewHolder.getMessageReferenceIcon(), activity.getDrawable(R.drawable.ic_send_file_offline), activity.getDrawable(R.drawable.ic_send_file_offline_white));
+                MessageReferenceUtils.setMessageReferenceIcon(darkBackground, binding.messageReferencePreview.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_file_offline), activity.getDrawable(R.drawable.ic_send_file_offline_white));
             }
         }
 
-        viewHolder.getMessageReferenceContainer().setBackground(activity.getDrawable(R.drawable.message_reference_background_light_grey));
+        binding.messageReferencePreview.messageReferenceContainer.setBackground(activity.getDrawable(R.drawable.message_reference_background_light_grey));
 
         if (darkBackground) {
-            viewHolder.getMessageReferenceContainer().setBackground(activity.getResources().getDrawable(R.drawable.message_reference_background_dark_grey));
-            viewHolder.getMessageReferenceBar().setBackgroundColor(activity.getResources().getColor(R.color.white70));
-            viewHolder.getMessageReferenceInfo().setTextAppearance(getContext(), R.style.TextAppearance_Conversations_Caption_OnDark);
-            viewHolder.getMessageReferenceText().setTextAppearance(getContext(), R.style.TextAppearance_Conversations_MessageReferenceText_OnDark);
+            binding.messageReferencePreview.messageReferenceContainer.setBackground(activity.getResources().getDrawable(R.drawable.message_reference_background_dark_grey));
+            binding.messageReferencePreview.messageReferenceBar.setBackgroundColor(activity.getResources().getColor(R.color.white70));
+            binding.messageReferencePreview.messageReferenceInfo.setTextAppearance(getContext(), R.style.TextAppearance_Conversations_Caption_OnDark);
+            binding.messageReferencePreview.messageReferenceText.setTextAppearance(getContext(), R.style.TextAppearance_Conversations_MessageReferenceText_OnDark);
         }
 
-        viewHolder.getMessageReferenceContainer().setVisibility(View.VISIBLE);
-        viewHolder.getMessageReferenceBar().setVisibility(View.VISIBLE);
-        viewHolder.getMessageReferenceInfo().setText(MessageReferenceUtils.createInfo(activity, getContext(), message));
-        viewHolder.getMessageReferenceInfo().setVisibility(View.VISIBLE);
-        viewHolder.getMessageReferencePreviewCancelButton().setVisibility(View.VISIBLE);
+        binding.messageReferencePreview.messageReferenceInfo.setText(MessageReferenceUtils.createInfo(activity, getContext(), message));
+        binding.messageReferencePreview.messageReferenceContainer.setVisibility(View.VISIBLE);
 
-        // Set the viewHolder for the message reference area to make all views "gone" after sending the message with sendMessage().
-        conversation.setMessageReferenceViewHolder(viewHolder);
+        /*
+        binding.messageReferencePreview.messageReferencePreviewCancelButton.setVisibility(View.VISIBLE);
+        */
 
         // Set the legacy quotation so that it can be used as the first part of the body for the message to be sent.
         conversation.setMessageReferenceQuote(MessageUtils.createQuote(MessageUtils.prepareQuote(message)) + "\n");
 
         // Jump to the referenced message when the message reference container is clicked.
-        viewHolder.getMessageReferenceContainer().setOnClickListener(v -> {
+        binding.messageReferencePreview.messageReferenceContainer.setOnClickListener(v -> {
             ((Conversation) message.getConversation()).getConversationFragment().setSelection(messageListAdapter.getPosition(message), false);
         });
 
@@ -1862,7 +1849,6 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         this.conversation.setDraftMessage(editable.toString());
         this.binding.textinput.setText("");
         this.binding.textinput.append(message.getBody());
-
     }
 
     private void highlightInConference(String nick) {

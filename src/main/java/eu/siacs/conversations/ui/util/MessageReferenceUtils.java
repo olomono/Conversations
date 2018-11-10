@@ -8,6 +8,7 @@ import android.widget.ImageView;
 import java.util.Arrays;
 
 import eu.siacs.conversations.R;
+import eu.siacs.conversations.databinding.MessageReferenceBinding;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.Message;
 import eu.siacs.conversations.ui.XmppActivity;
@@ -18,16 +19,16 @@ public class MessageReferenceUtils {
     /**
      * Hide the whole area where a referenced message would be displayed.
      */
-    public static void hideMessageReference(MessageViewHolder viewHolder) {
-        viewHolder.getMessageReferenceContainer().setVisibility(View.GONE);
-        viewHolder.getMessageReferenceBar().setVisibility(View.GONE);
-        viewHolder.getMessageReferenceInfo().setVisibility(View.GONE);
-        viewHolder.getMessageReferenceText().setVisibility(View.GONE);
-        viewHolder.getMessageReferenceIcon().setVisibility(View.GONE);
-        viewHolder.getMessageReferenceImageThumbnail().setVisibility(View.GONE);
-        if (viewHolder.getMessageReferencePreviewCancelButton() != null) {
-            viewHolder.getMessageReferencePreviewCancelButton().setVisibility(View.GONE);
+    public static void hideMessageReference(MessageReferenceBinding messageReferenceBinding) {
+        messageReferenceBinding.messageReferenceContainer.setVisibility(View.GONE);
+        messageReferenceBinding.messageReferenceText.setVisibility(View.GONE);
+        messageReferenceBinding.messageReferenceIcon.setVisibility(View.GONE);
+        messageReferenceBinding.messageReferenceImageThumbnail.setVisibility(View.GONE);
+        /*
+        if (messageReferenceBinding.messageReferencePreviewCancelButton != null) {
+            messageReferenceBinding.messageReferencePreviewCancelButton.setVisibility(View.GONE);
         }
+        */
     }
 
     /**
