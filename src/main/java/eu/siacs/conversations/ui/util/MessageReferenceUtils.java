@@ -32,29 +32,31 @@ public class MessageReferenceUtils {
      * Displays the message reference area.
      * @param position position of the given message in the array
      * @param messageReferenceBinding binding that was created for the messageReference
-     * @param message message that has a messageReference
+     * @param message message that has a messageReference or null if the messageReference is used for a preview before sending a new message with that messageReference
      * @param referencedMessage message that is referenced by the given message
      * @param darkBackground true if the background (message bubble) of the given message is dark
-     * @param messageReferencePreview true if the messageReference is used as a preview for sending a new message with that messageReference
      */
-    public static void displayMessageReference(final XmppActivity activity, final Context context, final int position, final MessageReferenceBinding messageReferenceBinding, final Message message, final Message referencedMessage, boolean darkBackground, boolean messageReferencePreview) {
+    public static void displayMessageReference(final XmppActivity activity, final Context context, final int position, final MessageReferenceBinding messageReferenceBinding, final Message message, final Message referencedMessage, boolean darkBackground) {
+        // true if this method is used for a preview of a messageReference area
+        boolean messageReferencePreview = message == null;
+
         if (referencedMessage.isImageOrVideo()) {
             displayReferencedImageMessage(activity, messageReferenceBinding, message, referencedMessage);
         } else {
             if (referencedMessage.isAudio()) {
                 messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
-                MessageReferenceUtils.setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_voice_offline), activity.getDrawable(R.drawable.ic_send_voice_offline_white));
+                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_voice_offline), activity.getDrawable(R.drawable.ic_send_voice_offline_white));
             } else if (referencedMessage.isGeoUri()) {
                 messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
-                MessageReferenceUtils.setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_location_offline), activity.getDrawable(R.drawable.ic_send_location_offline_white));
+                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_location_offline), activity.getDrawable(R.drawable.ic_send_location_offline_white));
 
             } else if (referencedMessage.isText()) {
                 messageReferenceBinding.messageReferenceText.setVisibility(View.VISIBLE);
-                messageReferenceBinding.messageReferenceText.setText(MessageReferenceUtils.extractFirstTwoLinesOfBody(referencedMessage));
+                messageReferenceBinding.messageReferenceText.setText(extractFirstTwoLinesOfBody(referencedMessage));
             } else {
                 messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
                 // default icon
-                MessageReferenceUtils.setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_file_offline), activity.getDrawable(R.drawable.ic_send_file_offline_white));
+                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_file_offline), activity.getDrawable(R.drawable.ic_send_file_offline_white));
             }
         }
 
@@ -74,7 +76,7 @@ public class MessageReferenceUtils {
             messageReferenceBinding.messageReferenceInfo.setTextAppearance(context, R.style.TextAppearance_Conversations_Caption_OnDark);
             messageReferenceBinding.messageReferenceText.setTextAppearance(context, R.style.TextAppearance_Conversations_MessageReferenceText_OnDark);
         } else if (messageReferencePreview) {
-            // Set a different background if the messageReference is for a preview.
+            // Set a different background if the background is not dark and the messageReference is for a preview.
             messageReferenceBinding.messageReferenceContainer.setBackground(activity.getResources().getDrawable(R.drawable.message_reference_background_light_grey));
         }
 
@@ -143,7 +145,7 @@ public class MessageReferenceUtils {
      * Displays a thumbnail for the image or video of the referenced message.
      * The normal message is used for showing the image thumbnail if a message exists
      * which is the case when this method is called by MessageAdapter.
-     * Otherwise use the referenced message which is the case when this method is called by ConversationFragment.
+     * Otherwise use the referenced message which is the case when the calling method is called by ConversationFragment.
      */
     public static void displayReferencedImageMessage(final XmppActivity activity, final MessageReferenceBinding messageReferenceBinding, Message message, final Message referencedMessage) {
         if (message != null) {

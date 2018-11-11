@@ -1113,7 +1113,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         updateChatMsgHint();
         boolean darkBackground = activity.isDarkTheme();
 
-        MessageReferenceUtils.displayMessageReference(activity, getContext(), messageListAdapter.getPosition(message), binding.messageReferencePreview, null, message, darkBackground, true);
+        MessageReferenceUtils.displayMessageReference(activity, getContext(), messageListAdapter.getPosition(message), binding.messageReferencePreview, null, message, darkBackground);
 
         /*
         if (message.isImageOrVideo()) {
