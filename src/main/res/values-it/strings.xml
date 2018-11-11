@@ -292,7 +292,7 @@
   <string name="check_x_filesize">Controlla dimensione %s</string>
   <string name="check_x_filesize_on_host">Controlla dimensione %1$s su %2$s</string>
   <string name="message_options">Opzioni del messaggio</string>
-  <string name="quote">Cita</string>
+  <string name="comment_lines">Cita</string>
   <string name="paste_as_quote">Incolla come citazione</string>
   <string name="copy_original_url">Copia URL originale</string>
   <string name="send_again">Invia di nuovo</string>

@@ -128,7 +128,7 @@ public class SearchActivity extends XmppActivity implements TextWatcher, OnSearc
 		this.selectedMessageReference = new WeakReference<>(message);
 		getMenuInflater().inflate(R.menu.search_result_context, menu);
 		MenuItem copy = menu.findItem(R.id.copy_message);
-		MenuItem quote = menu.findItem(R.id.quote_message);
+		MenuItem quote = menu.findItem(R.id.comment_lines);
 		MenuItem copyUrl = menu.findItem(R.id.copy_url);
 		if (message.isGeoUri()) {
 			copy.setVisible(false);
@@ -164,7 +164,7 @@ public class SearchActivity extends XmppActivity implements TextWatcher, OnSearc
 				case R.id.copy_url:
 					ShareUtil.copyUrlToClipboard(this, message);
 					break;
-				case R.id.quote_message:
+				case R.id.comment_lines:
 					quote(message);
 					break;
 			}

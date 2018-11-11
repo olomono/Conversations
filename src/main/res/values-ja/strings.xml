@@ -278,7 +278,7 @@
   <string name="check_x_filesize">%s サイズを確認</string>
   <string name="check_x_filesize_on_host">%2$s で %1$s のサイズを確認</string>
   <string name="message_options">メッセージオプション</string>
-  <string name="quote">引用</string>
+  <string name="comment_lines">引用</string>
   <string name="copy_original_url">元の URL をコピー</string>
   <string name="send_again">再送</string>
   <string name="file_url">ファイル URL</string>

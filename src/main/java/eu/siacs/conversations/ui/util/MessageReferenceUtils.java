@@ -36,7 +36,7 @@ public class MessageReferenceUtils {
      * @param referencedMessage message that is referenced by the given message
      * @param darkBackground true if the background (message bubble) of the given message is dark
      */
-    public static void displayMessageReference(final XmppActivity activity, final Context context, final int position, final MessageReferenceBinding messageReferenceBinding, final Message message, final Message referencedMessage, boolean darkBackground) {
+    public static void displayMessageReference(final XmppActivity activity, final int position, final MessageReferenceBinding messageReferenceBinding, final Message message, final Message referencedMessage, boolean darkBackground) {
         // true if this method is used for a preview of a messageReference area
         boolean messageReferencePreview = message == null;
 
@@ -45,10 +45,10 @@ public class MessageReferenceUtils {
         } else {
             if (referencedMessage.isAudio()) {
                 messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
-                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_voice_offline), activity.getDrawable(R.drawable.ic_send_voice_offline_white));
+                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_send_voice_offline), activity.getResources().getDrawable(R.drawable.ic_send_voice_offline_white));
             } else if (referencedMessage.isGeoUri()) {
                 messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
-                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_location_offline), activity.getDrawable(R.drawable.ic_send_location_offline_white));
+                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_send_location_offline), activity.getResources().getDrawable(R.drawable.ic_send_location_offline_white));
 
             } else if (referencedMessage.isText()) {
                 messageReferenceBinding.messageReferenceText.setVisibility(View.VISIBLE);
@@ -56,7 +56,7 @@ public class MessageReferenceUtils {
             } else {
                 messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
                 // default icon
-                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getDrawable(R.drawable.ic_send_file_offline), activity.getDrawable(R.drawable.ic_send_file_offline_white));
+                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_send_file_offline), activity.getResources().getDrawable(R.drawable.ic_send_file_offline_white));
             }
         }
 
@@ -69,22 +69,26 @@ public class MessageReferenceUtils {
                 background = R.drawable.message_reference_background_white;
             } else {
                 background = R.drawable.message_reference_background_dark_grey;
+                messageReferenceBinding.messageReferencePreviewCancelButton.setBackground(activity.getResources().getDrawable(R.drawable.ic_send_cancel_offline_white));
             }
             messageReferenceBinding.messageReferenceContainer.setBackground(activity.getResources().getDrawable(background));
 
             messageReferenceBinding.messageReferenceBar.setBackgroundColor(activity.getResources().getColor(R.color.white70));
-            messageReferenceBinding.messageReferenceInfo.setTextAppearance(context, R.style.TextAppearance_Conversations_Caption_OnDark);
-            messageReferenceBinding.messageReferenceText.setTextAppearance(context, R.style.TextAppearance_Conversations_MessageReferenceText_OnDark);
+            messageReferenceBinding.messageReferenceInfo.setTextAppearance(activity, R.style.TextAppearance_Conversations_Caption_OnDark);
+            messageReferenceBinding.messageReferenceText.setTextAppearance(activity, R.style.TextAppearance_Conversations_MessageReferenceText_OnDark);
         } else if (messageReferencePreview) {
             // Set a different background if the background is not dark and the messageReference is for a preview.
             messageReferenceBinding.messageReferenceContainer.setBackground(activity.getResources().getDrawable(R.drawable.message_reference_background_light_grey));
         }
 
-        messageReferenceBinding.messageReferenceInfo.setText(MessageReferenceUtils.createInfo(activity, context, referencedMessage));
+        messageReferenceBinding.messageReferenceInfo.setText(MessageReferenceUtils.createInfo(activity, activity, referencedMessage));
         messageReferenceBinding.messageReferenceContainer.setVisibility(View.VISIBLE);
 
-        // Cancel the referencing of a message.
+
         if (messageReferencePreview) {
+            messageReferenceBinding.messageReferencePreviewCancelButton.setVisibility(View.VISIBLE);
+
+            // Cancel the referencing of a message.
             messageReferenceBinding.messageReferencePreviewCancelButton.setOnClickListener(v -> {
                 hideMessageReference(messageReferenceBinding);
                 ((Conversation) referencedMessage.getConversation()).setMessageReference(null);

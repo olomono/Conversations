@@ -47,7 +47,6 @@ import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.CheckBox;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.TextView.OnEditorActionListener;
@@ -738,7 +737,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         if (conversation.getCorrectingMessage() == null) {
             message = new Message(conversation, body, conversation.getNextEncryption());
 
-            // Set message reference for the message to be sent.
+            // Set the message reference for the message to be sent.
             final String messageReference = conversation.getMessageReference();
             if (messageReference != null) {
                 message.setMessageReference(messageReference);
@@ -1080,28 +1079,19 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
     }
 
     private void quoteText(String text) {
-        if (binding.textinput.isEnabled()) {
-            binding.textinput.insertAsQuote(text);
-        }
-    }
-
-    private void quoteMessage(Message message) {
-        quoteText(MessageUtils.prepareQuote(message));
-        binding.textinput.requestFocus();
-        InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-        if (inputMethodManager != null) {
-            inputMethodManager.showSoftInput(binding.textinput, InputMethodManager.SHOW_IMPLICIT);
-        }
+        binding.textinput.insertAsQuote(text);
     }
 
 	/**
+     * Comment the whole given message or line by line.
 	 * Set the message reference for the current conversation so that it can be used by sendMessage()
      * and show a preview of the referenced message.
 	 *
 	 * Use XEP-0367: Message Attaching while still supporting legacy quoting method ("> ").
 	 * @param message message that should be referenced when a new message is sent.
+     * @param quoteMessage quote the lines of the given message
 	 */
-	private void commentMessage(Message message) {
+	private void commentMessage(Message message, boolean quoteMessage) {
 	    // Add a message reference to be used later in sendMessage().
         String remoteMsgId = message.getRemoteMsgId();
         if (remoteMsgId == null) {
@@ -1111,9 +1101,10 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         }
 
         updateChatMsgHint();
+        displaySoftInput();
         boolean darkBackground = activity.isDarkTheme();
 
-        MessageReferenceUtils.displayMessageReference(activity, getContext(), messageListAdapter.getPosition(message), binding.messageReferencePreview, null, message, darkBackground);
+        MessageReferenceUtils.displayMessageReference(activity, messageListAdapter.getPosition(message), binding.messageReferencePreview, null, message, darkBackground);
 
         /*
         if (message.isImageOrVideo()) {
@@ -1122,18 +1113,31 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             binding.messageReferencePreview.messageReferenceImageThumbnail.setVisibility(View.VISIBLE);
         }
         */
-        binding.messageReferencePreview.messageReferencePreviewCancelButton.setVisibility(View.VISIBLE);
 
-        // Set the legacy quotation so that it can be used as the first part of the body for the message to be sent.
-        conversation.setMessageReferenceQuote(MessageUtils.createQuote(MessageUtils.prepareQuote(message)) + "\n");
+        if (quoteMessage) {
+            // Show the lines of the referenced message as quotations instead of letting a legacy quotation be used for the body of the message to be sent.
+            quoteText(MessageUtils.prepareQuote(message));
+            conversation.setMessageReferenceQuote("");
+        } else {
+            // Set the legacy quotation so that it can be used as the first part of the body for the message to be sent.
+            conversation.setMessageReferenceQuote(MessageUtils.createQuote(MessageUtils.prepareQuote(message)) + "\n");
+        }
 
-        // Add comment for referenced message.
-		binding.textinput.requestFocus();
-		InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-		if (inputMethodManager != null) {
-			inputMethodManager.showSoftInput(binding.textinput, InputMethodManager.SHOW_IMPLICIT);
-		}
+
 	}
+
+    /**
+     * Opens the soft keyboard and places the cursor inside of the text input.
+     */
+	private void displaySoftInput() {
+        if (binding.textinput.isEnabled()) {
+            binding.textinput.requestFocus();
+            InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (inputMethodManager != null) {
+                inputMethodManager.showSoftInput(binding.textinput, InputMethodManager.SHOW_IMPLICIT);
+            }
+        }
+    }
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
@@ -1167,7 +1171,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             MenuItem copyMessage = menu.findItem(R.id.copy_message);
             MenuItem copyLink = menu.findItem(R.id.copy_link);
             MenuItem commentMessage = menu.findItem(R.id.comment_message);
-            MenuItem quoteMessage = menu.findItem(R.id.quote_message);
+            MenuItem quoteMessage = menu.findItem(R.id.comment_lines);
             MenuItem retryDecryption = menu.findItem(R.id.retry_decryption);
             MenuItem correctMessage = menu.findItem(R.id.correct_message);
             MenuItem shareWith = menu.findItem(R.id.share_with);
@@ -1252,10 +1256,10 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                 ShareUtil.copyLinkToClipboard(activity, selectedMessage);
                 return true;
             case R.id.comment_message:
-                commentMessage(selectedMessage);
+                commentMessage(selectedMessage, false);
                 return true;
-            case R.id.quote_message:
-                quoteMessage(selectedMessage);
+            case R.id.comment_lines:
+                commentMessage(selectedMessage, true);
                 return true;
             case R.id.send_again:
                 resendMessage(selectedMessage);

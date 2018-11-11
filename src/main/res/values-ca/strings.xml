@@ -287,7 +287,7 @@
   <string name="check_x_filesize">Verificació de la mida de %s</string>
   <string name="check_x_filesize_on_host">Verificació de la mida de %1$s en %2$s</string>
   <string name="message_options">Opcions del missatge</string>
-  <string name="quote">Cita</string>
+  <string name="comment_lines">Cita</string>
   <string name="paste_as_quote">Pegar com a cita</string>
   <string name="copy_original_url">Copiar la URL original</string>
   <string name="send_again">Envia una altra vegada</string>

@@ -25,16 +25,14 @@
             android:id="@+id/message_reference_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingVertical="10dp"
-            android:paddingHorizontal="10dp"
+            android:padding="10dp"
             android:textAppearance="@style/TextAppearance.Conversations.Caption" />
 
         <TextView
             android:id="@+id/message_reference_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingVertical="10dp"
-            android:paddingHorizontal="10dp"
+            android:padding="10dp"
             android:ellipsize="end"
             android:maxLines="2"
             android:textAppearance="@style/TextAppearance.Conversations.MessageReferenceText"
@@ -63,8 +61,8 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="5dp"
             android:layout_marginRight="5dp"
-            android:background="?attr/color_background_tertiary"
-            android:src="?attr/ic_send_cancel_offline"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_send_cancel_offline_dark"
             android:visibility="gone" />
 
     </LinearLayout>

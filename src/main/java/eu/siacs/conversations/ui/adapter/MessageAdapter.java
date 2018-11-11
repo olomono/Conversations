@@ -438,7 +438,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 	 */
 	private void displayReferencingMessage(final ViewHolder viewHolder, final Message message, final Message referencedMessage, boolean darkBackground, int type) {
 		// Show the message reference area.
-		MessageReferenceUtils.displayMessageReference(activity, getContext(), getPosition(referencedMessage), viewHolder.messageReferenceBinding, message, referencedMessage, darkBackground);
+		MessageReferenceUtils.displayMessageReference(activity, getPosition(referencedMessage), viewHolder.messageReferenceBinding, message, referencedMessage, darkBackground);
 
 		// Show the comment on the referenced message.
 		constructTextMessage(viewHolder, message, darkBackground, type);
@@ -515,7 +515,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
      * (e.g., a reference to an image message with a text comment).
      *
      * Only to be used in conjunction with a display*Message() method.
-     * For instance see {@link #displayReferencedImageMessage} or {@link #displayTextMessage}
+     * For instance see {@link #displayReferencingMessage} or {@link #displayTextMessage}
      */
     private void constructTextMessage(final ViewHolder viewHolder, final Message message, boolean darkBackground, int type) {
         viewHolder.downloadButton.setVisibility(View.GONE);
@@ -792,11 +792,14 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 			// Use the referenced message if a message was found for the given reference.
 			// This is useful if the sending client used an ID that cannot be found locally.
 			if (referencedMessage != null && referencedMessage.getEncryption() != Message.ENCRYPTION_DECRYPTION_FAILED && referencedMessage.getEncryption() != Message.ENCRYPTION_AXOLOTL_NOT_FOR_THIS_DEVICE) {
-				String body = message.getBody();
-				String[] bodyLines = body.split("\n");
+				String messageBody = message.getBody();
+				String[] messageBodyLines = messageBody.split("\n");
+				int numberOfMessageBodyLines = messageBodyLines.length;
+				String[] referencedMessageBodyLines = referencedMessage.getBody().split("\n");
+				int numberOfReferencedMessageBodyLines = referencedMessageBodyLines.length;
 
-				// Delete legacy quotation if present.
-				if (body.length() > 0 && (body.charAt(0) == '>' || body.charAt(0) == '\u00bb')) {
+				// Delete legacy quotation added for backward compatibility if present but preserve independent quotations.
+				if (numberOfMessageBodyLines > 0 && numberOfMessageBodyLines >= numberOfReferencedMessageBodyLines && (messageBody.charAt(0) == '>' || messageBody.charAt(0) == '\u00bb')) {
 
 					// If the referenced message is a file message
 					// and the first quoted line is the URL of the referenced file message,
@@ -805,22 +808,19 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 					// If the referenced message is not a file message, remove all quoted lines from the message's body
 					// that are lines of the referenced message.
 					if (referencedMessage.hasFileOnRemoteHost()) {
-						String line = bodyLines[0];
+						String line = messageBodyLines[0];
 						if (UIHelper.isQuotationLine(line)) {
 							if (line.substring(1).trim().equals(referencedMessage.getFileParams().url.toString())) {
-								message.setBody(MessageReferenceUtils.createStringWithLinesOutOfStringArray(bodyLines, 1, bodyLines.length));
+								message.setBody(MessageReferenceUtils.createStringWithLinesOutOfStringArray(messageBodyLines, 1, messageBodyLines.length));
 							}
 						}
 					} else {
-						String[] referencedMessageBodyLines = referencedMessage.getBody().split("\n");
+						// Take only the part of the body that contains the comment without legacy quotation.
 						int currentLine = 0;
 						boolean quotationEqualsReferencedMessage = true;
-
-						// Ignore each line of the body until a line is found that does not begin with a quoting symbol
-						// and take all lines after that.
-						for (String line : bodyLines) {
-							if (UIHelper.isQuotationLine(line)) {
-								if (currentLine >= referencedMessageBodyLines.length || !line.substring(1).trim().equals(referencedMessageBodyLines[currentLine].trim())) {
+						for (String line : messageBodyLines) {
+							if (currentLine < numberOfReferencedMessageBodyLines) {
+								if (!(UIHelper.isQuotationLine(line) && line.substring(1).trim().equals(referencedMessageBodyLines[currentLine].trim()))) {
 									quotationEqualsReferencedMessage = false;
 									break;
 								}
@@ -829,9 +829,8 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 							}
 							currentLine++;
 						}
-
 						if (quotationEqualsReferencedMessage) {
-							message.setBody(MessageReferenceUtils.createStringWithLinesOutOfStringArray(bodyLines, currentLine, bodyLines.length));
+							message.setBody(MessageReferenceUtils.createStringWithLinesOutOfStringArray(messageBodyLines, currentLine, messageBodyLines.length));
 							activity.xmppConnectionService.updateMessage(message);
 						}
 					}
@@ -841,7 +840,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 				displayReferencingMessage(viewHolder, message, referencedMessage, darkBackground, type);
 
 			} else {
-				// TODO handle the case that no message was found for the given message reference
+				// TODO handle the case that no message was found for the given message reference correctly
                 displayTextMessage(viewHolder, message, darkBackground, type);
 			}
 		} else if (message.isFileOrImage() && message.getEncryption() != Message.ENCRYPTION_PGP && message.getEncryption() != Message.ENCRYPTION_DECRYPTION_FAILED) {
@@ -1103,7 +1102,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 			if (onQuoteListener != null) {
 				int quoteResId = activity.getThemeResource(R.attr.icon_quote, R.drawable.ic_action_reply);
 				// 3rd item is placed after "copy" item
-				menu.add(0, android.R.id.button1, 3, R.string.quote).setIcon(quoteResId)
+				menu.add(0, android.R.id.button1, 3, R.string.comment_lines).setIcon(quoteResId)
 						.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
 			}
 			return false;

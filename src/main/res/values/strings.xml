@@ -294,7 +294,6 @@
     <string name="check_x_filesize">Check %s size</string>
     <string name="check_x_filesize_on_host">Check %1$s size on %2$s</string>
     <string name="message_options">Message options</string>
-    <string name="quote">Quote</string>
     <string name="paste_as_quote">Paste as quote</string>
     <string name="copy_original_url">Copy original URL</string>
     <string name="send_again">Send again</string>
@@ -749,5 +748,6 @@
     <string name="cancelled">cancelled</string>
     <string name="already_drafting_message">You are already drafting a message.</string>
     <string name="comment">Comment</string>
+    <string name="comment_lines">Comment lines</string>
 </resources>
 

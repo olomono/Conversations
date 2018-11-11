@@ -251,7 +251,7 @@
   <string name="check_x_filesize">%s 크기 확인</string>
   <string name="check_x_filesize_on_host">%2$s의 %1$s 크기 확인</string>
   <string name="message_options">메세지 설정 </string>
-  <string name="quote">인용</string>
+  <string name="comment_lines">인용</string>
   <string name="copy_original_url">원본 URL 복사 </string>
   <string name="send_again">다시 보내기 </string>
   <string name="file_url">파일 URL</string>

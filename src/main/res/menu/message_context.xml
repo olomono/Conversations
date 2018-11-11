@@ -18,8 +18,8 @@
         android:title="@string/comment"
         android:visible="false"/>
     <item
-        android:id="@+id/quote_message"
-        android:title="@string/quote"
+        android:id="@+id/comment_lines"
+        android:title="@string/comment_lines"
         android:visible="false"/>
     <item
         android:id="@+id/retry_decryption"

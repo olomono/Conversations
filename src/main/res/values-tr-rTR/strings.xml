@@ -252,7 +252,7 @@
   <string name="check_x_filesize">%s boyutunu denetle</string>
   <string name="check_x_filesize_on_host">%2$s üzerindeki %1$s boyutunu denetle</string>
   <string name="message_options">İleti seçenekleri</string>
-  <string name="quote">Alıntı</string>
+  <string name="comment_lines">Alıntı</string>
   <string name="copy_original_url">Orijinal URL\'i kopyala</string>
   <string name="send_again">Yeniden gönder</string>
   <string name="file_url">Dosya URL</string>
