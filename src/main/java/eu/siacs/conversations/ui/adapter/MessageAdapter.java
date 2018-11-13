@@ -799,7 +799,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 				int numberOfReferencedMessageBodyLines = referencedMessageBodyLines.length;
 
 				// Delete legacy quotation added for backward compatibility if present but preserve independent quotations.
-				if (numberOfMessageBodyLines > 0 && numberOfMessageBodyLines >= numberOfReferencedMessageBodyLines && (messageBody.charAt(0) == '>' || messageBody.charAt(0) == '\u00bb')) {
+				if (messageBody.length() > 0 && numberOfMessageBodyLines >= numberOfReferencedMessageBodyLines && (messageBody.charAt(0) == '>' || messageBody.charAt(0) == '\u00bb')) {
 
 					// If the referenced message is a file message
 					// and the first quoted line is the URL of the referenced file message,
