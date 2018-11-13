@@ -131,15 +131,15 @@ public class MessageReferenceUtils {
     }
 
     /**
-     * Sets the image for the message reference icon depending on the color of the underlying message bubble.
-     * @param nonDefaultMessageBubbleColor specifies if the message bubble has a non-default color
+     * Sets the image for the message reference icon depending on the color of its background.
+     * @param darkBackground specifies if the background of the message reference icon is dark
      * @param messageReferenceIcon icon for the message reference
-     * @param defaultDrawable drawable that will be used as the message reference icon if the message bubble has the default color
-     * @param nonDefaultDrawable drawable that will be used as the message reference icon if the message bubble has not the default color
+     * @param defaultDrawable drawable that will be used as the message reference icon if its background is light
+     * @param drawableForDarkBackground drawable that will be used as the message reference icon if its background is dark
      */
-    public static void setMessageReferenceIcon(boolean nonDefaultMessageBubbleColor, ImageView messageReferenceIcon, Drawable defaultDrawable, Drawable nonDefaultDrawable) {
-        if (nonDefaultMessageBubbleColor) {
-            messageReferenceIcon.setBackground(nonDefaultDrawable);
+    public static void setMessageReferenceIcon(boolean darkBackground, ImageView messageReferenceIcon, Drawable defaultDrawable, Drawable drawableForDarkBackground) {
+        if (darkBackground) {
+            messageReferenceIcon.setBackground(drawableForDarkBackground);
         } else {
             messageReferenceIcon.setBackground(defaultDrawable);
         }
