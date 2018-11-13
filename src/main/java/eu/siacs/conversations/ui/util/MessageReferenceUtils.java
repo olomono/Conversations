@@ -158,7 +158,14 @@ public class MessageReferenceUtils {
                 message.setRelativeFilePath(referencedMessage.getRelativeFilePath());
             }
         } else {
+            // Set the message as the referenced message so that it can be used for loading the bitmap.
             message = referencedMessage;
+
+            // Set the scale type manually only for the message reference preview since a common scale type cannot be used.
+            messageReferenceBinding.messageReferenceImageThumbnail.setScaleType(ImageView.ScaleType.FIT_START);
+
+            // Remove the rounded corners of the thumbnail in the message reference preview.
+            messageReferenceBinding.messageReferenceImageThumbnail.setCornerRadius(0);
         }
 
         activity.loadBitmapForReferencedImageMessage(message, messageReferenceBinding.messageReferenceImageThumbnail);
