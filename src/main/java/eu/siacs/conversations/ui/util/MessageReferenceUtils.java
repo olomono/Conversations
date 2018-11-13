@@ -45,10 +45,10 @@ public class MessageReferenceUtils {
         } else {
             if (referencedMessage.isAudio()) {
                 messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
-                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_send_voice_offline), activity.getResources().getDrawable(R.drawable.ic_send_voice_offline_white));
+                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_attach_record), activity.getResources().getDrawable(R.drawable.ic_attach_record_white));
             } else if (referencedMessage.isGeoUri()) {
                 messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
-                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_send_location_offline), activity.getResources().getDrawable(R.drawable.ic_send_location_offline_white));
+                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_attach_location), activity.getResources().getDrawable(R.drawable.ic_attach_location_white));
 
             } else if (referencedMessage.isText()) {
                 messageReferenceBinding.messageReferenceText.setVisibility(View.VISIBLE);
@@ -56,7 +56,7 @@ public class MessageReferenceUtils {
             } else {
                 messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
                 // default icon
-                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_send_file_offline), activity.getResources().getDrawable(R.drawable.ic_send_file_offline_white));
+                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_attach_document), activity.getResources().getDrawable(R.drawable.ic_attach_document_white));
             }
         }
 
