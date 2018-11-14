@@ -1106,14 +1106,6 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 
         MessageReferenceUtils.displayMessageReference(activity, messageListAdapter.getPosition(message), binding.messageReferencePreview, null, message, darkBackground);
 
-        /*
-        if (message.isImageOrVideo()) {
-            // TODO clear the background right to the image thumbnail
-            binding.messageReferencePreview.messageReferenceImageThumbnail.setScaleType(ImageView.ScaleType.FIT_START);
-            binding.messageReferencePreview.messageReferenceImageThumbnail.setVisibility(View.VISIBLE);
-        }
-        */
-
         if (quoteMessage) {
             // Show the lines of the referenced message as quotations instead of letting a legacy quotation be used for the body of the message to be sent.
             quoteText(MessageUtils.prepareQuote(message));
@@ -1122,8 +1114,6 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             // Set the legacy quotation so that it can be used as the first part of the body for the message to be sent.
             conversation.setMessageReferenceQuote(MessageUtils.createQuote(MessageUtils.prepareQuote(message)) + "\n");
         }
-
-
 	}
 
     /**
@@ -1171,7 +1161,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             MenuItem copyMessage = menu.findItem(R.id.copy_message);
             MenuItem copyLink = menu.findItem(R.id.copy_link);
             MenuItem commentMessage = menu.findItem(R.id.comment_message);
-            MenuItem quoteMessage = menu.findItem(R.id.comment_lines);
+            MenuItem commentLines = menu.findItem(R.id.comment_lines);
             MenuItem retryDecryption = menu.findItem(R.id.retry_decryption);
             MenuItem correctMessage = menu.findItem(R.id.correct_message);
             MenuItem shareWith = menu.findItem(R.id.share_with);
@@ -1185,7 +1175,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                 commentMessage.setVisible(MessageUtils.prepareQuote(m).length() > 0);
             }
             if (!m.isFileOrImage() && !encrypted && !m.isGeoUri() && !m.treatAsDownloadable()) {
-                quoteMessage.setVisible(MessageUtils.prepareQuote(m).length() > 0);
+                commentLines.setVisible(MessageUtils.prepareQuote(m).length() > 0);
                 copyMessage.setVisible(true);
                 String body = m.getMergedBody().toString();
                 if (ShareUtil.containsXmppUri(body)) {
