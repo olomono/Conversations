@@ -49,7 +49,9 @@ public class MessageReferenceUtils {
             } else if (referencedMessage.isGeoUri()) {
                 messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
                 setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_attach_location), activity.getResources().getDrawable(R.drawable.ic_attach_location_white));
-
+            } else if (referencedMessage.treatAsDownloadable()) {
+                messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
+                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_file_download), activity.getResources().getDrawable(R.drawable.ic_file_download_white_24dp));
             } else if (referencedMessage.isText()) {
                 messageReferenceBinding.messageReferenceText.setVisibility(View.VISIBLE);
                 messageReferenceBinding.messageReferenceText.setText(extractFirstTwoLinesOfBody(referencedMessage));
