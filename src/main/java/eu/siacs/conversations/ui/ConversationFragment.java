@@ -1083,12 +1083,12 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
     }
 
 	/**
-     * Comment the whole given message or line by line.
-	 * Set the message reference for the current conversation so that it can be used by sendMessage()
-     * and show a preview of the referenced message.
+     * Comments the whole given message or line by line.
+	 * Sets the message reference for the current conversation so that it can be used by sendMessage()
+     * and shows a preview of the referenced message.
 	 *
-	 * Use XEP-0367: Message Attaching while still supporting legacy quoting method ("> ").
-	 * @param message message that should be referenced when a new message is sent.
+	 * Uses XEP-0367: Message Attaching while still supporting legacy quoting method ("> ").
+	 * @param message message that should be referenced when a new message is sent
      * @param quoteMessage quote the lines of the given message
 	 */
 	private void commentMessage(Message message, boolean quoteMessage) {
@@ -1104,6 +1104,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         displaySoftInput();
         boolean darkBackground = activity.isDarkTheme();
 
+        // Show the message reference preview.
         MessageReferenceUtils.displayMessageReference(activity, messageListAdapter.getPosition(message), binding.messageReferencePreview, null, message, darkBackground);
 
         if (quoteMessage) {
