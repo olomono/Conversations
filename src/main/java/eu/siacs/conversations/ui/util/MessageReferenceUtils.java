@@ -40,26 +40,27 @@ public class MessageReferenceUtils {
         // true if this method is used for a preview of a messageReference area
         boolean messageReferencePreview = message == null;
 
-        if (referencedMessage.isImageOrVideo()) {
+        if (referencedMessage.isFileOrImage() && !activity.xmppConnectionService.getFileBackend().getFile(referencedMessage).exists()) {
+            messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
+            setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_file_deleted), activity.getResources().getDrawable(R.drawable.ic_file_deleted_white));
+        } else if (referencedMessage.isImageOrVideo()) {
             displayReferencedImageMessage(activity, messageReferenceBinding, message, referencedMessage);
+        } else if (referencedMessage.isAudio()) {
+            messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
+            setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_attach_record), activity.getResources().getDrawable(R.drawable.ic_attach_record_white));
+        } else if (referencedMessage.isGeoUri()) {
+            messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
+            setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_attach_location), activity.getResources().getDrawable(R.drawable.ic_attach_location_white));
+        } else if (referencedMessage.treatAsDownloadable()) {
+            messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
+            setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_file_download), activity.getResources().getDrawable(R.drawable.ic_file_download_white));
+        } else if (referencedMessage.isText()) {
+            messageReferenceBinding.messageReferenceText.setVisibility(View.VISIBLE);
+            messageReferenceBinding.messageReferenceText.setText(extractFirstTwoLinesOfBody(referencedMessage));
         } else {
-            if (referencedMessage.isAudio()) {
-                messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
-                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_attach_record), activity.getResources().getDrawable(R.drawable.ic_attach_record_white));
-            } else if (referencedMessage.isGeoUri()) {
-                messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
-                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_attach_location), activity.getResources().getDrawable(R.drawable.ic_attach_location_white));
-            } else if (referencedMessage.treatAsDownloadable()) {
-                messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
-                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_file_download), activity.getResources().getDrawable(R.drawable.ic_file_download_white));
-            } else if (referencedMessage.isText()) {
-                messageReferenceBinding.messageReferenceText.setVisibility(View.VISIBLE);
-                messageReferenceBinding.messageReferenceText.setText(extractFirstTwoLinesOfBody(referencedMessage));
-            } else {
-                messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
-                // default icon
-                setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_attach_document), activity.getResources().getDrawable(R.drawable.ic_attach_document_white));
-            }
+            messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
+            // default icon
+            setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_attach_document), activity.getResources().getDrawable(R.drawable.ic_attach_document_white));
         }
 
         if (darkBackground) {
