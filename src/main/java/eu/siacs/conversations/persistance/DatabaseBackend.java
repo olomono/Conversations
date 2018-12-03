@@ -706,6 +706,43 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 		return list;
 	}
 
+	public Message getMessageByUUID(final String uuid, final Conversation conversation){
+		final SQLiteDatabase db = this.getReadableDatabase();
+		final String[] selectionArgs = {uuid};
+		final Cursor cursor = db.query(Message.TABLENAME, null, Message.UUID
+				+ "=?", selectionArgs, null, null, null, null);
+
+		Message message = null;
+		if (cursor.getCount() == 1) {
+			cursor.moveToLast();
+			message = Message.fromCursor(cursor, conversation);
+		}
+		cursor.close();
+		return message;
+	}
+
+	public Message getMessageByRemoteMsgId(final String remoteMsgId, final Conversation conversation){
+		final SQLiteDatabase db = this.getReadableDatabase();
+		final String[] selectionArgs = {remoteMsgId};
+		final Cursor cursor = db.query(Message.TABLENAME, null, Message.REMOTE_MSG_ID
+				+ "=?", selectionArgs, null, null, null, null);
+		Message message = null;
+		if (cursor.getCount() == 1) {
+			cursor.moveToLast();
+			message = Message.fromCursor(cursor, conversation);
+		}
+		cursor.close();
+		return message;
+	}
+
+	public Message getMsgByUuidOrRemoteMsgId(final String id, final Conversation conversation){
+		Message message = getMessageByUUID(id, conversation);
+		if (message == null){
+			message = getMessageByRemoteMsgId(id, conversation);
+		}
+		return message;
+	}
+
 	public ArrayList<Message> getMessages(Conversation conversations, int limit) {
 		return getMessages(conversations, limit, -1);
 	}

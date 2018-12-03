@@ -50,6 +50,7 @@ public class Message extends AbstractEntity {
 	public static final int TYPE_STATUS = 3;
 	public static final int TYPE_PRIVATE = 4;
 
+	public static final String UUID = "uuid";
 	public static final String CONVERSATION = "conversationUuid";
 	public static final String COUNTERPART = "counterpart";
 	public static final String TRUE_COUNTERPART = "trueCounterpart";
