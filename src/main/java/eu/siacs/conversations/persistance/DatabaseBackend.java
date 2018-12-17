@@ -706,12 +706,19 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 		return list;
 	}
 
+	public Message getMsgByUuidOrRemoteMsgId(final String id, final Conversation conversation){
+		Message message = getMessageByUUID(id, conversation);
+		if (message == null){
+			message = getMessageByRemoteMsgId(id, conversation);
+		}
+		return message;
+	}
+
 	public Message getMessageByUUID(final String uuid, final Conversation conversation){
 		final SQLiteDatabase db = this.getReadableDatabase();
 		final String[] selectionArgs = {uuid};
 		final Cursor cursor = db.query(Message.TABLENAME, null, Message.UUID
 				+ "=?", selectionArgs, null, null, null, null);
-
 		Message message = null;
 		if (cursor.getCount() == 1) {
 			cursor.moveToLast();
@@ -735,16 +742,38 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 		return message;
 	}
 
-	public Message getMsgByUuidOrRemoteMsgId(final String id, final Conversation conversation){
-		Message message = getMessageByUUID(id, conversation);
-		if (message == null){
-			message = getMessageByRemoteMsgId(id, conversation);
-		}
-		return message;
-	}
-
 	public ArrayList<Message> getMessages(Conversation conversations, int limit) {
 		return getMessages(conversations, limit, -1);
+	}
+
+	public ArrayList<Message> getMessagesForMessageReference(Conversation conversation, int limit, long timestamp) {
+		ArrayList<Message> list = new ArrayList<>();
+		SQLiteDatabase db = this.getReadableDatabase();
+		Cursor cursor;
+		if (timestamp == -1) {
+			String[] selectionArgs = {conversation.getUuid()};
+			cursor = db.query(Message.TABLENAME, null, Message.CONVERSATION
+					+ "=?", selectionArgs, null, null, Message.TIME_SENT
+					+ " DESC", limit == -1 ? null : String.valueOf(limit));
+		} else {
+			String[] selectionArgs = {conversation.getUuid(),
+					Long.toString(timestamp)};
+			cursor = db.query(Message.TABLENAME, null, Message.CONVERSATION
+							+ "=? and " + Message.TIME_SENT + ">=?", selectionArgs,
+					null, null, Message.TIME_SENT + " DESC",
+					limit == -1 ? null : String.valueOf(limit));
+		}
+		if (cursor.getCount() > 0) {
+			cursor.moveToLast();
+			do {
+				Message message = Message.fromCursor(cursor, conversation);
+				if (message != null) {
+					list.add(message);
+				}
+			} while (cursor.moveToPrevious());
+		}
+		cursor.close();
+		return list;
 	}
 
 	public ArrayList<Message> getMessages(Conversation conversation, int limit, long timestamp) {
@@ -755,14 +784,14 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 			String[] selectionArgs = {conversation.getUuid()};
 			cursor = db.query(Message.TABLENAME, null, Message.CONVERSATION
 					+ "=?", selectionArgs, null, null, Message.TIME_SENT
-					+ " DESC", String.valueOf(limit));
+					+ " DESC", limit == -1 ? null : String.valueOf(limit));
 		} else {
 			String[] selectionArgs = {conversation.getUuid(),
 					Long.toString(timestamp)};
 			cursor = db.query(Message.TABLENAME, null, Message.CONVERSATION
 							+ "=? and " + Message.TIME_SENT + "<?", selectionArgs,
 					null, null, Message.TIME_SENT + " DESC",
-					String.valueOf(limit));
+					limit == -1 ? null : String.valueOf(limit));
 		}
 		if (cursor.getCount() > 0) {
 			cursor.moveToLast();

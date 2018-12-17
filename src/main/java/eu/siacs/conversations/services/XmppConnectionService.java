@@ -107,6 +107,7 @@ import eu.siacs.conversations.persistance.DatabaseBackend;
 import eu.siacs.conversations.persistance.FileBackend;
 import eu.siacs.conversations.ui.SettingsActivity;
 import eu.siacs.conversations.ui.UiCallback;
+import eu.siacs.conversations.ui.XmppActivity;
 import eu.siacs.conversations.ui.interfaces.OnAvatarPublication;
 import eu.siacs.conversations.ui.interfaces.OnMediaLoaded;
 import eu.siacs.conversations.ui.interfaces.OnSearchResultsAvailable;
@@ -1569,7 +1570,7 @@ public class XmppConnectionService extends Service {
 		return this.conversations;
 	}
 
-	private void checkDeletedFiles(Conversation conversation) {
+	public void checkDeletedFiles(Conversation conversation) {
 		conversation.findMessagesWithFiles(message -> {
 			if (!getFileBackend().isFileAvailable(message)) {
 				message.setTransferable(new TransferablePlaceholder(Transferable.STATUS_DELETED));
@@ -1663,6 +1664,36 @@ public class XmppConnectionService extends Service {
 		};
 		mDatabaseReaderExecutor.execute(runnable);
 	}
+
+    public void loadMessage(final XmppActivity activity, final Conversation conversation, final Message message, final XmppConnectionService.OnMoreMessagesLoaded callback){
+        final Account account = conversation.getAccount();
+        final List<Message> messages = activity.xmppConnectionService.databaseBackend.getMessagesForMessageReference(conversation, -1, message.getTimeSent());
+        if (messages.size() > 0) {
+            conversation.clearMessages();
+            conversation.addAll(0, messages);
+            activity.xmppConnectionService.checkDeletedFiles(conversation);
+            callback.onMoreMessagesLoaded(messages.size(), conversation);
+        } else if (conversation.hasMessagesLeftOnServer()
+                && account.isOnlineAndConnected()
+                && conversation.getLastClearHistory().getTimestamp() == 0) {
+            final boolean mamAvailable;
+            if (conversation.getMode() == Conversation.MODE_SINGLE) {
+                mamAvailable = account.getXmppConnection().getFeatures().mam() && !conversation.getContact().isBlocked();
+            } else {
+                mamAvailable = conversation.getMucOptions().mamSupport();
+            }
+            if (mamAvailable) {
+                MessageArchiveService.Query query = getMessageArchiveService().query(conversation, new MamReference(0), message.getTimeSent(), false);
+                if (query != null) {
+                    query.setCallback(callback);
+                    callback.informUser(R.string.fetching_history_from_server);
+                } else {
+                    callback.informUser(R.string.not_fetching_history_retention_period);
+                }
+
+            }
+        }
+    }
 
 	public List<Account> getAccounts() {
 		return this.accounts;

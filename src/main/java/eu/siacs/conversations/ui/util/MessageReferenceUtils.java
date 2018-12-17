@@ -11,6 +11,7 @@ import eu.siacs.conversations.R;
 import eu.siacs.conversations.databinding.MessageReferenceBinding;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.Message;
+import eu.siacs.conversations.ui.ConversationFragment;
 import eu.siacs.conversations.ui.XmppActivity;
 import eu.siacs.conversations.utils.UIHelper;
 
@@ -39,8 +40,12 @@ public class MessageReferenceUtils {
     public static void displayMessageReference(final XmppActivity activity, final int position, final MessageReferenceBinding messageReferenceBinding, final Message message, final Message referencedMessage, boolean darkBackground) {
         // true if this method is used for a preview of a messageReference area
         boolean messageReferencePreview = message == null;
+        final Conversation conversation = (Conversation) referencedMessage.getConversation();
 
-        if (referencedMessage.isFileOrImage() && !activity.xmppConnectionService.getFileBackend().getFile(referencedMessage).exists()) {
+        if (referencedMessage == null) {
+            messageReferenceBinding.messageReferenceInfo.setVisibility(View.VISIBLE);
+            messageReferenceBinding.messageReferenceInfo.setText(activity.getResources().getString(R.string.message_not_found));
+        } else if (referencedMessage.isFileOrImage() && !activity.xmppConnectionService.getFileBackend().getFile(referencedMessage).exists()) {
             messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
             setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_file_deleted), activity.getResources().getDrawable(R.drawable.ic_file_deleted_white));
         } else if (referencedMessage.isImageOrVideo()) {
@@ -84,9 +89,13 @@ public class MessageReferenceUtils {
             messageReferenceBinding.messageReferenceContainer.setBackground(activity.getResources().getDrawable(R.drawable.message_reference_background_light_grey));
         }
 
-        messageReferenceBinding.messageReferenceInfo.setText(MessageReferenceUtils.createInfo(activity, activity, referencedMessage));
         messageReferenceBinding.messageReferenceContainer.setVisibility(View.VISIBLE);
+        // TODO: refactor logic for referencedMessage == null
+        if (referencedMessage == null){
+            return;
+        }
 
+        messageReferenceBinding.messageReferenceInfo.setText(MessageReferenceUtils.createInfo(activity, activity, referencedMessage));
 
         if (messageReferencePreview) {
             messageReferenceBinding.messageReferencePreviewCancelButton.setVisibility(View.VISIBLE);
@@ -94,18 +103,23 @@ public class MessageReferenceUtils {
             // Cancel the referencing of a message.
             messageReferenceBinding.messageReferencePreviewCancelButton.setOnClickListener(v -> {
                 hideMessageReference(messageReferenceBinding);
-                ((Conversation) referencedMessage.getConversation()).setMessageReference(null);
-                ((Conversation) referencedMessage.getConversation()).getConversationFragment().updateChatMsgHint();
+                conversation.setMessageReference(null);
+                conversation.getConversationFragment().updateChatMsgHint();
             });
 
             // Jump to the referenced message when the message reference preview is clicked.
             messageReferenceBinding.messageReferenceContainer.setOnClickListener(v -> {
-                ((Conversation) referencedMessage.getConversation()).getConversationFragment().setSelection(position, false);
+                conversation.getConversationFragment().setSelection(position, false);
             });
         } else {
             // Jump to the referenced message when the message reference is clicked.
             messageReferenceBinding.messageReferenceContainer.setOnClickListener(v -> {
-                ((Conversation) message.getConversation()).getConversationFragment().setSelection(position, false);
+                final ConversationFragment conversationFragment = conversation.getConversationFragment();
+                if (position == -1) {
+                    activity.xmppConnectionService.loadMessage(activity, conversation, referencedMessage, conversationFragment.getOnReferencedMessageLoadedCallback(conversationFragment.getView().findViewById(R.id.messages_view), referencedMessage, message));
+                } else {
+                    conversationFragment.setSelection(position, false);
+                }
             });
         }
     }

@@ -789,7 +789,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		} else if (message.hasMessageReference() && message.getEncryption() != Message.ENCRYPTION_DECRYPTION_FAILED && message.getEncryption() != Message.ENCRYPTION_AXOLOTL_NOT_FOR_THIS_DEVICE) {
 			Message referencedMessage = ((Conversation) conversation).findMessageWithUuidOrRemoteMsgId(message.getMessageReference());
 
-			// Try to search the referenced message in the DB if it is null and could not be found in current loaded conversation.
+			// Try to search the referenced message in the DB if it is null and could not be found in the currently loaded conversation.
 			if(referencedMessage == null){
 				referencedMessage = activity.xmppConnectionService.databaseBackend.getMsgByUuidOrRemoteMsgId(message.getMessageReference(), (Conversation) conversation);
 			}
@@ -840,14 +840,12 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 						}
 					}
 				}
-
-				// Display a referenced message of any type.
-				displayReferencingMessage(viewHolder, message, referencedMessage, darkBackground, type);
-
-			} else {
-				// TODO handle the case that no message was found for the given message reference correctly
-                displayTextMessage(viewHolder, message, darkBackground, type);
 			}
+
+			// Display a referenced message of any type.
+			// or only an info message for a message reference that has no associated message.
+			displayReferencingMessage(viewHolder, message, referencedMessage, darkBackground, type);
+
 		} else if (message.isFileOrImage() && message.getEncryption() != Message.ENCRYPTION_PGP && message.getEncryption() != Message.ENCRYPTION_DECRYPTION_FAILED) {
 			if (message.isImageOrVideo()) {
 				displayImageMessage(viewHolder, message);
