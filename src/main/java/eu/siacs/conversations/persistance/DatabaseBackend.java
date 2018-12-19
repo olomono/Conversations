@@ -737,27 +737,35 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 		return message;
 	}
 
-	public ArrayList<Message> getMessages(Conversation conversations, int limit) {
-		return getMessages(conversations, limit, -1);
-	}
-
-	public ArrayList<Message> getMessagesForMessageReference(Conversation conversation, int limit, long timestamp) {
-		ArrayList<Message> list = new ArrayList<>();
+	/**
+	 * Retrieve messages between an earliest and a latest timestamp.
+	 * @param conversation conversation that holds the messages
+	 * @param limit count of retrieved messages or -1 for ignoring this parameter
+	 * @param earliestTimestamp earliest time of a retrieved message (including this message) or -1 for ignoring this parameter
+	 * @param latestTimestamp latest time of a retrieved message (excluding this message) or -1 for ignoring this parameter
+	 * @return retrieved messages
+	 */
+	public ArrayList<Message> getMessages(final Conversation conversation, int limit, final long earliestTimestamp, final long latestTimestamp) {
+		final ArrayList<Message> list = new ArrayList<>();
 		SQLiteDatabase db = this.getReadableDatabase();
 		Cursor cursor;
-		if (timestamp == -1) {
-			String[] selectionArgs = {conversation.getUuid()};
-			cursor = db.query(Message.TABLENAME, null, Message.CONVERSATION
-					+ "=?", selectionArgs, null, null, Message.TIME_SENT
-					+ " DESC", limit == -1 ? null : String.valueOf(limit));
-		} else {
-			String[] selectionArgs = {conversation.getUuid(),
-					Long.toString(timestamp)};
-			cursor = db.query(Message.TABLENAME, null, Message.CONVERSATION
-							+ "=? and " + Message.TIME_SENT + ">=?", selectionArgs,
-					null, null, Message.TIME_SENT + " DESC",
-					limit == -1 ? null : String.valueOf(limit));
+
+		String selection = Message.CONVERSATION + "=?";
+		final List<String> selectionArgs = new ArrayList<>();
+		selectionArgs.add(conversation.getUuid());
+		String limitation = limit == -1 ? null : String.valueOf(limit);
+
+		if (earliestTimestamp != -1) {
+			selection += " and " + Message.TIME_SENT + ">=?";
+			selectionArgs.add(Long.toString(earliestTimestamp));
 		}
+		if (latestTimestamp != -1) {
+			selectionArgs.add(Long.toString(latestTimestamp));
+			selection += " and " + Message.TIME_SENT + "<?";
+		}
+
+		cursor = db.query(Message.TABLENAME, null, selection, selectionArgs.toArray(new String[selectionArgs.size()]), null, null, Message.TIME_SENT + " DESC", limitation);
+
 		if (cursor.getCount() > 0) {
 			cursor.moveToLast();
 			do {
@@ -771,34 +779,35 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 		return list;
 	}
 
-	public ArrayList<Message> getMessages(Conversation conversation, int limit, long timestamp) {
-		ArrayList<Message> list = new ArrayList<>();
-		SQLiteDatabase db = this.getReadableDatabase();
-		Cursor cursor;
-		if (timestamp == -1) {
-			String[] selectionArgs = {conversation.getUuid()};
-			cursor = db.query(Message.TABLENAME, null, Message.CONVERSATION
-					+ "=?", selectionArgs, null, null, Message.TIME_SENT
-					+ " DESC", limit == -1 ? null : String.valueOf(limit));
-		} else {
-			String[] selectionArgs = {conversation.getUuid(),
-					Long.toString(timestamp)};
-			cursor = db.query(Message.TABLENAME, null, Message.CONVERSATION
-							+ "=? and " + Message.TIME_SENT + "<?", selectionArgs,
-					null, null, Message.TIME_SENT + " DESC",
-					limit == -1 ? null : String.valueOf(limit));
-		}
-		if (cursor.getCount() > 0) {
-			cursor.moveToLast();
-			do {
-				Message message = Message.fromCursor(cursor, conversation);
-				if (message != null) {
-					list.add(message);
-				}
-			} while (cursor.moveToPrevious());
-		}
-		cursor.close();
-		return list;
+	/**
+	 * Retrieve messages for a given limit.
+	 * @param conversation conversation that holds the messages
+	 * @param limit count of retrieved messages or -1 for ignoring this parameter
+	 * @return retrieved messages
+	 */
+	public ArrayList<Message> getMessages(Conversation conversation, int limit) {
+		return getMessages(conversation, limit, -1);
+	}
+
+	/**
+	 * Retrieve messages before a latest timestamp.
+	 * @param conversation conversation that holds the messages
+	 * @param limit count of retrieved messages or -1 for ignoring this parameter
+	 * @param latestTimestamp latest time of a retrieved message (excluding this message) or -1 for ignoring this parameter	 * @return retrieved messages
+	 */
+	public ArrayList<Message> getMessages(Conversation conversation, int limit, long latestTimestamp) {
+		return getMessages(conversation, limit, -1, latestTimestamp);
+	}
+
+	/**
+	 * Retrieve messages between an earliest and a latest timestamp without a limit.
+	 * @param conversation conversation that holds the messages
+	 * @param earliestTimestamp earliest time of a retrieved message (including this message) or -1 for ignoring this parameter
+	 * @param latestTimestamp latest time of a retrieved message (excluding this message) or -1 for ignoring this parameter
+	 * @return retrieved messages
+	 */
+	public ArrayList<Message> getMessages(Conversation conversation, long earliestTimestamp, long latestTimestamp) {
+		return getMessages(conversation, -1, earliestTimestamp, latestTimestamp);
 	}
 
 	public Cursor getMessageSearchCursor(List<String> term) {

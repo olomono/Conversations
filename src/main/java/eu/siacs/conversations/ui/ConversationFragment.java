@@ -242,7 +242,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                 });
 
                 ((Conversation) referencedMessage.getConversation()).getConversationFragment().refresh();
-                ((Conversation) message.getConversation()).getConversationFragment().setSelection(0, false);
+                ((Conversation) message.getConversation()).getConversationFragment().setSelection(1, false);
             }
 
             @Override

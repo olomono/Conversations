@@ -1667,9 +1667,8 @@ public class XmppConnectionService extends Service {
 
     public void loadMessage(final XmppActivity activity, final Conversation conversation, final Message message, final XmppConnectionService.OnMoreMessagesLoaded callback){
         final Account account = conversation.getAccount();
-        final List<Message> messages = activity.xmppConnectionService.databaseBackend.getMessagesForMessageReference(conversation, -1, message.getTimeSent());
+        final List<Message> messages = activity.xmppConnectionService.databaseBackend.getMessages(conversation, message.getTimeSent(), conversation.getFirstMessage().getTimeSent());
         if (messages.size() > 0) {
-            conversation.clearMessages();
             conversation.addAll(0, messages);
             activity.xmppConnectionService.checkDeletedFiles(conversation);
             callback.onMoreMessagesLoaded(messages.size(), conversation);
