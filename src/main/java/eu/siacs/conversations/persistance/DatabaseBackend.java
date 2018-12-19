@@ -715,30 +715,25 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 	}
 
 	public Message getMessageByUUID(final String uuid, final Conversation conversation){
-		final SQLiteDatabase db = this.getReadableDatabase();
-		final String[] selectionArgs = {uuid};
-		final Cursor cursor = db.query(Message.TABLENAME, null, Message.UUID
-				+ "=?", selectionArgs, null, null, null, null);
-		Message message = null;
-		if (cursor.getCount() == 1) {
-			cursor.moveToLast();
-			message = Message.fromCursor(cursor, conversation);
-		}
-		cursor.close();
-		return message;
+		return getMessage(uuid, conversation, Message.UUID);
 	}
 
 	public Message getMessageByRemoteMsgId(final String remoteMsgId, final Conversation conversation){
+		return getMessage(remoteMsgId, conversation, Message.REMOTE_MSG_ID);
+	}
+
+	private Message getMessage(final String id, final Conversation conversation, final String selection){
 		final SQLiteDatabase db = this.getReadableDatabase();
-		final String[] selectionArgs = {remoteMsgId};
-		final Cursor cursor = db.query(Message.TABLENAME, null, Message.REMOTE_MSG_ID
+		final String[] selectionArgs = {id};
+		final Cursor cursor = db.query(Message.TABLENAME, null, selection
 				+ "=?", selectionArgs, null, null, null, null);
 		Message message = null;
-		if (cursor.getCount() == 1) {
-			cursor.moveToLast();
-			message = Message.fromCursor(cursor, conversation);
+		if (cursor != null) {
+			if (cursor.moveToFirst()) {
+				message = Message.fromCursor(cursor, conversation);
+			}
+			cursor.close();
 		}
-		cursor.close();
 		return message;
 	}
 
