@@ -650,8 +650,8 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 			switch (type) {
 				case DATE_SEPARATOR:
 					view = activity.getLayoutInflater().inflate(R.layout.message_date_bubble, parent, false);
-					viewHolder.statusMessage = view.findViewById(R.id.message_body);
-					viewHolder.messageBox = view.findViewById(R.id.message_box);
+					viewHolder.statusMessage = (TextView) view.findViewById(R.id.message_body);
+					viewHolder.messageBox = (LinearLayout) view.findViewById(R.id.message_box);
 					break;
 				case SENT:
 					MessageSentBinding messageSentBinding = MessageSentBinding.inflate(activity.getLayoutInflater());
@@ -688,9 +688,9 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 					break;
 				case STATUS:
 					view = activity.getLayoutInflater().inflate(R.layout.message_status, parent, false);
-					viewHolder.contactPicture = view.findViewById(R.id.message_photo);
-					viewHolder.statusMessage = view.findViewById(R.id.status_message);
-					viewHolder.loadMoreMessages = view.findViewById(R.id.load_more_messages);
+					viewHolder.contactPicture = (ImageView) view.findViewById(R.id.message_photo);
+					viewHolder.statusMessage = (TextView) view.findViewById(R.id.status_message);
+					viewHolder.loadMoreMessages = (Button) view.findViewById(R.id.load_more_messages);
 					break;
 				default:
 					throw new AssertionError("Unknown view type");

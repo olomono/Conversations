@@ -1570,7 +1570,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(getString(R.string.clear_conversation_history));
         final View dialogView = getActivity().getLayoutInflater().inflate(R.layout.dialog_clear_history, null);
-        final CheckBox endConversationCheckBox = dialogView.findViewById(R.id.end_conversation_checkbox);
+        final CheckBox endConversationCheckBox = (CheckBox) dialogView.findViewById(R.id.end_conversation_checkbox);
         builder.setView(dialogView);
         builder.setNegativeButton(getString(R.string.cancel), null);
         builder.setPositiveButton(getString(R.string.confirm), (dialog, which) -> {
