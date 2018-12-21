@@ -3,6 +3,7 @@ package eu.siacs.conversations.ui.util;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.view.View;
+import android.widget.AbsListView;
 import android.widget.ImageView;
 
 import java.util.Arrays;
@@ -116,7 +117,7 @@ public class MessageReferenceUtils {
             messageReferenceBinding.messageReferenceContainer.setOnClickListener(v -> {
                 final ConversationFragment conversationFragment = conversation.getConversationFragment();
                 if (position == -1) {
-                    activity.xmppConnectionService.loadMessage(activity, conversation, referencedMessage, conversationFragment.getOnReferencedMessageLoadedCallback(conversationFragment.getView().findViewById(R.id.messages_view), referencedMessage, message));
+                    activity.xmppConnectionService.loadMessage(activity, conversation, referencedMessage, conversationFragment.getOnMessageLoadedCallback((AbsListView) conversationFragment.getView().findViewById(R.id.messages_view), message));
                 } else {
                     conversationFragment.setSelection(position, false);
                 }
