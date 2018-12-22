@@ -41,7 +41,6 @@ public class MessageReferenceUtils {
     public static void displayMessageReference(final XmppActivity activity, final int position, final MessageReferenceBinding messageReferenceBinding, final Message message, final Message referencedMessage, boolean darkBackground) {
         // true if this method is used for a preview of a messageReference area
         boolean messageReferencePreview = message == null;
-        final Conversation conversation = (Conversation) referencedMessage.getConversation();
 
         if (referencedMessage == null) {
             messageReferenceBinding.messageReferenceInfo.setVisibility(View.VISIBLE);
@@ -92,11 +91,13 @@ public class MessageReferenceUtils {
 
         messageReferenceBinding.messageReferenceContainer.setVisibility(View.VISIBLE);
         // TODO: refactor logic for referencedMessage == null
-        if (referencedMessage == null){
+        if (referencedMessage == null) {
             return;
         }
 
         messageReferenceBinding.messageReferenceInfo.setText(MessageReferenceUtils.createInfo(activity, activity, referencedMessage));
+
+        final Conversation conversation = (Conversation) referencedMessage.getConversation();
 
         if (messageReferencePreview) {
             messageReferenceBinding.messageReferencePreviewCancelButton.setVisibility(View.VISIBLE);

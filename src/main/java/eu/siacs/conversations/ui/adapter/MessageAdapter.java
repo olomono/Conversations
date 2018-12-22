@@ -789,7 +789,8 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		} else if (message.hasMessageReference() && message.getEncryption() != Message.ENCRYPTION_DECRYPTION_FAILED && message.getEncryption() != Message.ENCRYPTION_AXOLOTL_NOT_FOR_THIS_DEVICE) {
 			Message referencedMessage = ((Conversation) conversation).findMessageWithUuidOrRemoteMsgId(message.getMessageReference());
 
-			// Try to search the referenced message in the DB if it is null and could not be found in the currently loaded conversation.
+			// Try to load the referenced message from the DB if it is null and could not be found in the currently loaded conversation.
+			// If it cannot be loaded from the DB it will remain null.
 			if(referencedMessage == null){
 				referencedMessage = activity.xmppConnectionService.databaseBackend.getMsgByUuidOrRemoteMsgId(message.getMessageReference(), (Conversation) conversation);
 			}
