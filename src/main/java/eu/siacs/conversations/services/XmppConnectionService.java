@@ -1640,7 +1640,7 @@ public class XmppConnectionService extends Service {
 			if (messages.size() > 0) {
 				conversation.addAll(0, messages);
 				checkDeletedFiles(conversation);
-				callback.onMoreMessagesLoaded(messages.size(), conversation);
+				callback.onMoreMessagesLoaded(conversation);
 			} else if (conversation.hasMessagesLeftOnServer()
 					&& account.isOnlineAndConnected()
 					&& conversation.getLastClearHistory().getTimestamp() == 0) {
@@ -1665,13 +1665,20 @@ public class XmppConnectionService extends Service {
 		mDatabaseReaderExecutor.execute(runnable);
 	}
 
-    public void loadMessage(final XmppActivity activity, final Conversation conversation, final Message message, final XmppConnectionService.OnMoreMessagesLoaded callback){
+    /**
+     * Loads all messages between the currently loaded earliest and a given message (inclusive).
+     * @param message earliest message to load
+     * @param callback method that will be called after the messages are loaded
+     */
+    public void loadMoreMessages(final Message message, final OnMoreMessagesLoaded callback){
+        final Conversation conversation = (Conversation) message.getConversation();
+        final XmppActivity activity = (XmppActivity) conversation.getConversationFragment().getActivity();
         final Account account = conversation.getAccount();
         final List<Message> messages = activity.xmppConnectionService.databaseBackend.getMessages(conversation, message.getTimeSent(), conversation.getFirstMessage().getTimeSent());
         if (messages.size() > 0) {
             conversation.addAll(0, messages);
             activity.xmppConnectionService.checkDeletedFiles(conversation);
-            callback.onMoreMessagesLoaded(messages.size(), conversation);
+            callback.onMoreMessagesLoaded(conversation);
         } else if (conversation.hasMessagesLeftOnServer()
                 && account.isOnlineAndConnected()
                 && conversation.getLastClearHistory().getTimestamp() == 0) {
@@ -4050,7 +4057,7 @@ public class XmppConnectionService extends Service {
 	}
 
 	public interface OnMoreMessagesLoaded {
-		void onMoreMessagesLoaded(int count, Conversation conversation);
+		void onMoreMessagesLoaded(Conversation conversation);
 
 		void informUser(int r);
 	}

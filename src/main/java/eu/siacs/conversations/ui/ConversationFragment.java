@@ -223,8 +223,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                     } else {
                         timestamp = messageList.get(0).getTimeSent();
                     }
-                    activity.xmppConnectionService.loadMoreMessages(conversation, timestamp, new OnMoreMessagesLoadedImpl(view));
-
+                    activity.xmppConnectionService.loadMoreMessages(conversation, timestamp, new OnMoreMessagesLoadedImpl(view, null));
                 }
             }
         }
@@ -232,31 +231,39 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 
     private class OnMoreMessagesLoadedImpl implements XmppConnectionService.OnMoreMessagesLoaded {
         private AbsListView view;
+        private Message jumpToMessage;
 
-        public OnMoreMessagesLoadedImpl(AbsListView view) {
+        public OnMoreMessagesLoadedImpl(AbsListView view, Message jumpToMessage) {
             this.view = view;
+            this.jumpToMessage = jumpToMessage;
         }
 
         @Override
-        public void onMoreMessagesLoaded(final int c, final Conversation conversation) {
+        public void onMoreMessagesLoaded(final Conversation conversation) {
             if (ConversationFragment.this.conversation != conversation) {
                 conversation.messagesLoaded.set(true);
                 return;
             }
             runOnUiThread(() -> {
                 synchronized (messageList) {
-                    final int oldPosition = binding.messagesView.getFirstVisiblePosition();
-                    Message message = null;
-                    int childPos;
-                    for (childPos = 0; childPos + oldPosition < messageList.size(); ++childPos) {
-                        message = messageList.get(oldPosition + childPos);
-                        if (message.getType() != Message.TYPE_STATUS) {
-                            break;
+                    String uuid = null;
+                    int pxOffset = 0;
+
+                    if (jumpToMessage == null) {
+                        final int oldPosition = binding.messagesView.getFirstVisiblePosition();
+                        Message message = null;
+                        int childPos;
+                        for (childPos = 0; childPos + oldPosition < messageList.size(); ++childPos) {
+                            message = messageList.get(oldPosition + childPos);
+                            if (message.getType() != Message.TYPE_STATUS) {
+                                break;
+                            }
                         }
+                        uuid = message != null ? message.getUuid() : null;
+                        View v = binding.messagesView.getChildAt(childPos);
+                        pxOffset = (v == null) ? 0 : v.getTop();
                     }
-                    final String uuid = message != null ? message.getUuid() : null;
-                    View v = binding.messagesView.getChildAt(childPos);
-                    final int pxOffset = (v == null) ? 0 : v.getTop();
+
                     ConversationFragment.this.conversation.populateWithMessages(ConversationFragment.this.messageList);
                     try {
                         updateStatusMessages();
@@ -264,8 +271,14 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                         Log.d(Config.LOGTAG, "caught illegal state exception while updating status messages");
                     }
                     messageListAdapter.notifyDataSetChanged();
-                    int pos = Math.max(getIndexOf(uuid, messageList), 0);
-                    binding.messagesView.setSelectionFromTop(pos, pxOffset);
+
+                    if (jumpToMessage == null) {
+                        int pos = Math.max(getIndexOf(uuid, messageList), 0);
+                        binding.messagesView.setSelectionFromTop(pos, pxOffset);
+                    } else {
+                        setSelection(messageListAdapter.getPosition(conversation.findMessageWithUuid(jumpToMessage.getUuid())), false);
+                    }
+
                     if (messageLoaderToast != null) {
                         messageLoaderToast.cancel();
                     }
@@ -291,26 +304,8 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         }
     }
 
-    public OnMessageLoadedCallback getOnMessageLoadedCallback(AbsListView view, Message message) {
-        return new OnMessageLoadedCallback(view, message);
-    }
-
-    /**
-     * Jump to a message loaded from the database.
-     */
-    private class OnMessageLoadedCallback extends OnMoreMessagesLoadedImpl {
-        private Message message;
-
-        public OnMessageLoadedCallback(AbsListView view, Message message) {
-            super(view);
-            this.message = message;
-        }
-
-        @Override
-        public void onMoreMessagesLoaded(final int c, final Conversation conversation) {
-            super.onMoreMessagesLoaded(c, conversation);
-            ((Conversation) message.getConversation()).getConversationFragment().setSelection(1, false);
-        }
+    public OnMoreMessagesLoadedImpl getOnMoreMessagesLoadedImpl(AbsListView view, Message jumpToMessage) {
+        return new OnMoreMessagesLoadedImpl(view, jumpToMessage);
     }
 
     private EditMessage.OnCommitContentListener mEditorContentListener = new EditMessage.OnCommitContentListener() {

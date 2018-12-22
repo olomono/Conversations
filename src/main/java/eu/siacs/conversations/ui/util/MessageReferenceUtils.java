@@ -115,7 +115,7 @@ public class MessageReferenceUtils {
             messageReferenceBinding.messageReferenceContainer.setOnClickListener(v -> {
                 final ConversationFragment conversationFragment = conversation.getConversationFragment();
                 if (position == -1) {
-                    activity.xmppConnectionService.loadMessage(activity, conversation, referencedMessage, conversationFragment.getOnMessageLoadedCallback((AbsListView) conversationFragment.getView().findViewById(R.id.messages_view), message));
+                    activity.xmppConnectionService.loadMoreMessages(referencedMessage, conversationFragment.getOnMoreMessagesLoadedImpl(conversationFragment.getView().findViewById(R.id.messages_view), referencedMessage));
                 } else {
                     conversationFragment.setSelection(position, false);
                 }
