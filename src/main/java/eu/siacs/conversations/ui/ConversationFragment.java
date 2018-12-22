@@ -2002,8 +2002,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         }
         this.conversation = conversation;
 
-        // Add this object to the conversation so that it can be used inside of MessageAdapter
-        // by the onClickListener of messageReferenceContainer.
+        // Add this object to the Conversation object so that it can be used by methods that only have access to Conversation objects (e.g., via a Message object) but not to ConversationFragment objects.
         conversation.setConversationFragment(this);
 
         //once we set the conversation all is good and it will automatically do the right thing in onStart()

@@ -95,6 +95,7 @@ public class MessageReferenceUtils {
         messageReferenceBinding.messageReferenceInfo.setText(MessageReferenceUtils.createInfo(activity, activity, referencedMessage));
 
         final Conversation conversation = (Conversation) referencedMessage.getConversation();
+        final ConversationFragment conversationFragment = conversation.getConversationFragment();
 
         if (messageReferencePreview) {
             messageReferenceBinding.messageReferencePreviewCancelButton.setVisibility(View.VISIBLE);
@@ -103,17 +104,16 @@ public class MessageReferenceUtils {
             messageReferenceBinding.messageReferencePreviewCancelButton.setOnClickListener(v -> {
                 hideMessageReference(messageReferenceBinding);
                 conversation.setMessageReference(null);
-                conversation.getConversationFragment().updateChatMsgHint();
+                conversationFragment.updateChatMsgHint();
             });
 
             // Jump to the referenced message when the message reference preview is clicked.
             messageReferenceBinding.messageReferenceContainer.setOnClickListener(v -> {
-                conversation.getConversationFragment().setSelection(position, false);
+                conversationFragment.setSelection(position, false);
             });
         } else {
             // Jump to the referenced message when the message reference is clicked.
             messageReferenceBinding.messageReferenceContainer.setOnClickListener(v -> {
-                final ConversationFragment conversationFragment = conversation.getConversationFragment();
                 if (position == -1) {
                     activity.xmppConnectionService.loadMoreMessages(referencedMessage, conversationFragment.getOnMoreMessagesLoadedImpl(conversationFragment.getView().findViewById(R.id.messages_view), referencedMessage));
                 } else {
