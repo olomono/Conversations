@@ -1198,7 +1198,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             MenuItem cancelTransmission = menu.findItem(R.id.cancel_transmission);
             MenuItem deleteFile = menu.findItem(R.id.delete_file);
             MenuItem showErrorMessage = menu.findItem(R.id.show_error_message);
-            if (!encrypted && !m.treatAsDownloadable()) {
+            if (!encrypted) {
                 commentMessage.setVisible(MessageUtils.prepareQuote(m).length() > 0);
             }
             if (!m.isFileOrImage() && !encrypted && !m.isGeoUri() && !m.treatAsDownloadable()) {
