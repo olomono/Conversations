@@ -792,7 +792,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 			// Try to load the referenced message from the DB if it is null and could not be found in the currently loaded conversation.
 			// If it cannot be loaded from the DB it will remain null.
 			if(referencedMessage == null){
-				referencedMessage = activity.xmppConnectionService.databaseBackend.getMsgByUuidOrRemoteMsgId(message.getMessageReference(), (Conversation) conversation);
+				referencedMessage = activity.xmppConnectionService.databaseBackend.getMsgByUuidOrRemoteMsgId((Conversation) conversation, message.getMessageReference());
 			}
 
 			// Use the referenced message if a message was found for the given reference.

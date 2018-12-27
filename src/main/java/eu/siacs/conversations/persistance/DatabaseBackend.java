@@ -706,27 +706,34 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 		return list;
 	}
 
-	public Message getMsgByUuidOrRemoteMsgId(final String id, final Conversation conversation){
-		Message message = getMessageByUUID(id, conversation);
+	public Message getMsgByUuidOrRemoteMsgId(final Conversation conversation, final String id){
+		Message message = getMessageByUUID(conversation, id);
 		if (message == null){
-			message = getMessageByRemoteMsgId(id, conversation);
+			message = getMessageByRemoteMsgId(conversation, id);
 		}
 		return message;
 	}
 
-	public Message getMessageByUUID(final String uuid, final Conversation conversation){
-		return getMessage(uuid, conversation, Message.UUID);
+	public Message getMessageByUUID(final Conversation conversation, final String uuid){
+		return getMessage(conversation, Message.UUID, uuid);
 	}
 
-	public Message getMessageByRemoteMsgId(final String remoteMsgId, final Conversation conversation){
-		return getMessage(remoteMsgId, conversation, Message.REMOTE_MSG_ID);
+	public Message getMessageByRemoteMsgId(final Conversation conversation, final String remoteMsgId){
+		return getMessage(conversation, Message.REMOTE_MSG_ID, remoteMsgId);
 	}
 
-	private Message getMessage(final String id, final Conversation conversation, final String selection){
+    /**
+     * Searches a message in a conversation by an additional selection which returns only one message.
+     * @param conversation conversation that may contain the message
+     * @param additionalSelection column for searching
+     * @param value value for the additional selection
+     * @return message in the given conversation that has the given value as the field for the given additional selection
+     */
+	private Message getMessage(final Conversation conversation, final String additionalSelection, final String value){
 		final SQLiteDatabase db = this.getReadableDatabase();
-		final String[] selectionArgs = {id};
-		final Cursor cursor = db.query(Message.TABLENAME, null, selection
-				+ "=?", selectionArgs, null, null, null, null);
+		final String[] selectionArgs = {conversation.getUuid(), value};
+		final String selection = Message.CONVERSATION + "=? and " + additionalSelection + "=?";
+		final Cursor cursor = db.query(Message.TABLENAME, null, selection, selectionArgs, null, null, null, null);
 		Message message = null;
 		if (cursor != null) {
 			if (cursor.moveToFirst()) {
