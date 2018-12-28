@@ -1,9 +1,7 @@
 package eu.siacs.conversations.ui.util;
 
-import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.view.View;
-import android.widget.AbsListView;
 import android.widget.ImageView;
 
 import java.util.Arrays;
@@ -92,7 +90,7 @@ public class MessageReferenceUtils {
             setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_attach_document), activity.getResources().getDrawable(R.drawable.ic_attach_document_white));
         }
 
-        messageReferenceBinding.messageReferenceInfo.setText(MessageReferenceUtils.createInfo(activity, activity, referencedMessage));
+        messageReferenceBinding.messageReferenceInfo.setText(MessageReferenceUtils.createInfo(activity, referencedMessage));
 
         final Conversation conversation = (Conversation) referencedMessage.getConversation();
         final ConversationFragment conversationFragment = conversation.getConversationFragment();
@@ -128,7 +126,7 @@ public class MessageReferenceUtils {
      * @param message message for that the info text is generated
      * @return info text
      */
-    public static String createInfo(XmppActivity activity, Context context, Message message) {
+    public static String createInfo(XmppActivity activity, Message message) {
         // text that is shown when the referenced message is no image or video
         String info;
 
@@ -141,7 +139,7 @@ public class MessageReferenceUtils {
         }
 
         // Add the time when the referenced message was sent to the tag.
-        info += "\n" + UIHelper.readableTimeDifferenceFull(context, message.getMergedTimeSent());
+        info += "\n" + UIHelper.readableTimeDifferenceFull(activity, message.getMergedTimeSent());
 
         return info;
     }
