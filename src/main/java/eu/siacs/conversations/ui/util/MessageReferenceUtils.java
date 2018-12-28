@@ -3,6 +3,7 @@ package eu.siacs.conversations.ui.util;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import java.util.Arrays;
 
@@ -62,10 +63,9 @@ public class MessageReferenceUtils {
         }
 
         messageReferenceBinding.messageReferenceContainer.setVisibility(View.VISIBLE);
+        createInfo(activity, referencedMessage, messageReferenceBinding.messageReferenceInfo);
 
         if (referencedMessage == null) {
-            messageReferenceBinding.messageReferenceInfo.setVisibility(View.VISIBLE);
-            messageReferenceBinding.messageReferenceInfo.setText(activity.getResources().getString(R.string.message_not_found));
             return;
         } else if (referencedMessage.isFileOrImage() && !activity.xmppConnectionService.getFileBackend().getFile(referencedMessage).exists()) {
             messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
@@ -89,8 +89,6 @@ public class MessageReferenceUtils {
             // default icon
             setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_attach_document), activity.getResources().getDrawable(R.drawable.ic_attach_document_white));
         }
-
-        messageReferenceBinding.messageReferenceInfo.setText(MessageReferenceUtils.createInfo(activity, referencedMessage));
 
         final Conversation conversation = (Conversation) referencedMessage.getConversation();
         final ConversationFragment conversationFragment = conversation.getConversationFragment();
@@ -122,26 +120,30 @@ public class MessageReferenceUtils {
     }
 
     /**
-     * Creates an info text that contains the sender and the date for a given message.
+     * Creates an info text that contains the sender and the date for a given message
+     * or a hint if the message is null.
      * @param message message for that the info text is generated
-     * @return info text
+     * @param textView view that will get the created info text
      */
-    public static String createInfo(XmppActivity activity, Message message) {
-        // text that is shown when the referenced message is no image or video
+    public static void createInfo(XmppActivity activity, Message message, TextView textView) {
         String info;
 
-        // Set the name of the author of the referenced message as the tag.
-        info = UIHelper.getMessageDisplayName(message);
+        if (message == null) {
+            info = activity.getResources().getString(R.string.message_not_found);
+        } else {
+            // Set the name of the author of the message as the tag.
+            info = UIHelper.getMessageDisplayName(message);
 
-        // Replace the name of the author with a standard identifier for the user if the user is the author of the referenced message.
-        if (info.equals(((Conversation) message.getConversation()).getMucOptions().getSelf().getName())) {
-            info = activity.getString(R.string.me);
+            // Replace the name of the author with a standard identifier for the user if the user is the author of the message.
+            if (info.equals(((Conversation) message.getConversation()).getMucOptions().getSelf().getName())) {
+                info = activity.getString(R.string.me);
+            }
+
+            // Add the time when the message was sent to the tag.
+            info += "\n" + UIHelper.readableTimeDifferenceFull(activity, message.getMergedTimeSent());
         }
 
-        // Add the time when the referenced message was sent to the tag.
-        info += "\n" + UIHelper.readableTimeDifferenceFull(activity, message.getMergedTimeSent());
-
-        return info;
+        textView.setText(info);
     }
 
     /**
