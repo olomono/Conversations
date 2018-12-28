@@ -50,7 +50,7 @@ public class MessageReferenceUtils {
                 background = R.drawable.message_reference_background_white;
             } else {
                 background = R.drawable.message_reference_background_dark_grey;
-                messageReferenceBinding.messageReferencePreviewCancelButton.setBackground(activity.getResources().getDrawable(R.drawable.ic_send_cancel_offline_white));
+                messageReferenceBinding.messageReferencePreviewCancelButton.setImageDrawable(activity.getResources().getDrawable(R.drawable.ic_send_cancel_offline_white));
             }
             messageReferenceBinding.messageReferenceContainer.setBackground(activity.getResources().getDrawable(background));
 
