@@ -795,8 +795,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 				referencedMessage = activity.xmppConnectionService.databaseBackend.getMsgByUuidOrRemoteMsgId((Conversation) conversation, message.getMessageReference());
 			}
 
-			// Use the referenced message if a message was found for the given reference.
-			// This is useful if the sending client used an ID that cannot be found locally.
+			// Delete legacy quotation added for backward compatibility if present but preserve independent quotations.
 			if (referencedMessage != null && referencedMessage.getEncryption() != Message.ENCRYPTION_DECRYPTION_FAILED && referencedMessage.getEncryption() != Message.ENCRYPTION_AXOLOTL_NOT_FOR_THIS_DEVICE) {
 				String messageBody = message.getBody();
 				String[] messageBodyLines = messageBody.split("\n");
@@ -804,7 +803,6 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 				String[] referencedMessageBodyLines = referencedMessage.getBody().split("\n");
 				int numberOfReferencedMessageBodyLines = referencedMessageBodyLines.length;
 
-				// Delete legacy quotation added for backward compatibility if present but preserve independent quotations.
 				if (messageBody.length() > 0 && numberOfMessageBodyLines >= numberOfReferencedMessageBodyLines && (messageBody.charAt(0) == '>' || messageBody.charAt(0) == '\u00bb')) {
 
 					// If the referenced message is a file message
