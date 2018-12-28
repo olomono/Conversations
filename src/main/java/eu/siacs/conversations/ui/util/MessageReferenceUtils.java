@@ -71,7 +71,7 @@ public class MessageReferenceUtils {
             messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
             setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_file_deleted), activity.getResources().getDrawable(R.drawable.ic_file_deleted_white));
         } else if (referencedMessage.isImageOrVideo()) {
-            displayReferencedImageMessage(activity, messageReferenceBinding, message, referencedMessage);
+            displayReferencedImageMessage(activity, messageReferenceBinding, referencedMessage, messageReferencePreview);
         } else if (referencedMessage.isAudio()) {
             messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
             setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_attach_record), activity.getResources().getDrawable(R.drawable.ic_attach_record_white));
@@ -161,20 +161,9 @@ public class MessageReferenceUtils {
 
     /**
      * Displays a thumbnail for the image or video of the referenced message.
-     * The normal message is used for showing the image thumbnail if a message exists
-     * which is the case when this method is called by MessageAdapter.
-     * Otherwise use the referenced message which is the case when the calling method is called by ConversationFragment.
      */
-    public static void displayReferencedImageMessage(final XmppActivity activity, final MessageReferenceBinding messageReferenceBinding, Message message, final Message referencedMessage) {
-        if (message != null) {
-            // Find the relative file path for the referenced image or video.
-            if (message.getRelativeFilePath() == null) {
-                message.setRelativeFilePath(referencedMessage.getRelativeFilePath());
-            }
-        } else {
-            // Set the message as the referenced message so that it can be used for loading the bitmap.
-            message = referencedMessage;
-
+    public static void displayReferencedImageMessage(final XmppActivity activity, final MessageReferenceBinding messageReferenceBinding, final Message referencedMessage, final boolean messageReferencePreview) {
+        if (messageReferencePreview) {
             // Set the scale type manually only for the message reference preview since a common scale type cannot be used.
             messageReferenceBinding.messageReferenceImageThumbnail.setScaleType(ImageView.ScaleType.FIT_START);
 
@@ -182,7 +171,7 @@ public class MessageReferenceUtils {
             messageReferenceBinding.messageReferenceImageThumbnail.setCornerRadius(0);
         }
 
-        activity.loadBitmapForReferencedImageMessage(message, messageReferenceBinding.messageReferenceImageThumbnail);
+        activity.loadBitmapForReferencedImageMessage(referencedMessage, messageReferenceBinding.messageReferenceImageThumbnail);
         messageReferenceBinding.messageReferenceImageThumbnail.setVisibility(View.VISIBLE);
     }
 
