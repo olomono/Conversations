@@ -31,9 +31,9 @@ public class MessageReferenceUtils {
 
     /**
      * Displays the message reference area.
-     * @param position position of the given message in the array
+     * @param position position of the given referencedMessage in the array
      * @param messageReferenceBinding binding that was created for the messageReference
-     * @param message message that has a messageReference or null if the messageReference is used for a preview before sending a new message with that messageReference
+     * @param message message that has a messageReference or is null if the messageReference is used for a preview before sending a new message with that messageReference
      * @param referencedMessage message that is referenced by the given message
      * @param darkBackground true if the background (message bubble) of the given message is dark
      */
