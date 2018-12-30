@@ -438,7 +438,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 	 */
 	private void displayReferencingMessage(final ViewHolder viewHolder, final Message message, final Message referencedMessage, boolean darkBackground, int type) {
 		// Show the message reference area.
-		MessageReferenceUtils.displayMessageReference(activity, getPosition(referencedMessage), viewHolder.messageReferenceBinding, message, referencedMessage, darkBackground);
+		MessageReferenceUtils.displayMessageReference(activity, viewHolder.messageReferenceBinding, message, referencedMessage, darkBackground);
 
 		// Show the comment on the referenced message.
 		constructTextMessage(viewHolder, message, darkBackground, type);

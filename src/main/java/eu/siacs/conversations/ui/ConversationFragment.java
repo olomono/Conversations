@@ -1131,7 +1131,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         boolean darkBackground = activity.isDarkTheme();
 
         // Show the message reference preview.
-        MessageReferenceUtils.displayMessageReference(activity, messageListAdapter.getPosition(message), binding.messageReferencePreview, null, message, darkBackground);
+        MessageReferenceUtils.displayMessageReference(activity, binding.messageReferencePreview, null, message, darkBackground);
 
         if (quoteMessage) {
             // Show the lines of the referenced message as quotations instead of letting a legacy quotation be used for the body of the message to be sent.
@@ -1198,7 +1198,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             MenuItem cancelTransmission = menu.findItem(R.id.cancel_transmission);
             MenuItem deleteFile = menu.findItem(R.id.delete_file);
             MenuItem showErrorMessage = menu.findItem(R.id.show_error_message);
-            if (!encrypted) {
+            if (!encrypted && !m.wasMergedWithNext()) {
                 commentMessage.setVisible(MessageUtils.prepareQuote(m).length() > 0);
             }
             if (!m.isFileOrImage() && !encrypted && !m.isGeoUri() && !m.treatAsDownloadable()) {
@@ -1737,6 +1737,10 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             }
         }
         return null;
+    }
+
+    public int getMessagePosition(Message message) {
+        return messageListAdapter.getPosition(message);
     }
 
     private void showErrorMessage(final Message message) {

@@ -3,7 +3,6 @@ package eu.siacs.conversations.ui.util;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import java.util.Arrays;
 
@@ -21,7 +20,7 @@ public class MessageReferenceUtils {
      * Hide the whole area where a referenced message would be displayed.
      * @param messageReferenceBinding data binding that holds the message reference views
      */
-    public static void hideMessageReference(MessageReferenceBinding messageReferenceBinding) {
+    public static void hideMessageReference(final MessageReferenceBinding messageReferenceBinding) {
         messageReferenceBinding.messageReferenceContainer.setVisibility(View.GONE);
         messageReferenceBinding.messageReferenceText.setVisibility(View.GONE);
         messageReferenceBinding.messageReferenceIcon.setVisibility(View.GONE);
@@ -31,21 +30,21 @@ public class MessageReferenceUtils {
 
     /**
      * Displays the message reference area.
-     * @param position position of the given referencedMessage in the array
+     * @param activity current activity
      * @param messageReferenceBinding binding that was created for the messageReference
      * @param message message that has a messageReference or is null if the messageReference is used for a preview before sending a new message with that messageReference
      * @param referencedMessage message that is referenced by the given message
      * @param darkBackground true if the background (message bubble) of the given message is dark
      */
-    public static void displayMessageReference(final XmppActivity activity, final int position, final MessageReferenceBinding messageReferenceBinding, final Message message, final Message referencedMessage, boolean darkBackground) {
+    public static void displayMessageReference(final XmppActivity activity, final MessageReferenceBinding messageReferenceBinding, final Message message, final Message referencedMessage, final boolean darkBackground) {
         // true if this method is used for a preview of a messageReference area
-        boolean messageReferencePreview = message == null;
+        final boolean messageReferencePreview = message == null;
 
         if (darkBackground) {
             // Use different backgrounds depending on the usage of a message bubble.
             // A messageReference (MessageAdapter) of a normal message is inside of a message bubble.
             // A messageReferencePreview (ConversationFragment) is not inside a message bubble.
-            int background;
+            final int background;
             if (!messageReferencePreview) {
                 background = R.drawable.message_reference_background_white;
             } else {
@@ -63,101 +62,103 @@ public class MessageReferenceUtils {
         }
 
         messageReferenceBinding.messageReferenceContainer.setVisibility(View.VISIBLE);
-        createInfo(activity, referencedMessage, messageReferenceBinding.messageReferenceInfo);
+        createInfo(activity, messageReferenceBinding, referencedMessage);
 
-        if (referencedMessage == null) {
-            return;
-        } else if (referencedMessage.isFileOrImage() && !activity.xmppConnectionService.getFileBackend().getFile(referencedMessage).exists()) {
-            messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
-            setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_file_deleted), activity.getResources().getDrawable(R.drawable.ic_file_deleted_white));
-        } else if (referencedMessage.isImageOrVideo()) {
-            displayReferencedImageMessage(activity, messageReferenceBinding, referencedMessage, messageReferencePreview);
-        } else if (referencedMessage.isAudio()) {
-            messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
-            setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_attach_record), activity.getResources().getDrawable(R.drawable.ic_attach_record_white));
-        } else if (referencedMessage.isGeoUri()) {
-            messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
-            setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_attach_location), activity.getResources().getDrawable(R.drawable.ic_attach_location_white));
-        } else if (referencedMessage.treatAsDownloadable()) {
-            messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
-            setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_file_download), activity.getResources().getDrawable(R.drawable.ic_file_download_white));
-        } else if (referencedMessage.isText()) {
-            messageReferenceBinding.messageReferenceText.setVisibility(View.VISIBLE);
-            messageReferenceBinding.messageReferenceText.setText(extractFirstTwoLinesOfBody(referencedMessage));
-        } else {
-            messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
-            // default icon
-            setMessageReferenceIcon(darkBackground, messageReferenceBinding.messageReferenceIcon, activity.getResources().getDrawable(R.drawable.ic_attach_document), activity.getResources().getDrawable(R.drawable.ic_attach_document_white));
-        }
+        if (referencedMessage != null) {
+            if (referencedMessage.isFileOrImage() && !activity.xmppConnectionService.getFileBackend().getFile(referencedMessage).exists()) {
+                messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
+                setMessageReferenceIcon(darkBackground, messageReferenceBinding, activity.getResources().getDrawable(R.drawable.ic_file_deleted), activity.getResources().getDrawable(R.drawable.ic_file_deleted_white));
+            } else if (referencedMessage.isImageOrVideo()) {
+                displayReferencedImageMessage(activity, messageReferenceBinding, referencedMessage, messageReferencePreview);
+            } else if (referencedMessage.isAudio()) {
+                messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
+                setMessageReferenceIcon(darkBackground, messageReferenceBinding, activity.getResources().getDrawable(R.drawable.ic_attach_record), activity.getResources().getDrawable(R.drawable.ic_attach_record_white));
+            } else if (referencedMessage.isGeoUri()) {
+                messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
+                setMessageReferenceIcon(darkBackground, messageReferenceBinding, activity.getResources().getDrawable(R.drawable.ic_attach_location), activity.getResources().getDrawable(R.drawable.ic_attach_location_white));
+            } else if (referencedMessage.treatAsDownloadable()) {
+                messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
+                setMessageReferenceIcon(darkBackground, messageReferenceBinding, activity.getResources().getDrawable(R.drawable.ic_file_download), activity.getResources().getDrawable(R.drawable.ic_file_download_white));
+            } else if (referencedMessage.isText()) {
+                messageReferenceBinding.messageReferenceText.setVisibility(View.VISIBLE);
+                messageReferenceBinding.messageReferenceText.setText(extractFirstTwoLinesOfBody(referencedMessage));
+            } else {
+                messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
+                // default icon
+                setMessageReferenceIcon(darkBackground, messageReferenceBinding, activity.getResources().getDrawable(R.drawable.ic_attach_document), activity.getResources().getDrawable(R.drawable.ic_attach_document_white));
+            }
 
-        final Conversation conversation = (Conversation) referencedMessage.getConversation();
-        final ConversationFragment conversationFragment = conversation.getConversationFragment();
+            final Conversation conversation = (Conversation) referencedMessage.getConversation();
+            final ConversationFragment conversationFragment = conversation.getConversationFragment();
+            final int jumpingPosition = conversationFragment.getMessagePosition(referencedMessage.firstMergeMessage());
 
-        if (messageReferencePreview) {
-            messageReferenceBinding.messageReferencePreviewCancelButton.setVisibility(View.VISIBLE);
+            if (messageReferencePreview) {
+                messageReferenceBinding.messageReferencePreviewCancelButton.setVisibility(View.VISIBLE);
 
-            // Cancel the referencing of a message.
-            messageReferenceBinding.messageReferencePreviewCancelButton.setOnClickListener(v -> {
-                hideMessageReference(messageReferenceBinding);
-                conversation.setMessageReference(null);
-                conversationFragment.updateChatMsgHint();
-            });
+                // Cancel the referencing of a message.
+                messageReferenceBinding.messageReferencePreviewCancelButton.setOnClickListener(v -> {
+                    hideMessageReference(messageReferenceBinding);
+                    conversation.setMessageReference(null);
+                    conversationFragment.updateChatMsgHint();
+                });
 
-            // Jump to the referenced message when the message reference preview is clicked.
-            messageReferenceBinding.messageReferenceContainer.setOnClickListener(v -> {
-                conversationFragment.setSelection(position, false);
-            });
-        } else {
-            // Jump to the referenced message when the message reference is clicked.
-            messageReferenceBinding.messageReferenceContainer.setOnClickListener(v -> {
-                if (position == -1) {
-                    activity.xmppConnectionService.loadMoreMessages(referencedMessage, conversationFragment.getOnMoreMessagesLoadedImpl(conversationFragment.getView().findViewById(R.id.messages_view), referencedMessage));
-                } else {
-                    conversationFragment.setSelection(position, false);
-                }
-            });
+                // Jump to the referenced message when the message reference preview is clicked.
+                messageReferenceBinding.messageReferenceContainer.setOnClickListener(v -> {
+                    conversationFragment.setSelection(jumpingPosition, false);
+                });
+            } else {
+                // Jump to the referenced message when the message reference is clicked.
+                messageReferenceBinding.messageReferenceContainer.setOnClickListener(v -> {
+                    if (jumpingPosition == -1) {
+                        activity.xmppConnectionService.loadMoreMessages(referencedMessage, conversationFragment.getOnMoreMessagesLoadedImpl(conversationFragment.getView().findViewById(R.id.messages_view), referencedMessage));
+                    } else {
+                        conversationFragment.setSelection(jumpingPosition, false);
+                    }
+                });
+            }
         }
     }
 
     /**
-     * Creates an info text that contains the sender and the date for a given message
-     * or a hint if the message is null.
-     * @param message message for that the info text is generated
-     * @param textView view that will get the created info text
+     * Creates an info text that contains the sender and the date for a given referenced message
+     * or a hint if the referenced message is null.
+     * @param activity current activity
+     * @param messageReferenceBinding data binding that holds the message reference views
+     * @param referencedMessage referenced message for that the info text is generated
      */
-    public static void createInfo(XmppActivity activity, Message message, TextView textView) {
+    public static void createInfo(final XmppActivity activity, final MessageReferenceBinding messageReferenceBinding, final Message referencedMessage) {
         String info;
 
-        if (message == null) {
+        if (referencedMessage == null) {
             info = activity.getResources().getString(R.string.message_not_found);
         } else {
             // Set the name of the author of the message as the tag.
-            info = UIHelper.getMessageDisplayName(message);
+            info = UIHelper.getMessageDisplayName(referencedMessage);
 
             // Replace the name of the author with a standard identifier for the user if the user is the author of the message.
-            if (info.equals(((Conversation) message.getConversation()).getMucOptions().getSelf().getName())) {
+            if (info.equals(((Conversation) referencedMessage.getConversation()).getMucOptions().getSelf().getName())) {
                 info = activity.getString(R.string.me);
             }
 
             // Add the time when the message was sent to the tag.
-            info += "\n" + UIHelper.readableTimeDifferenceFull(activity, message.getMergedTimeSent());
+            info += "\n" + UIHelper.readableTimeDifferenceFull(activity, referencedMessage.getMergedTimeSent());
         }
 
-        textView.setText(info);
+        messageReferenceBinding.messageReferenceInfo.setText(info);
     }
 
     /**
      * Sets the image for the message reference icon depending on the color of its background.
      * @param darkBackground specifies if the background of the message reference icon is dark
-     * @param messageReferenceIcon icon for the message reference
+     * @param messageReferenceBinding data binding that holds the message reference views
      * @param defaultDrawable drawable that will be used as the message reference icon if its background is light
      * @param drawableForDarkBackground drawable that will be used as the message reference icon if its background is dark
      */
-    public static void setMessageReferenceIcon(boolean darkBackground, ImageView messageReferenceIcon, Drawable defaultDrawable, Drawable drawableForDarkBackground) {
+    public static void setMessageReferenceIcon(final boolean darkBackground, final MessageReferenceBinding messageReferenceBinding, final Drawable defaultDrawable, final Drawable drawableForDarkBackground) {
         if (darkBackground) {
-            messageReferenceIcon.setBackground(drawableForDarkBackground);
+            messageReferenceBinding.messageReferenceIcon.setBackground(drawableForDarkBackground);
         } else {
-            messageReferenceIcon.setBackground(defaultDrawable);
+            messageReferenceBinding.messageReferenceIcon.setBackground(defaultDrawable);
         }
     }
 
@@ -184,7 +185,7 @@ public class MessageReferenceUtils {
      * @param indexOfLastLineToTake position (exclusive) of the last string to be taken for the newly created string
      * @return string with the desired lines
      */
-    public static String createStringWithLinesOutOfStringArray(String[] allLines, int indexOfFirstLineToTake, int indexOfLastLineToTake) {
+    public static String createStringWithLinesOutOfStringArray(final String[] allLines, final int indexOfFirstLineToTake, final int indexOfLastLineToTake) {
         StringBuilder takingBuilder = new StringBuilder();
         for (String line : Arrays.copyOfRange(allLines, indexOfFirstLineToTake, indexOfLastLineToTake)) {
             takingBuilder.append("\n" + line);
@@ -206,7 +207,7 @@ public class MessageReferenceUtils {
      * @param linesToBeExtracted number of lines to be extracted
      * @return extracted lines
      */
-    public static String extractFirstLinesOfBody(Message message, int linesToBeExtracted) {
+    public static String extractFirstLinesOfBody(final Message message, int linesToBeExtracted) {
         String[] bodyLines = message.getBody().split("\n");
 
         // Reduce the number of lines to be extracted if the body has less lines than that number.
@@ -228,7 +229,7 @@ public class MessageReferenceUtils {
      * @param message message for that the first lines of its body will be extracted
      * @return extracted lines
      */
-    public static String extractFirstTwoLinesOfBody(Message message) {
+    public static String extractFirstTwoLinesOfBody(final Message message) {
         return extractFirstLinesOfBody(message, 2);
     }
 }
