@@ -24,6 +24,7 @@ import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -71,6 +72,7 @@ import eu.siacs.conversations.services.XmppConnectionService.XmppConnectionBinde
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil;
 import eu.siacs.conversations.ui.util.PresenceSelector;
 import eu.siacs.conversations.ui.util.SoftKeyboardUtils;
+import eu.siacs.conversations.utils.AccountUtils;
 import eu.siacs.conversations.utils.ExceptionHelper;
 import eu.siacs.conversations.utils.ThemeHelper;
 import eu.siacs.conversations.xmpp.OnKeyStatusUpdated;
@@ -340,7 +342,10 @@ public abstract class XmppActivity extends ActionBarActivity {
 				startActivity(new Intent(this, SettingsActivity.class));
 				break;
 			case R.id.action_accounts:
-				startActivity(new Intent(this, ManageAccountActivity.class));
+				AccountUtils.launchManageAccounts(this);
+				break;
+			case R.id.action_account:
+				AccountUtils.launchManageAccount(this);
 				break;
 			case android.R.id.home:
 				finish();
@@ -387,6 +392,7 @@ public abstract class XmppActivity extends ActionBarActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		setVolumeControlStream(AudioManager.STREAM_NOTIFICATION);
 		metrics = getResources().getDisplayMetrics();
 		ExceptionHelper.init(getApplicationContext());
 		this.isCameraFeatureAvailable = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA);
@@ -727,6 +733,7 @@ public abstract class XmppActivity extends ActionBarActivity {
 			SoftKeyboardUtils.hideSoftKeyboard(binding.inputEditText);
 			dialog.dismiss();
 		}));
+		dialog.setCanceledOnTouchOutside(false);
 		dialog.setOnDismissListener(dialog1 -> {
 			SoftKeyboardUtils.hideSoftKeyboard(binding.inputEditText);
         });
@@ -777,10 +784,6 @@ public abstract class XmppActivity extends ActionBarActivity {
 			return true;
 		}
 		return false;
-	}
-
-	protected boolean neverCompressPictures() {
-		return getPreferences().getString("picture_compression", getResources().getString(R.string.picture_compression)).equals("never");
 	}
 
 	protected boolean manuallyChangePresence() {

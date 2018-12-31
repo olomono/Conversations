@@ -13,6 +13,7 @@
         <item name="color_warning">@color/red_a700</item>
         <item name="TextColorOnline">@color/green600</item>
         <item name="TextColorError">@color/red800</item>
+        <item name="edit_text_color">@color/black87</item>
 
         <item name="activity_background_search">@drawable/search_background_light</item>
         <item name="activity_background_no_results">@drawable/no_results_background_light</item>
@@ -74,6 +75,7 @@
         <item type="reference" name="media_preview_app">@drawable/ic_android_black_48dp</item>
         <item type="reference" name="media_preview_calendar">@drawable/ic_event_black_48dp</item>
         <item type="reference" name="media_preview_archive">@drawable/ic_archive_black_48dp</item>
+        <item type="reference" name="media_preview_ebook">@drawable/ic_book_black_48dp</item>
         <item type="reference" name="media_preview_unknown">@drawable/ic_help_black_48dp</item>
 
         <item type="reference" name="icon_add_group">@drawable/ic_group_add_white_24dp</item>
@@ -131,6 +133,7 @@
 
         <item name="TextColorOnline">@color/green500</item>
         <item name="TextColorError">@color/red500</item>
+        <item name="edit_text_color">@color/white</item>
 
         <item name="EmojiColor">@color/white</item>
 
@@ -187,6 +190,7 @@
         <item type="reference" name="media_preview_app">@drawable/ic_android_white_48dp</item>
         <item type="reference" name="media_preview_calendar">@drawable/ic_event_white_48dp</item>
         <item type="reference" name="media_preview_archive">@drawable/ic_archive_white_48dp</item>
+        <item type="reference" name="media_preview_ebook">@drawable/ic_book_white_48dp</item>
         <item type="reference" name="media_preview_unknown">@drawable/ic_help_white_48dp</item>
 
         <item type="reference" name="icon_add_group">@drawable/ic_group_add_white_24dp</item>

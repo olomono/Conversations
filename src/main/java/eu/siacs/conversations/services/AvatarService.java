@@ -11,6 +11,7 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.LruCache;
@@ -66,14 +67,17 @@ public class AvatarService implements OnAdvancedStreamFeaturesLoaded {
 		if (avatar != null || cachedOnly) {
 			return avatar;
 		}
-		if (contact.getProfilePhoto() != null) {
+		if (contact.getAvatarFilename() != null && QuickConversationsService.isQuicksy()) {
+			avatar = mXmppConnectionService.getFileBackend().getAvatar(contact.getAvatarFilename(), size);
+		}
+		if (avatar == null && contact.getProfilePhoto() != null) {
 			avatar = mXmppConnectionService.getFileBackend().cropCenterSquare(Uri.parse(contact.getProfilePhoto()), size);
 		}
 		if (avatar == null && contact.getAvatarFilename() != null) {
 			avatar = mXmppConnectionService.getFileBackend().getAvatar(contact.getAvatarFilename(), size);
 		}
 		if (avatar == null) {
-			avatar = get(contact.getDisplayName(), contact.getJid().asBareJid().toString(), size, cachedOnly);
+			avatar = get(contact.getDisplayName(), contact.getJid().asBareJid().toString(), size, false);
 		}
 		this.mXmppConnectionService.getBitmapCache().put(KEY, avatar);
 		return avatar;
@@ -147,10 +151,10 @@ public class AvatarService implements OnAdvancedStreamFeaturesLoaded {
 		if (avatar == null) {
 			Contact contact = user.getContact();
 			if (contact != null) {
-				avatar = get(contact, size, cachedOnly);
+				avatar = get(contact, size, false);
 			} else {
 				String seed = user.getRealJid() != null ? user.getRealJid().asBareJid().toString() : null;
-				avatar = get(user.getName(), seed, size, cachedOnly);
+				avatar = get(user.getName(), seed, size, false);
 			}
 		}
 		this.mXmppConnectionService.getBitmapCache().put(KEY, avatar);
@@ -392,7 +396,13 @@ public class AvatarService implements OnAdvancedStreamFeaturesLoaded {
 		}
 		avatar = mXmppConnectionService.getFileBackend().getAvatar(account.getAvatar(), size);
 		if (avatar == null) {
-			avatar = get(account.getJid().asBareJid().toString(), null, size, false);
+			final String displayName = account.getDisplayName();
+			final String jid = account.getJid().asBareJid().toEscapedString();
+			if (QuickConversationsService.isQuicksy() && !TextUtils.isEmpty(displayName)) {
+				avatar = get(displayName, jid, size, false);
+			} else {
+				avatar = get(jid, null, size, false);
+			}
 		}
 		mXmppConnectionService.getBitmapCache().put(KEY, avatar);
 		return avatar;
@@ -460,7 +470,7 @@ public class AvatarService implements OnAdvancedStreamFeaturesLoaded {
 	}*/
 
 	public Bitmap get(final String name, String seed, final int size, boolean cachedOnly) {
-		final String KEY = key(seed == null ? name : seed, size);
+		final String KEY = key(seed == null ? name : name+"\0"+seed, size);
 		Bitmap bitmap = mXmppConnectionService.getBitmapCache().get(KEY);
 		if (bitmap != null || cachedOnly) {
 			return bitmap;
@@ -510,11 +520,12 @@ public class AvatarService implements OnAdvancedStreamFeaturesLoaded {
 		Contact contact = user.getContact();
 		if (contact != null) {
 			Uri uri = null;
-			if (contact.getProfilePhoto() != null) {
+			if (contact.getAvatarFilename() != null && QuickConversationsService.isQuicksy()) {
+				uri = mXmppConnectionService.getFileBackend().getAvatarUri(contact.getAvatarFilename());
+			} else if (contact.getProfilePhoto() != null) {
 				uri = Uri.parse(contact.getProfilePhoto());
 			} else if (contact.getAvatarFilename() != null) {
-				uri = mXmppConnectionService.getFileBackend().getAvatarUri(
-						contact.getAvatarFilename());
+				uri = mXmppConnectionService.getFileBackend().getAvatarUri(contact.getAvatarFilename());
 			}
 			if (drawTile(canvas, uri, left, top, right, bottom)) {
 				return true;

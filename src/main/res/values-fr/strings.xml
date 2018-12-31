@@ -3,7 +3,7 @@
   <string name="action_settings">Paramètres</string>
   <string name="action_add">Nouvelle conversation</string>
   <string name="action_accounts">Gérer les comptes</string>
-  <string name="action_end_conversation">Terminer cette conversation</string>
+  <string name="action_account">Gérer le compte</string>
   <string name="action_contact_details">Détails du contact</string>
   <string name="action_muc_details">Détails de la conversation de groupe</string>
   <string name="action_secure">Conversation sécurisée</string>
@@ -80,7 +80,6 @@
   <string name="clear_histor_msg">Êtes-vous sûr de vouloir supprimer tous les messages de cette conversation ?\n\n <b>Avertissement :</b> Cela ne supprimera pas les copies des messages qui sont stockés sur d\'autres appareils ou serveurs.</string>
   <string name="delete_file_dialog">Supprimer le fichier</string>
   <string name="delete_file_dialog_msg">Êtes-vous sûr de vouloir supprimer ce fichier ?\n\n <b>Avertissement :</b> Cela ne supprimera pas les copies de ce fichier qui sont stockés sur d\'autres appareils ou serveurs.</string>
-  <string name="also_end_conversation">Fermer cette conversation ensuite</string>
   <string name="choose_presence">Choisir l\'appareil</string>
   <string name="send_unencrypted_message">Envoyer un message en clair</string>
   <string name="send_message">Envoyer le message</string>
@@ -265,8 +264,6 @@
   <string name="pref_allow_message_correction_summary">Permet à vos contacts d\'éditer leurs messages rétroactivement</string>
   <string name="pref_expert_options">Paramètres avancés</string>
   <string name="pref_expert_options_summary">À utiliser avec précaution.</string>
-  <string name="title_activity_about">À propos</string>
-  <string name="pref_about_conversations_summary">Informations sur la version et les licences</string>
   <string name="title_pref_quiet_hours">Heures tranquilles</string>
   <string name="title_pref_quiet_hours_start_time">Heure de début</string>
   <string name="title_pref_quiet_hours_end_time">Heure de fin</string>
@@ -277,8 +274,6 @@
   <string name="pref_use_indicate_received_summary">Les messages reçus seront marqués d\'une coche verte (si supporté).</string>
   <string name="pref_use_send_button_to_indicate_status_summary">Le bouton Envoyer change de couleur pour indiquer le statut du contact.</string>
   <string name="pref_expert_options_other">Autres</string>
-  <string name="pref_autojoin">Joindre les conversations de groupe automatiquement</string>
-  <string name="pref_autojoin_summary">Respectez l\'indicateur de jointure automatique dans les signets des groupes de discussion</string>
   <string name="toast_message_omemo_fingerprint">Empreinte OMEMO copiée dans le presse-papier !</string>
   <string name="conference_banned">Vous êtes bannis de cette conversation de groupe</string>
   <string name="conference_members_only">Cette conversation de groupe est réservée aux membres</string>
@@ -298,7 +293,6 @@
   <string name="send_again">Envoyer de nouveau</string>
   <string name="file_url">URL du fichier</string>
   <string name="url_copied_to_clipboard">URL copiée dans le presse-papier</string>
-  <string name="jabber_id_copied_to_clipboard">Jabberd ID copié dans le presse-papier</string>
   <string name="web_address">adresse internet</string>
   <string name="scan_qr_code">Scanner le code-barres 2D</string>
   <string name="show_qr_code">Montrer le code-barres 2D</string>
@@ -487,7 +481,6 @@
   <string name="no_storage_permission">Conversations a besoin d\'accéder au stockage externe</string>
   <string name="no_camera_permission">Conversations a besoin d\'accéder à l\'appareil photo</string>
   <string name="sync_with_contacts">Synchroniser avec contacts</string>
-  <string name="sync_with_contacts_long">Conversations souhaite associer vos contacts XMPP avec les contacts de votre appareil, pour utiliser leur nom complet et leur avatar.\n\nConversations va uniquement lire vos contacts et les associer localement, sans les envoyer sur le serveur XMPP.\n\nVotre appareil va maintenant vous demander la permission d\'accéder à vos contacts.</string>
   <string name="notify_on_all_messages">Notifier pour tous les messages</string>
   <string name="notify_only_when_highlighted">Notifier seulement en cas de mention</string>
   <string name="notify_never">Notifications désactivées</string>
@@ -721,7 +714,6 @@
   <string name="providing_a_name_is_optional">Fournir un nom est facultatif</string>
   <string name="create_dialog_group_chat_name">Nom de la conversation de groupe</string>
   <string name="conference_destroyed">Cette conversation de groupe a été supprimée</string>
-  <string name="phone_book">Carnet d\'adresses</string>
   <string name="unable_to_save_recording">Impossible de sauvegarder l\'enregistrement</string>
   <string name="foreground_service_channel_name">Service au premier plan</string>
   <string name="foreground_service_channel_description">Cette catégorie de notification est utilisée pour afficher une notification permanente indiquant que Conversations est en cours.</string>
@@ -744,4 +736,18 @@
   <string name="video_360p">Moyenne (360p)</string>
   <string name="video_720p">Haute (720p)</string>
   <string name="cancelled">Annulé</string>
+  <string name="already_drafting_message">Vous avez déjà un brouillon de message.</string>
+  <string name="feature_not_implemented">Fonction non mise en oeuvre</string>
+  <string name="invalid_country_code">Code pays invalide</string>
+  <string name="choose_a_country">Choisissez un pays</string>
+  <string name="phone_number">Numéro de téléphone</string>
+  <string name="verify_your_phone_number">Vérifier votre numéro de téléphone</string>
+  <string name="enter_country_code_and_phone_number">Quicksy va envoyer un message SMS (des frais opérateurs sont possibles) pour vérifier votre numéro de téléphone. Entrez votre code pays et votre No de téléphone.</string>
+  <string name="not_a_valid_phone_number">%s n\'est pas un numéro de téléphone valide.</string>
+  <string name="please_enter_your_phone_number">Veuillez saisir votre numéro de téléphone.</string>
+  <string name="search_countries">Recherche de pays</string>
+  <string name="verify_x">Vérifier %s</string>
+  <string name="we_have_sent_you_another_sms">Nous vous avons envoyé un autre SMS avec un code à 6 chiffres.</string>
+  <string name="please_enter_pin_below">Veuillez saisir ci-dessous le code PIN à 6 chiffres.</string>
+  <string name="resend_sms">Renvoyer un SMS.</string>
 </resources>

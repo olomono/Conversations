@@ -21,6 +21,7 @@ import eu.siacs.conversations.Config;
 import eu.siacs.conversations.crypto.OmemoSetting;
 import eu.siacs.conversations.crypto.PgpDecryptionService;
 import eu.siacs.conversations.crypto.axolotl.AxolotlService;
+import eu.siacs.conversations.services.QuickConversationsService;
 import eu.siacs.conversations.ui.ConversationFragment;
 import eu.siacs.conversations.utils.JidHelper;
 import eu.siacs.conversations.xmpp.chatstate.ChatState;
@@ -79,7 +80,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
     private String messageReferenceQuote;
     private ConversationFragment conversationFragment;
 
-    public Conversation(final String name, final Account account, final Jid contactJid,
+	public Conversation(final String name, final Account account, final Jid contactJid,
 	                    final int mode) {
 		this(java.util.UUID.randomUUID().toString(), name, null, account
 						.getUuid(), contactJid, System.currentTimeMillis(),
@@ -538,7 +539,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 					return contactJid.getLocal() != null ? contactJid.getLocal() : contactJid;
 				}
 			}
-		} else if (isWithStranger()) {
+		} else if ((QuickConversationsService.isConversations() || !Config.QUICKSY_DOMAIN.equals(contactJid.getDomain())) && isWithStranger()) {
 			return contactJid;
 		} else {
 			return this.getContact().getDisplayName();
@@ -739,6 +740,20 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 			}
 			return null;
 		}
+	}
+
+	public boolean possibleDuplicate(final String serverMsgId, final String remoteMsgId) {
+		if (serverMsgId == null || remoteMsgId == null) {
+			return false;
+		}
+		synchronized (this.messages) {
+			for(Message message : this.messages) {
+				if (serverMsgId.equals(message.getServerMsgId()) || remoteMsgId.equals(message.getRemoteMsgId())) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public MamReference getLastMessageTransmitted() {
@@ -969,9 +984,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 		final Contact contact = getContact();
 		return mode == MODE_SINGLE
 				&& !contact.isOwnServer()
-				&& !contact.showInRoster()
+				&& !contact.showInContactList()
 				&& !contact.isSelf()
-				&& !contact.showInPhoneBook()
+				&& !Config.QUICKSY_DOMAIN.equals(contact.getJid().toEscapedString())
 				&& sentMessagesCount() == 0;
 	}
 

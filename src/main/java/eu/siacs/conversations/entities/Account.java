@@ -54,6 +54,7 @@ public class Account extends AbstractEntity {
     public static final int OPTION_REQUIRES_ACCESS_MODE_CHANGE = 5;
     public static final int OPTION_LOGGED_IN_SUCCESSFULLY = 6;
     public static final int OPTION_HTTP_UPLOAD_AVAILABLE = 7;
+    public static final int OPTION_UNVERIFIED = 8;
     private static final String KEY_PGP_SIGNATURE = "pgp_signature";
     private static final String KEY_PGP_ID = "pgp_id";
     public final HashSet<Pair<String, String>> inProgressDiscoFetches = new HashSet<>();
@@ -66,6 +67,7 @@ public class Account extends AbstractEntity {
     protected String password;
     protected int options = 0;
     protected State status = State.OFFLINE;
+    private State lastErrorStatus = State.OFFLINE;
     protected String resource;
     protected String avatar;
     protected String hostname = null;
@@ -262,8 +264,15 @@ public class Account extends AbstractEntity {
         }
     }
 
+    public State getLastErrorStatus() {
+        return this.lastErrorStatus;
+    }
+
     public void setStatus(final State status) {
         this.status = status;
+        if (status.isError || status == State.ONLINE) {
+            this.lastErrorStatus = status;
+        }
     }
 
     public State getTrueStatus() {

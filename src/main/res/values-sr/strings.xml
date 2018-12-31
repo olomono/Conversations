@@ -3,7 +3,6 @@
   <string name="action_settings">Поставке</string>
   <string name="action_add">Нова преписка</string>
   <string name="action_accounts">Управљај налозима</string>
-  <string name="action_end_conversation">Окончај преписку</string>
   <string name="action_contact_details">Детаљи контакта</string>
   <string name="action_muc_details">Детаљи групног ћаскања</string>
   <string name="action_secure">Безбедна преписка</string>
@@ -77,7 +76,6 @@
   <string name="sharing_files_please_wait">Делим фајлове, сачекајте…</string>
   <string name="action_clear_history">Очисти историјат</string>
   <string name="clear_conversation_history">Брисање историјата преписки</string>
-  <string name="also_end_conversation">Окончај ову преписку након тога</string>
   <string name="choose_presence">Изаберите уређај</string>
   <string name="send_unencrypted_message">Пошаљи нешифровану поруку</string>
   <string name="send_message">Пошаљи поруку</string>
@@ -261,8 +259,6 @@
   <string name="pref_allow_message_correction_summary">Дозвољава вашим контактима да ретроактивно уређују њихове поруке</string>
   <string name="pref_expert_options">Поставке за стручњаке</string>
   <string name="pref_expert_options_summary">Будите пажљиви са овим</string>
-  <string name="title_activity_about">О Конверзацији</string>
-  <string name="pref_about_conversations_summary">Подаци о издању и лиценци</string>
   <string name="title_pref_quiet_hours">Тихи сати</string>
   <string name="title_pref_quiet_hours_start_time">Време почетка</string>
   <string name="title_pref_quiet_hours_end_time">Време завршетка</string>
@@ -273,8 +269,6 @@
   <string name="pref_use_indicate_received_summary">Означи примљене поруке зеленом квачицом, ако је подржано</string>
   <string name="pref_use_send_button_to_indicate_status_summary">Боја дугмета за слање показује стање контакта</string>
   <string name="pref_expert_options_other">Остало</string>
-  <string name="pref_autojoin">Аутоматски ме придружуј групним ћаскањима</string>
-  <string name="pref_autojoin_summary">Поштовање опције аутоматског придруживања у обележивачу групног ћаскања</string>
   <string name="toast_message_omemo_fingerprint">ОМЕМО отисак копиран на клипборд!</string>
   <string name="conference_banned">Забрањени сте на овом групном ћаскању</string>
   <string name="conference_members_only">Ово групно ћаскање је само за чланове</string>
@@ -293,7 +287,6 @@
   <string name="send_again">Пошаљи поново</string>
   <string name="file_url">УРЛ фајла</string>
   <string name="url_copied_to_clipboard">УРЛ је копиран на клипборд</string>
-  <string name="jabber_id_copied_to_clipboard">Џабер ИД је копиран на клипборд</string>
   <string name="web_address">веб адреса</string>
   <string name="scan_qr_code">Очитај 2Д бар-кôд</string>
   <string name="show_qr_code">Прикажи 2Д бар-кôд</string>
@@ -481,7 +474,6 @@
   <string name="shared_images_with_x">Подељене слике са %s</string>
   <string name="shared_text_with_x">Подељен текст са %s</string>
   <string name="sync_with_contacts">Синхронизуј са контактима</string>
-  <string name="sync_with_contacts_long">Конверзација жели да поклапи ваш ИксМПП именик са контактима на вашем уређају да би приказала њихова пуна имена и аватаре.\n\nКонверзација ће само да очита ваше контакте и упореди их локално без отпремања на сервер.\n\nСада ћете бити упитани за дозволу приступа вашим контактима.</string>
   <string name="notify_on_all_messages">Обавештења за све поруке</string>
   <string name="notify_never">Обавештења искључена</string>
   <string name="notify_paused">Обавештења паузирана</string>
@@ -662,7 +654,6 @@
   <string name="providing_a_name_is_optional">Име је опционо</string>
   <string name="create_dialog_group_chat_name">Назив групног ћаскања</string>
   <string name="conference_destroyed">Ово групно ћаскање је обрисано</string>
-  <string name="phone_book">Адресар</string>
   <string name="notification_group_messages">Поруке</string>
   <string name="messages_channel_name">Поруке</string>
   <string name="silent_messages_channel_name">Тихе поруке</string>

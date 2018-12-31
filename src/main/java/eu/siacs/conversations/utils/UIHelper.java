@@ -292,6 +292,8 @@ public class UIHelper {
 			return new Pair<>(context.getString(R.string.decryption_failed), true);
 		} else if (message.getEncryption() == Message.ENCRYPTION_AXOLOTL_NOT_FOR_THIS_DEVICE) {
 			return new Pair<>(context.getString(R.string.not_encrypted_for_this_device), true);
+		} else if (message.getEncryption() == Message.ENCRYPTION_AXOLOTL_FAILED) {
+			return new Pair<>(context.getString(R.string.omemo_decryption_failed), true);
 		} else if (message.getType() == Message.TYPE_FILE || message.getType() == Message.TYPE_IMAGE) {
 			return new Pair<>(getFileDescriptionString(context, message), true);
 		} else {
@@ -495,6 +497,8 @@ public class UIHelper {
 			return context.getString(R.string.apk);
 		} else if (mime.contains("vcard")) {
 			return context.getString(R.string.vcard);
+		} else if (mime.equals("application/epub+zip") || mime.equals("application/vnd.amazon.mobi8-ebook")) {
+			return context.getString(R.string.ebook);
 		} else {
 			return mime;
 		}

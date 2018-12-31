@@ -50,6 +50,7 @@ import eu.siacs.conversations.entities.Message;
 import eu.siacs.conversations.entities.PresenceTemplate;
 import eu.siacs.conversations.entities.Roster;
 import eu.siacs.conversations.entities.ServiceDiscoveryResult;
+import eu.siacs.conversations.services.QuickConversationsService;
 import eu.siacs.conversations.services.ShortcutService;
 import eu.siacs.conversations.utils.CryptoHelper;
 import eu.siacs.conversations.utils.FtsUtils;
@@ -62,7 +63,7 @@ import rocks.xmpp.addr.Jid;
 public class DatabaseBackend extends SQLiteOpenHelper {
 
 	private static final String DATABASE_NAME = "history";
-	private static final int DATABASE_VERSION = 43;
+	private static final int DATABASE_VERSION = 44;
 	private static DatabaseBackend instance = null;
 	private static String CREATE_CONTACTS_STATEMENT = "create table "
 			+ Contact.TABLENAME + "(" + Contact.ACCOUNT + " TEXT, "
@@ -520,7 +521,16 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 			db.execSQL("DROP TRIGGER IF EXISTS after_message_delete");
 		}
 
-		if (oldVersion < 43 && newVersion >= 43) {
+		if (QuickConversationsService.isQuicksy() && oldVersion < 43 && newVersion >= 43) {
+			List<Account> accounts = getAccounts(db);
+			for (Account account : accounts) {
+				account.setOption(Account.OPTION_MAGIC_CREATE, true);
+				db.update(Account.TABLENAME, account.getContentValues(), Account.UUID
+						+ "=?", new String[]{account.getUuid()});
+			}
+		}
+
+		if (oldVersion < 44 && newVersion >= 44) {
 			db.execSQL("ALTER TABLE " + Message.TABLENAME + " ADD COLUMN"
 					+ Message.MESSAGE_REFERENCE + " TEXT");
 		}
@@ -653,17 +663,23 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 		db.insert(RESOLVER_RESULTS_TABLENAME, null, contentValues);
 	}
 
-	public Resolver.Result findResolverResult(String domain) {
+	public synchronized Resolver.Result findResolverResult(String domain) {
 		SQLiteDatabase db = this.getReadableDatabase();
 		String where = Resolver.Result.DOMAIN + "=?";
 		String[] whereArgs = {domain};
 		final Cursor cursor = db.query(RESOLVER_RESULTS_TABLENAME, null, where, whereArgs, null, null, null);
 		Resolver.Result result = null;
 		if (cursor != null) {
-			if (cursor.moveToFirst()) {
-				result = Resolver.Result.fromCursor(cursor);
+			try {
+				if (cursor.moveToFirst()) {
+					result = Resolver.Result.fromCursor(cursor);
+				}
+			} catch (Exception e ) {
+				Log.d(Config.LOGTAG,"unable to find cached resolver result in database "+e.getMessage());
+				return null;
+			} finally {
+				cursor.close();
 			}
-			cursor.close();
 		}
 		return result;
 	}
@@ -819,7 +835,7 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 
 	public Cursor getMessageSearchCursor(List<String> term) {
 		SQLiteDatabase db = this.getReadableDatabase();
-		String SQL = "SELECT " + Message.TABLENAME + ".*," + Conversation.TABLENAME + '.' + Conversation.CONTACTJID + ',' + Conversation.TABLENAME + '.' + Conversation.ACCOUNT + ',' + Conversation.TABLENAME + '.' + Conversation.MODE + " FROM " + Message.TABLENAME + " join " + Conversation.TABLENAME + " on " + Message.TABLENAME + '.' + Message.CONVERSATION + '=' + Conversation.TABLENAME + '.' + Conversation.UUID + " join messages_index ON messages_index.uuid=messages.uuid where " + Message.ENCRYPTION + " NOT IN(" + Message.ENCRYPTION_AXOLOTL_NOT_FOR_THIS_DEVICE + ',' + Message.ENCRYPTION_PGP + ',' + Message.ENCRYPTION_DECRYPTION_FAILED + ") AND " + Message.TYPE + " IN(" + Message.TYPE_TEXT + ',' + Message.TYPE_PRIVATE + ") AND messages_index.body MATCH ? ORDER BY " + Message.TIME_SENT + " DESC limit " + Config.MAX_SEARCH_RESULTS;
+		String SQL = "SELECT " + Message.TABLENAME + ".*," + Conversation.TABLENAME + '.' + Conversation.CONTACTJID + ',' + Conversation.TABLENAME + '.' + Conversation.ACCOUNT + ',' + Conversation.TABLENAME + '.' + Conversation.MODE + " FROM " + Message.TABLENAME + " join " + Conversation.TABLENAME + " on " + Message.TABLENAME + '.' + Message.CONVERSATION + '=' + Conversation.TABLENAME + '.' + Conversation.UUID + " join messages_index ON messages_index.uuid=messages.uuid where " + Message.ENCRYPTION + " NOT IN(" + Message.ENCRYPTION_AXOLOTL_NOT_FOR_THIS_DEVICE + ',' + Message.ENCRYPTION_PGP + ',' + Message.ENCRYPTION_DECRYPTION_FAILED + ','+Message.ENCRYPTION_AXOLOTL_FAILED+") AND " + Message.TYPE + " IN(" + Message.TYPE_TEXT + ',' + Message.TYPE_PRIVATE + ") AND messages_index.body MATCH ? ORDER BY " + Message.TIME_SENT + " DESC limit " + Config.MAX_SEARCH_RESULTS;
 		Log.d(Config.LOGTAG, "search term: " + FtsUtils.toMatchString(term));
 		return db.rawQuery(SQL, new String[]{FtsUtils.toMatchString(term)});
 	}
@@ -970,11 +986,10 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 		return db.update(Message.TABLENAME, message.getContentValues(), Message.UUID + "=?", args) == 1;
 	}
 
-	public void updateMessage(Message message, String uuid) {
+	public boolean updateMessage(Message message, String uuid) {
 		SQLiteDatabase db = this.getWritableDatabase();
 		String[] args = {uuid};
-		db.update(Message.TABLENAME, message.getContentValues(), Message.UUID
-				+ "=?", args);
+		return db.update(Message.TABLENAME, message.getContentValues(), Message.UUID + "=?", args) == 1;
 	}
 
 	public void readRoster(Roster roster) {
@@ -994,7 +1009,7 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 		final SQLiteDatabase db = this.getWritableDatabase();
 		db.beginTransaction();
 		for (Contact contact : roster.getContacts()) {
-			if (contact.getOption(Contact.Options.IN_ROSTER) || contact.getAvatarFilename() != null) {
+			if (contact.getOption(Contact.Options.IN_ROSTER) || contact.getAvatarFilename() != null || contact.getOption(Contact.Options.SYNCED_VIA_OTHER)) {
 				db.insert(Contact.TABLENAME, null, contact.getContentValues());
 			} else {
 				String where = Contact.ACCOUNT + "=? AND " + Contact.JID + "=?";
@@ -1247,10 +1262,10 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 		db.insert(SQLiteAxolotlStore.PREKEY_TABLENAME, null, values);
 	}
 
-	public void deletePreKey(Account account, int preKeyId) {
+	public int deletePreKey(Account account, int preKeyId) {
 		SQLiteDatabase db = this.getWritableDatabase();
 		String[] args = {account.getUuid(), Integer.toString(preKeyId)};
-		db.delete(SQLiteAxolotlStore.PREKEY_TABLENAME,
+		return db.delete(SQLiteAxolotlStore.PREKEY_TABLENAME,
 				SQLiteAxolotlStore.ACCOUNT + "=? AND "
 						+ SQLiteAxolotlStore.ID + "=?",
 				args);

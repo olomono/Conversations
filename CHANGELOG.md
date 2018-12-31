@@ -1,5 +1,26 @@
 # Changelog
 
+### Version 2.3.10
+* lower minimum required Android version to 4.1
+* Synchronize group chat join/leaves across multiple clients
+* Fixed sending PGP encrypted messages from quick reply
+
+### Version 2.3.9
+* OMEMO stability improvements
+* Context menu when long pressing avatar in 1:1 chat
+
+### Version 2.3.8
+* make PEP avatars public to play nice with Prosody 0.11
+* Fixed re-sending failed files in group chats
+
+### Version 2.3.7
+* long press on 'allow' or 'add back' snackbar to bring up 'reject'
+* bug fixes for Android 9
+
+### Version 2.3.6
+* Improved handling of bookmark nicks
+* Show send PM menu entry in anonymous MUCs
+
 ### Version 2.3.5
 * Fixed group chat mentions when nick ends in . (dot)
 * Fixed Conversations not asking for permissions after direct share
@@ -19,7 +40,7 @@
 ### Version 2.3.1
 * Stronger compression for video files
 * Use SNI on STARTTLS to fix gtalk
-* Fix Quite Hours on Android 8+
+* Fix Quiet Hours on Android 8+
 * Use Consistent Color Generation (XEP-0392)
 
 ### Version 2.3.0

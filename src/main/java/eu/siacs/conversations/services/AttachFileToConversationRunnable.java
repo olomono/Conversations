@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.preference.PreferenceManager;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 
 import net.ypresto.androidtranscoder.MediaTranscoder;
@@ -46,14 +47,14 @@ public class AttachFileToConversationRunnable implements Runnable, MediaTranscod
 		this.mXmppConnectionService = xmppConnectionService;
 		this.message = message;
 		this.callback = callback;
-		final String mimeType = type != null ? type : MimeUtils.guessMimeTypeFromUri(mXmppConnectionService, uri);
+		final String mimeType = MimeUtils.guessMimeTypeFromUriAndMime(mXmppConnectionService, uri, type);
 		final int autoAcceptFileSize = mXmppConnectionService.getResources().getInteger(R.integer.auto_accept_filesize);
 		this.originalFileSize = FileBackend.getFileSize(mXmppConnectionService,uri);
 		this.isVideoMessage = (mimeType != null && mimeType.startsWith("video/")) && originalFileSize > autoAcceptFileSize;
 	}
 
 	boolean isVideoMessage() {
-		return this.isVideoMessage;
+		return this.isVideoMessage && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2;
 	}
 
 	private void processAsFile() {
@@ -88,6 +89,7 @@ public class AttachFileToConversationRunnable implements Runnable, MediaTranscod
 		}
 	}
 
+	@RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
 	private void processAsVideo() throws FileNotFoundException {
 		Log.d(Config.LOGTAG,"processing file as video");
 		mXmppConnectionService.startForcingForegroundNotification();
@@ -158,7 +160,7 @@ public class AttachFileToConversationRunnable implements Runnable, MediaTranscod
 
 	@Override
 	public void run() {
-		if (isVideoMessage) {
+		if (this.isVideoMessage()) {
 			try {
 				processAsVideo();
 			} catch (FileNotFoundException e) {

@@ -11,25 +11,26 @@
         android:paddingRight="8dp"
         android:paddingTop="3dp">
 
-        <LinearLayout
-            android:id="@+id/message_photo_box"
-            android:orientation="vertical"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentBottom="true"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-            <com.makeramen.roundedimageview.RoundedImageView
-                android:id="@+id/message_photo"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:scaleType="fitXY"
-                app:riv_corner_radius="2dp" />
-            <View
-                android:id="@+id/placeholder"
-                android:layout_height="3dp"
-                android:layout_width="48dp"
-            />
-        </LinearLayout>
+    <LinearLayout
+        android:id="@+id/message_photo_box"
+        android:orientation="vertical"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true">
+        <com.makeramen.roundedimageview.RoundedImageView
+            android:id="@+id/message_photo"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:scaleType="fitXY"
+            app:riv_corner_radius="2dp" />
+        <View
+            android:id="@+id/placeholder"
+            android:layout_height="3dp"
+            android:layout_width="48dp"
+        />
+    </LinearLayout>
 
         <LinearLayout
             android:id="@+id/message_box"

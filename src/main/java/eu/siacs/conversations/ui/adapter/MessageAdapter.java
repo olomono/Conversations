@@ -213,9 +213,10 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 				viewHolder.editIndicator.setVisibility(View.GONE);
 			}
 		}
+		final Transferable transferable = message.getTransferable();
 		boolean multiReceived = message.getConversation().getMode() == Conversation.MODE_MULTI
 				&& message.getMergedStatus() <= Message.STATUS_RECEIVED;
-		if (message.getType() == Message.TYPE_IMAGE || message.getType() == Message.TYPE_FILE || message.getTransferable() != null) {
+		if (message.getType() == Message.TYPE_IMAGE || message.getType() == Message.TYPE_FILE || transferable != null) {
 			FileParams params = message.getFileParams();
 			if (params.size > (1.5 * 1024 * 1024)) {
 				filesize = Math.round(params.size * 1f / (1024 * 1024)) + " MiB";
@@ -224,7 +225,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 			} else if (params.size > 0) {
 				filesize = params.size + " B";
 			}
-			if (message.getTransferable() != null && message.getTransferable().getStatus() == Transferable.STATUS_FAILED) {
+			if (transferable != null && transferable.getStatus() == Transferable.STATUS_FAILED) {
 				error = true;
 			}
 		}
@@ -233,9 +234,8 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 				info = getContext().getString(R.string.waiting);
 				break;
 			case Message.STATUS_UNSENT:
-				Transferable d = message.getTransferable();
-				if (d != null) {
-					info = getContext().getString(R.string.sending_file, d.getProgress());
+				if (transferable != null) {
+					info = getContext().getString(R.string.sending_file, transferable.getProgress());
 				} else {
 					info = getContext().getString(R.string.sending);
 				}
@@ -869,6 +869,8 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 			displayInfoMessage(viewHolder, activity.getString(R.string.decryption_failed), darkBackground);
 		} else if (message.getEncryption() == Message.ENCRYPTION_AXOLOTL_NOT_FOR_THIS_DEVICE) {
 			displayInfoMessage(viewHolder, activity.getString(R.string.not_encrypted_for_this_device), darkBackground);
+		} else if (message.getEncryption() == Message.ENCRYPTION_AXOLOTL_FAILED) {
+			displayInfoMessage(viewHolder, activity.getString(R.string.omemo_decryption_failed), darkBackground);
 		} else {
 			if (message.isGeoUri()) {
 				displayLocationMessage(viewHolder, message);

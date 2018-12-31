@@ -17,12 +17,14 @@ import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -57,12 +59,14 @@ import eu.siacs.conversations.ui.util.MenuDoubleTabUtil;
 import eu.siacs.conversations.ui.util.MucDetailsContextMenuHelper;
 import eu.siacs.conversations.ui.util.MyLinkify;
 import eu.siacs.conversations.ui.util.SoftKeyboardUtils;
+import eu.siacs.conversations.utils.AccountUtils;
 import eu.siacs.conversations.utils.Compatibility;
 import eu.siacs.conversations.utils.EmojiWrapper;
 import eu.siacs.conversations.utils.StringUtils;
 import eu.siacs.conversations.utils.StylingHelper;
 import eu.siacs.conversations.utils.UIHelper;
 import eu.siacs.conversations.utils.XmppUri;
+import me.drakeet.support.toast.ToastCompat;
 import rocks.xmpp.addr.Jid;
 
 import static eu.siacs.conversations.entities.Bookmark.printableValue;
@@ -91,8 +95,8 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
     private UiCallback<Conversation> renameCallback = new UiCallback<Conversation>() {
         @Override
         public void success(Conversation object) {
+            displayToast(getString(R.string.your_nick_has_been_changed));
             runOnUiThread(() -> {
-                Toast.makeText(ConferenceDetailsActivity.this, getString(R.string.your_nick_has_been_changed), Toast.LENGTH_SHORT).show();
                 updateView();
             });
 
@@ -100,7 +104,7 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
 
         @Override
         public void error(final int errorCode, Conversation object) {
-            runOnUiThread(() -> Toast.makeText(ConferenceDetailsActivity.this, getString(errorCode), Toast.LENGTH_SHORT).show());
+            displayToast(getString(errorCode));
         }
 
         @Override
@@ -419,6 +423,7 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.muc_details, menu);
+        AccountUtils.showHideMenuItems(menu);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -431,7 +436,7 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
             this.mSelectedUser = user;
             String name;
             final Contact contact = user.getContact();
-            if (contact != null && contact.showInRoster()) {
+            if (contact != null && contact.showInContactList()) {
                 name = contact.getDisplayName();
             } else if (user.getRealJid() != null) {
                 name = user.getRealJid().asBareJid().toString();
@@ -693,7 +698,12 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
     }
 
     private void displayToast(final String msg) {
-        runOnUiThread(() -> Toast.makeText(ConferenceDetailsActivity.this, msg, Toast.LENGTH_SHORT).show());
+        runOnUiThread(() -> {
+            if (isFinishing()) {
+                return;
+            }
+            ToastCompat.makeText(this, msg, Toast.LENGTH_SHORT).show();
+        });
     }
 
     public void loadAvatar(User user, ImageView imageView) {

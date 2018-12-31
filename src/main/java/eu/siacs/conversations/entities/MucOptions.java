@@ -2,6 +2,7 @@ package eu.siacs.conversations.entities;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,6 +42,9 @@ public class MucOptions {
     private Error error = Error.NONE;
     private User self;
     private String password = null;
+
+    private boolean tookProposedNickFromBookmark = false;
+
     public MucOptions(Conversation conversation) {
         this.account = conversation.getAccount();
         this.conversation = conversation;
@@ -90,6 +94,16 @@ public class MucOptions {
             for (User user : users) {
                 user.chatState = Config.DEFAULT_CHATSTATE;
             }
+        }
+    }
+
+    public boolean isTookProposedNickFromBookmark() {
+        return tookProposedNickFromBookmark;
+    }
+
+    void notifyOfBookmarkNick(String nick) {
+        if (nick != null && nick.trim().equals(getSelf().getFullJid().getResource())) {
+            this.tookProposedNickFromBookmark = true;
         }
     }
 
@@ -236,12 +250,13 @@ public class MucOptions {
             old = findUserByRealJid(user.realJid);
             realJidFound = old != null;
             synchronized (users) {
-                if (old != null && old.fullJid == null) {
+                if (old != null && (old.fullJid == null || old.role == Role.NONE)) {
                     users.remove(old);
                 }
             }
         }
         old = findUserByFullJid(user.getFullJid());
+
         synchronized (this.users) {
             if (old != null) {
                 users.remove(old);
@@ -373,14 +388,20 @@ public class MucOptions {
     }
 
     private String getProposedNick() {
-        if (conversation.getBookmark() != null
-                && conversation.getBookmark().getNick() != null
-                && !conversation.getBookmark().getNick().trim().isEmpty()) {
-            return conversation.getBookmark().getNick().trim();
+        final Bookmark bookmark = this.conversation.getBookmark();
+        final String bookmarkedNick = bookmark == null ? null : bookmark.getNick();
+        if (bookmarkedNick != null && !bookmarkedNick.trim().isEmpty()) {
+            this.tookProposedNickFromBookmark = true;
+            return bookmarkedNick.trim();
         } else if (!conversation.getJid().isBareJid()) {
             return conversation.getJid().getResource();
         } else {
-            return JidHelper.localPartOrFallback(account.getJid());
+            final String displayName = account.getDisplayName();
+            if (TextUtils.isEmpty(displayName)) {
+                return JidHelper.localPartOrFallback(account.getJid());
+            } else {
+                return displayName;
+            }
         }
     }
 
@@ -552,7 +573,7 @@ public class MucOptions {
         ArrayList<Jid> members = new ArrayList<>();
         synchronized (users) {
             for (User user : users) {
-                if (user.affiliation.ranks(Affiliation.MEMBER) && user.realJid != null && (!user.isDomain() || includeDomains)) {
+                if (user.affiliation.ranks(Affiliation.MEMBER) && user.realJid != null && !user.realJid.asBareJid().equals(conversation.account.getJid().asBareJid()) && (!user.isDomain() || includeDomains)) {
                     members.add(user.realJid);
                 }
             }
@@ -655,7 +676,8 @@ public class MucOptions {
         SHUTDOWN,
         DESTROYED,
         INVALID_NICK,
-        UNKNOWN
+        UNKNOWN,
+        NON_ANONYMOUS
     }
 
     private interface OnEventListener {
@@ -719,7 +741,7 @@ public class MucOptions {
 
         public Contact getContact() {
             if (fullJid != null) {
-                return getAccount().getRoster().getContactFromRoster(realJid);
+                return getAccount().getRoster().getContactFromContactList(realJid);
             } else if (realJid != null) {
                 return getAccount().getRoster().getContact(realJid);
             } else {
