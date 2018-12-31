@@ -702,14 +702,6 @@ public class Message extends AbstractEntity {
 		return firstMergeMessage;
 	}
 
-	public Message lastMergeMessage() {
-		Message lastMergeMessage = this;
-		while (lastMergeMessage.wasMergedWithNext()) {
-			lastMergeMessage = lastMergeMessage.next();
-		}
-		return lastMergeMessage;
-	}
-
 	public boolean trusted() {
 		Contact contact = this.getContact();
 		return status > STATUS_RECEIVED || (contact != null && (contact.showInRoster() || contact.isSelf()));
