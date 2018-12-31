@@ -90,32 +90,38 @@ public class MessageReferenceUtils {
 
             final Conversation conversation = (Conversation) referencedMessage.getConversation();
             final ConversationFragment conversationFragment = conversation.getConversationFragment();
-            final int jumpingPosition = conversationFragment.getMessagePosition(referencedMessage.firstMergeMessage());
 
-            if (messageReferencePreview) {
-                messageReferenceBinding.messageReferencePreviewCancelButton.setVisibility(View.VISIBLE);
+            // Add only onClickListeners if a conversationFragment exists.
+            // That is especially the case if this method is called during a message search.
+            if (conversationFragment != null) {
+                final int jumpingPosition = conversationFragment.getMessagePosition(referencedMessage.firstMergeMessage());
 
-                // Cancel the referencing of a message.
-                messageReferenceBinding.messageReferencePreviewCancelButton.setOnClickListener(v -> {
-                    hideMessageReference(messageReferenceBinding);
-                    conversation.setMessageReference(null);
-                    conversationFragment.updateChatMsgHint();
-                });
+                if (messageReferencePreview) {
+                    messageReferenceBinding.messageReferencePreviewCancelButton.setVisibility(View.VISIBLE);
 
-                // Jump to the referenced message when the message reference preview is clicked.
-                messageReferenceBinding.messageReferenceContainer.setOnClickListener(v -> {
-                    conversationFragment.setSelection(jumpingPosition, false);
-                });
-            } else {
-                // Jump to the referenced message when the message reference is clicked.
-                messageReferenceBinding.messageReferenceContainer.setOnClickListener(v -> {
-                    if (jumpingPosition == -1) {
-                        activity.xmppConnectionService.loadMoreMessages(referencedMessage, conversationFragment.getOnMoreMessagesLoadedImpl(conversationFragment.getView().findViewById(R.id.messages_view), referencedMessage));
-                    } else {
+                    // Cancel the referencing of a message.
+                    messageReferenceBinding.messageReferencePreviewCancelButton.setOnClickListener(v -> {
+                        hideMessageReference(messageReferenceBinding);
+                        conversation.setMessageReference(null);
+                        conversationFragment.updateChatMsgHint();
+                    });
+
+                    // Jump to the referenced message when the message reference preview is clicked.
+                    messageReferenceBinding.messageReferenceContainer.setOnClickListener(v -> {
                         conversationFragment.setSelection(jumpingPosition, false);
-                    }
-                });
+                    });
+                } else {
+                    // Jump to the referenced message when the message reference is clicked.
+                    messageReferenceBinding.messageReferenceContainer.setOnClickListener(v -> {
+                        if (jumpingPosition == -1) {
+                            activity.xmppConnectionService.loadMoreMessages(referencedMessage, conversationFragment.getOnMoreMessagesLoadedImpl(conversationFragment.getView().findViewById(R.id.messages_view), referencedMessage));
+                        } else {
+                            conversationFragment.setSelection(jumpingPosition, false);
+                        }
+                    });
+                }
             }
+
         }
     }
 

@@ -1092,7 +1092,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                 activity.showQrCode(conversation.getAccount().getShareableUri());
             }
         });
-        messageListAdapter.setOnQuoteListener(this::quoteText);
+        messageListAdapter.setOnCommentListener(this::commentMessage);
         binding.messagesView.setAdapter(messageListAdapter);
 
         registerForContextMenu(binding.messagesView);
@@ -1104,8 +1104,13 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         return binding.getRoot();
     }
 
-    private void quoteText(String text) {
-        binding.textinput.insertAsQuote(text);
+    /**
+     * Comments the whole given message or line by line for a given message reference.
+     * @param messageReference id of the message that should be referenced when a new message is sent
+     * @param quoteMessage quote the lines of the given message
+     */
+    private void commentMessage(String messageReference, boolean quoteMessage) {
+        commentMessage(conversation.findMessageWithUuidOrRemoteMsgId(messageReference), quoteMessage);
     }
 
 	/**
@@ -1135,7 +1140,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 
         if (quoteMessage) {
             // Show the lines of the referenced message as quotations instead of letting a legacy quotation be used for the body of the message to be sent.
-            quoteText(MessageUtils.prepareQuote(message));
+            binding.textinput.insertAsQuote(MessageUtils.prepareQuote(message));
             conversation.setMessageReferenceQuote("");
         } else {
             // Set the legacy quotation so that it can be used as the first part of the body for the message to be sent.
@@ -2100,7 +2105,8 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         final String downloadUuid = extras.getString(ConversationsActivity.EXTRA_DOWNLOAD_UUID);
         final String text = extras.getString(Intent.EXTRA_TEXT);
         final String nick = extras.getString(ConversationsActivity.EXTRA_NICK);
-        final boolean asQuote = extras.getBoolean(ConversationsActivity.EXTRA_AS_QUOTE);
+        final String messageReference = extras.getString(ConversationsActivity.EXTRA_MESSAGE_REFERENCE);
+        final boolean quoteMessage = extras.getBoolean(ConversationsActivity.EXTRA_QUOTE_MESSAGE);
         final boolean pm = extras.getBoolean(ConversationsActivity.EXTRA_IS_PRIVATE_MESSAGE, false);
         final boolean doNotAppend = extras.getBoolean(ConversationsActivity.EXTRA_DO_NOT_APPEND, false);
         final List<Uri> uris = extractUris(extras);
@@ -2126,8 +2132,8 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                 }
             }
         } else {
-            if (text != null && asQuote) {
-                quoteText(text);
+            if (messageReference != null) {
+                commentMessage(messageReference, quoteMessage);
             } else {
                 appendText(text, doNotAppend);
             }

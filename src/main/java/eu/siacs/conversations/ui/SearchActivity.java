@@ -128,11 +128,11 @@ public class SearchActivity extends XmppActivity implements TextWatcher, OnSearc
 		this.selectedMessageReference = new WeakReference<>(message);
 		getMenuInflater().inflate(R.menu.search_result_context, menu);
 		MenuItem copy = menu.findItem(R.id.copy_message);
-		MenuItem quote = menu.findItem(R.id.comment_lines);
+		MenuItem commentLines = menu.findItem(R.id.comment_lines);
 		MenuItem copyUrl = menu.findItem(R.id.copy_url);
 		if (message.isGeoUri()) {
 			copy.setVisible(false);
-			quote.setVisible(false);
+			commentLines.setVisible(false);
 		} else {
 			copyUrl.setVisible(false);
 		}
@@ -161,11 +161,14 @@ public class SearchActivity extends XmppActivity implements TextWatcher, OnSearc
 				case R.id.copy_message:
 					ShareUtil.copyToClipboard(this, message);
 					break;
-				case R.id.copy_url:
-					ShareUtil.copyUrlToClipboard(this, message);
+				case R.id.comment_message:
+					commentMessage(message, false);
 					break;
 				case R.id.comment_lines:
-					quote(message);
+					commentMessage(message, true);
+					break;
+				case R.id.copy_url:
+					ShareUtil.copyUrlToClipboard(this, message);
 					break;
 			}
 		}
@@ -181,8 +184,12 @@ public class SearchActivity extends XmppActivity implements TextWatcher, OnSearc
 		super.onSaveInstanceState(bundle);
 	}
 
-	private void quote(Message message) {
-		switchToConversationAndQuote(wrap(message.getConversation()), MessageUtils.prepareQuote(message));
+	private void commentMessage(Message message, boolean quoteMessage) {
+		String messageReference = message.getRemoteMsgId();
+		if (messageReference == null) {
+			messageReference = message.getUuid();
+		}
+		switchToConversationAndCommentMessage(wrap(message.getConversation()), messageReference, quoteMessage);
 	}
 
 	private Conversation wrap(Conversational conversational) {
