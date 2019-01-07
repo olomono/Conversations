@@ -42,8 +42,8 @@
         android:id="@+id/comment_message"
         android:title="@string/comment"/>
     <item
-        android:id="@+id/comment_lines"
-        android:title="@string/comment_lines"/>
+        android:id="@+id/quote_message"
+        android:title="@string/quote"/>
     <item
         android:id="@+id/copy_url"
         android:title="@string/copy_original_url"/>

@@ -257,7 +257,7 @@
   <string name="not_connected_try_again">انقطع الإتصال .. حاول مرة أخرى</string>
   <string name="check_x_filesize">تحقق من حجم %s</string>
   <string name="message_options">خيارات الرسالة</string>
-  <string name="comment_lines">إقتبس</string>
+  <string name="quote">إقتبس</string>
   <string name="copy_original_url">أنسخ الرابط الأصلي</string>
   <string name="send_again">أعد الإرسال</string>
   <string name="file_url">رابط الملف</string>

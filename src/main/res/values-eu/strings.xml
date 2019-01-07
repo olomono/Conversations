@@ -292,7 +292,7 @@
   <string name="check_x_filesize">Egiaztatu %sren neurria</string>
   <string name="check_x_filesize_on_host">Egiaztatu %1$sren neurria %2$s ostalarian</string>
   <string name="message_options">Mezuaren aukerak</string>
-  <string name="comment_lines">Aipatu</string>
+  <string name="quote">Aipatu</string>
   <string name="paste_as_quote">Aipamen bezala itsatsi</string>
   <string name="copy_original_url">Jatorrizko URLa kopiatu</string>
   <string name="send_again">Berriro bidali</string>

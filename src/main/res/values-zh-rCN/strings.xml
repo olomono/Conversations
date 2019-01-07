@@ -287,7 +287,7 @@
   <string name="check_x_filesize">检查 %s 大小</string>
   <string name="check_x_filesize_on_host">在 %2$s 上检查 %1$s 的大小</string>
   <string name="message_options">消息选项</string>
-  <string name="comment_lines">引用</string>
+  <string name="quote">引用</string>
   <string name="paste_as_quote">粘贴引用</string>
   <string name="copy_original_url">复制原始URL</string>
   <string name="send_again">重新发送</string>

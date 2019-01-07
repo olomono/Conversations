@@ -252,7 +252,7 @@
   <string name="check_x_filesize">Kontrollera filstorleken på %s</string>
   <string name="check_x_filesize_on_host">Kontrollera filstorlek för %1$s på %2$s</string>
   <string name="message_options">Meddelandealternativ</string>
-  <string name="comment_lines">Citera</string>
+  <string name="quote">Citera</string>
   <string name="copy_original_url">Kopiera orginal-URL</string>
   <string name="send_again">Skicka igen</string>
   <string name="file_url">Fil-URL</string>

@@ -32,8 +32,8 @@ public class Message extends AbstractEntity {
 	public static final String TABLENAME = "messages";
 
 	public static final int STATUS_RECEIVED = 0;
-	public static final int STATUS_UNSENT = 1;
-	public static final int STATUS_SENT = 2;
+	public static final int STATUS_UNSEND = 1;
+	public static final int STATUS_SEND = 2;
 	public static final int STATUS_SEND_FAILED = 3;
 	public static final int STATUS_WAITING = 5;
 	public static final int STATUS_OFFERED = 6;
@@ -119,7 +119,7 @@ public class Message extends AbstractEntity {
 	}
 
 	public Message(Conversational conversation, String body, int encryption) {
-		this(conversation, body, encryption, STATUS_UNSENT);
+		this(conversation, body, encryption, STATUS_UNSEND);
 	}
 
 	public Message(Conversational conversation, String body, int encryption, int status) {
@@ -618,11 +618,11 @@ public class Message extends AbstractEntity {
 
 	private static boolean isStatusMergeable(int a, int b) {
 		return a == b || (
-				(a == Message.STATUS_SEND_RECEIVED && b == Message.STATUS_UNSENT)
-						|| (a == Message.STATUS_SEND_RECEIVED && b == Message.STATUS_SENT)
+				(a == Message.STATUS_SEND_RECEIVED && b == Message.STATUS_UNSEND)
+						|| (a == Message.STATUS_SEND_RECEIVED && b == Message.STATUS_SEND)
 						|| (a == Message.STATUS_SEND_RECEIVED && b == Message.STATUS_WAITING)
-						|| (a == Message.STATUS_SENT && b == Message.STATUS_UNSENT)
-						|| (a == Message.STATUS_SENT && b == Message.STATUS_WAITING)
+						|| (a == Message.STATUS_SEND && b == Message.STATUS_UNSEND)
+						|| (a == Message.STATUS_SEND && b == Message.STATUS_WAITING)
 		);
 	}
 

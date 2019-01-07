@@ -141,7 +141,7 @@ public class HttpUploadConnection implements Transferable {
 			}
 		});
 		message.setTransferable(this);
-		mXmppConnectionService.markMessage(message, Message.STATUS_UNSENT);
+		mXmppConnectionService.markMessage(message, Message.STATUS_UNSEND);
 	}
 
 	private void upload() {

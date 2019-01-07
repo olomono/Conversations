@@ -290,7 +290,7 @@
   <string name="check_x_filesize">Ellenőrizze a %s méretét</string>
   <string name="check_x_filesize_on_host">Ellenőrizze a %1$s méretét a %2$s oldalon</string>
   <string name="message_options">Műveletek üzenetekkel</string>
-  <string name="comment_lines">Idéz</string>
+  <string name="quote">Idéz</string>
   <string name="paste_as_quote">Beillesztés idézetként</string>
   <string name="copy_original_url">Eredeti URL másolása</string>
   <string name="send_again">Elküldi újra</string>

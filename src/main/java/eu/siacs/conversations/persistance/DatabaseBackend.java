@@ -65,7 +65,7 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 	private static final String DATABASE_NAME = "history";
 	private static final int DATABASE_VERSION = 44;
 	private static DatabaseBackend instance = null;
-	private static String CREATE_CONTACTS_STATEMENT = "create table "
+	private static String CREATE_CONTATCS_STATEMENT = "create table "
 			+ Contact.TABLENAME + "(" + Contact.ACCOUNT + " TEXT, "
 			+ Contact.SERVERNAME + " TEXT, " + Contact.SYSTEMNAME + " TEXT,"
 			+ Contact.JID + " TEXT," + Contact.KEYS + " TEXT,"
@@ -243,7 +243,7 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 				+ ") ON DELETE CASCADE);");
 		db.execSQL(CREATE_MESSAGE_TIME_INDEX);
 		db.execSQL(CREATE_MESSAGE_CONVERSATION_INDEX);
-		db.execSQL(CREATE_CONTACTS_STATEMENT);
+		db.execSQL(CREATE_CONTATCS_STATEMENT);
 		db.execSQL(CREATE_DISCOVERY_RESULTS_STATEMENT);
 		db.execSQL(CREATE_SESSIONS_STATEMENT);
 		db.execSQL(CREATE_PREKEYS_STATEMENT);
@@ -268,7 +268,7 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 		}
 		if (oldVersion < 5 && newVersion >= 5) {
 			db.execSQL("DROP TABLE " + Contact.TABLENAME);
-			db.execSQL(CREATE_CONTACTS_STATEMENT);
+			db.execSQL(CREATE_CONTATCS_STATEMENT);
 			db.execSQL("UPDATE " + Account.TABLENAME + " SET "
 					+ Account.ROSTERVERSION + " = NULL");
 		}

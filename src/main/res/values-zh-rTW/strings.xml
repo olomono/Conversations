@@ -252,7 +252,7 @@
   <string name="check_x_filesize">檢查 %s 大小</string>
   <string name="check_x_filesize_on_host">在 %2$s 上檢查 %1$s 的大小</string>
   <string name="message_options">訊息選項</string>
-  <string name="comment_lines">引用</string>
+  <string name="quote">引用</string>
   <string name="copy_original_url">拷貝原始URL</string>
   <string name="send_again">再次發送</string>
   <string name="file_url">檔案位址(URL)</string>

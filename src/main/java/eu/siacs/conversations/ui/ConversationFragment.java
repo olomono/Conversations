@@ -286,7 +286,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                         int pos = Math.max(getIndexOf(uuid, messageList), 0);
                         binding.messagesView.setSelectionFromTop(pos, pxOffset);
                     } else {
-                        setSelection(messageListAdapter.getPosition(conversation.findMessageWithUuid(jumpToMessage.getUuid())), false);
+                        setSelection(messageListAdapter.getPosition(conversation.findSentMessageWithUuid(jumpToMessage.getUuid())), false);
                     }
 
                     if (messageLoaderToast != null) {
@@ -1153,7 +1153,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             MenuItem copyMessage = menu.findItem(R.id.copy_message);
             MenuItem copyLink = menu.findItem(R.id.copy_link);
             MenuItem commentMessage = menu.findItem(R.id.comment_message);
-            MenuItem commentLines = menu.findItem(R.id.comment_lines);
+            MenuItem quoteMessage = menu.findItem(R.id.quote_message);
             MenuItem retryDecryption = menu.findItem(R.id.retry_decryption);
             MenuItem correctMessage = menu.findItem(R.id.correct_message);
             MenuItem shareWith = menu.findItem(R.id.share_with);
@@ -1169,7 +1169,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             }
             if (!m.isFileOrImage() && !encrypted && !m.isGeoUri() && !m.treatAsDownloadable()) {
                 copyMessage.setVisible(true);
-                commentLines.setVisible(!showError && MessageUtils.prepareQuote(m).length() > 0);
+                quoteMessage.setVisible(!showError && MessageUtils.prepareQuote(m).length() > 0);
                 String body = m.getMergedBody().toString();
                 if (ShareUtil.containsXmppUri(body)) {
                     copyLink.setTitle(R.string.copy_jabber_id);
@@ -1205,7 +1205,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                 downloadFile.setTitle(activity.getString(R.string.download_x_file, UIHelper.getFileDescriptionString(activity, m)));
             }
             final boolean waitingOfferedSending = m.getStatus() == Message.STATUS_WAITING
-                    || m.getStatus() == Message.STATUS_UNSENT
+                    || m.getStatus() == Message.STATUS_UNSEND
                     || m.getStatus() == Message.STATUS_OFFERED;
             final boolean cancelable = (t != null && !deleted) || waitingOfferedSending && m.needsUploading();
             if (cancelable) {
@@ -1242,7 +1242,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             case R.id.comment_message:
                 commentMessage(selectedMessage, false);
                 return true;
-            case R.id.comment_lines:
+            case R.id.quote_message:
                 commentMessage(selectedMessage, true);
                 return true;
             case R.id.send_again:

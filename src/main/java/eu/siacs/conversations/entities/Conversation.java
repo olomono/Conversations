@@ -12,9 +12,11 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import eu.siacs.conversations.Config;
@@ -24,6 +26,7 @@ import eu.siacs.conversations.crypto.axolotl.AxolotlService;
 import eu.siacs.conversations.services.QuickConversationsService;
 import eu.siacs.conversations.ui.ConversationFragment;
 import eu.siacs.conversations.utils.JidHelper;
+import eu.siacs.conversations.xmpp.InvalidJid;
 import eu.siacs.conversations.xmpp.chatstate.ChatState;
 import eu.siacs.conversations.xmpp.mam.MamReference;
 import rocks.xmpp.addr.Jid;
@@ -144,7 +147,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 		synchronized (this.messages) {
 			for (final Message message : this.messages) {
 				final int s = message.getStatus();
-				if ((s == Message.STATUS_UNSENT || s == Message.STATUS_WAITING) && message.getUuid().equals(uuid)) {
+				if ((s == Message.STATUS_UNSEND || s == Message.STATUS_WAITING) && message.getUuid().equals(uuid)) {
 					return message;
 				}
 			}
@@ -259,7 +262,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 		final ArrayList<Message> results = new ArrayList<>();
 		synchronized (this.messages) {
 			for (Message message : this.messages) {
-				if (message.getType() != Message.TYPE_IMAGE && message.getStatus() == Message.STATUS_UNSENT) {
+				if (message.getType() != Message.TYPE_IMAGE && message.getStatus() == Message.STATUS_UNSEND) {
 					results.add(message);
 				}
 			}
@@ -273,7 +276,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 		synchronized (this.messages) {
 			for (Message message : this.messages) {
 				if (id.equals(message.getUuid())
-						|| (message.getStatus() >= Message.STATUS_SENT
+						|| (message.getStatus() >= Message.STATUS_SEND
 						&& id.equals(message.getRemoteMsgId()))) {
 					return message;
 				}
@@ -300,7 +303,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 		return null;
 	}
 
-	public Message findMessageWithUuid(String id) {
+	public Message findSentMessageWithUuid(String id) {
 		synchronized (this.messages) {
 			for (Message message : this.messages) {
 				if (id.equals(message.getUuid())) {
@@ -726,7 +729,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 		synchronized (this.messages) {
 			for (int i = this.messages.size() - 1; i >= 0; --i) {
 				Message message = this.messages.get(i);
-				if (message.getStatus() == Message.STATUS_UNSENT || message.getStatus() == Message.STATUS_SENT) {
+				if (message.getStatus() == Message.STATUS_UNSEND || message.getStatus() == Message.STATUS_SEND) {
 					String otherBody;
 					if (message.hasFileOnRemoteHost()) {
 						otherBody = message.getFileParams().url.toString();

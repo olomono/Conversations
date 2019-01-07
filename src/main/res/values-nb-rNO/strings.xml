@@ -275,7 +275,7 @@
   <string name="check_x_filesize">Sjekk %s størrelse</string>
   <string name="check_x_filesize_on_host">Sjekk %1$s størrelse på %2$s</string>
   <string name="message_options">Meldingsvalg</string>
-  <string name="comment_lines">Siter</string>
+  <string name="quote">Siter</string>
   <string name="copy_original_url">Kopier orginal nettadresse</string>
   <string name="send_again">Send igjen</string>
   <string name="file_url">Filens nettadresse</string>

@@ -292,7 +292,7 @@
   <string name="check_x_filesize">Проверете размера на %s</string>
   <string name="check_x_filesize_on_host">Проверете размера на %1$s на %2$s</string>
   <string name="message_options">Настройки за съобщенята</string>
-  <string name="comment_lines">Цитат</string>
+  <string name="quote">Цитат</string>
   <string name="paste_as_quote">Поставяне като цитат</string>
   <string name="copy_original_url">Копиране на оригиналния адрес</string>
   <string name="send_again">Повторно изпращане</string>

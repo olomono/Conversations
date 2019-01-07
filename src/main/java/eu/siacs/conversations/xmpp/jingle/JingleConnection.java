@@ -2,7 +2,6 @@ package eu.siacs.conversations.xmpp.jingle;
 
 import android.util.Base64;
 import android.util.Log;
-import android.util.Pair;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -596,7 +595,7 @@ public class JingleConnection implements Transferable {
 		mergeCandidates(JingleCandidate.parse(content.socks5transport()
 				.getChildren()));
 		this.mJingleStatus = JINGLE_STATUS_ACCEPTED;
-		mXmppConnectionService.markMessage(message, Message.STATUS_UNSENT);
+		mXmppConnectionService.markMessage(message, Message.STATUS_UNSEND);
 		this.connectNextCandidate();
 		return true;
 	}

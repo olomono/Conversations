@@ -253,7 +253,7 @@
   <string name="check_x_filesize">Перевірити %s розмір</string>
   <string name="check_x_filesize_on_host">Перевірити %1$s розмір на %2$s</string>
   <string name="message_options">Налаштування повідомлення</string>
-  <string name="comment_lines">Цитувати</string>
+  <string name="quote">Цитувати</string>
   <string name="copy_original_url">Скопіювати оригінальний URL</string>
   <string name="send_again">Надіслати знову</string>
   <string name="file_url">URL файла</string>

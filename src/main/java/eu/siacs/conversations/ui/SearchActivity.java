@@ -62,7 +62,6 @@ import eu.siacs.conversations.ui.util.ListViewUtils;
 import eu.siacs.conversations.ui.util.PendingItem;
 import eu.siacs.conversations.ui.util.ShareUtil;
 import eu.siacs.conversations.utils.FtsUtils;
-import eu.siacs.conversations.utils.MessageUtils;
 
 import static eu.siacs.conversations.ui.util.SoftKeyboardUtils.hideSoftKeyboard;
 import static eu.siacs.conversations.ui.util.SoftKeyboardUtils.showKeyboard;
@@ -128,11 +127,11 @@ public class SearchActivity extends XmppActivity implements TextWatcher, OnSearc
 		this.selectedMessageReference = new WeakReference<>(message);
 		getMenuInflater().inflate(R.menu.search_result_context, menu);
 		MenuItem copy = menu.findItem(R.id.copy_message);
-		MenuItem commentLines = menu.findItem(R.id.comment_lines);
+		MenuItem quote = menu.findItem(R.id.quote_message);
 		MenuItem copyUrl = menu.findItem(R.id.copy_url);
 		if (message.isGeoUri()) {
 			copy.setVisible(false);
-			commentLines.setVisible(false);
+			quote.setVisible(false);
 		} else {
 			copyUrl.setVisible(false);
 		}
@@ -164,7 +163,7 @@ public class SearchActivity extends XmppActivity implements TextWatcher, OnSearc
 				case R.id.comment_message:
 					commentMessage(message, false);
 					break;
-				case R.id.comment_lines:
+				case R.id.quote_message:
 					commentMessage(message, true);
 					break;
 				case R.id.copy_url:
