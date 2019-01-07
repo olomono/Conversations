@@ -490,7 +490,7 @@ public abstract class XmppActivity extends ActionBarActivity {
 		if (messageReference != null) {
 			intent.putExtra(ConversationsActivity.EXTRA_MESSAGE_REFERENCE, messageReference);
 			if (quoteMessage) {
-				intent.putExtra(ConversationsActivity.EXTRA_QUOTE_MESSAGE, true);
+				intent.putExtra(ConversationsActivity.EXTRA_COMMENT_LINES, true);
 			}
 		}
 		if (nick != null) {

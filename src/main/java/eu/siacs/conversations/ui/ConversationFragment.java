@@ -2077,7 +2077,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         final String text = extras.getString(Intent.EXTRA_TEXT);
         final String nick = extras.getString(ConversationsActivity.EXTRA_NICK);
         final String messageReference = extras.getString(ConversationsActivity.EXTRA_MESSAGE_REFERENCE);
-        final boolean quoteMessage = extras.getBoolean(ConversationsActivity.EXTRA_QUOTE_MESSAGE);
+        final boolean quoteMessage = extras.getBoolean(ConversationsActivity.EXTRA_COMMENT_LINES);
         final boolean pm = extras.getBoolean(ConversationsActivity.EXTRA_IS_PRIVATE_MESSAGE, false);
         final boolean doNotAppend = extras.getBoolean(ConversationsActivity.EXTRA_DO_NOT_APPEND, false);
         final List<Uri> uris = extractUris(extras);
