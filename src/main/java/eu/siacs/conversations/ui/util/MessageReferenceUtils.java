@@ -238,4 +238,56 @@ public class MessageReferenceUtils {
     public static String extractFirstTwoLinesOfBody(final Message message) {
         return extractFirstLinesOfBody(message, 2);
     }
+
+    /**
+     * Deletes legacy quotation added for backward compatibility if present but preserve independent quotations.
+     */
+    public static void deleteLegacyQuotation(final XmppActivity activity, final Message message, final Message referencedMessage) {
+        if (referencedMessage != null && referencedMessage.getEncryption() != Message.ENCRYPTION_DECRYPTION_FAILED && referencedMessage.getEncryption() != Message.ENCRYPTION_AXOLOTL_NOT_FOR_THIS_DEVICE) {
+            String messageBody = message.getBody();
+            String[] messageBodyLines = messageBody.split("\n");
+            int numberOfMessageBodyLines = messageBodyLines.length;
+            String[] referencedMessageBodyLines = referencedMessage.getBody().split("\n");
+            int numberOfReferencedMessageBodyLines = referencedMessageBodyLines.length;
+
+            if (messageBody.length() > 0 && numberOfMessageBodyLines >= numberOfReferencedMessageBodyLines && (messageBody.charAt(0) == '>' || messageBody.charAt(0) == '\u00bb')) {
+
+                // If the referenced message is a file message
+                // and the first quoted line is the URL of the referenced file message,
+                // remove that line from the message's body.
+                // This is necessary as a separate case for image messages since the URL can be compared without other FileParams like the dimensions.
+                // If the referenced message is not a file message, remove all quoted lines from the message's body
+                // that are lines of the referenced message.
+                if (referencedMessage.hasFileOnRemoteHost()) {
+                    String line = messageBodyLines[0];
+                    if (UIHelper.isQuotationLine(line)) {
+                        if (line.substring(1).trim().equals(referencedMessage.getFileParams().url.toString())) {
+                            message.setBody(MessageReferenceUtils.createStringWithLinesOutOfStringArray(messageBodyLines, 1, messageBodyLines.length));
+                        }
+                    }
+                } else {
+                    // Take only the part of the body that contains the comment without legacy quotation.
+                    int currentLine = 0;
+                    boolean quotationEqualsReferencedMessage = true;
+                    for (String line : messageBodyLines) {
+                        if (currentLine < numberOfReferencedMessageBodyLines) {
+                            if (!(UIHelper.isQuotationLine(line) && line.substring(1).trim().equals(referencedMessageBodyLines[currentLine].trim()))) {
+                                quotationEqualsReferencedMessage = false;
+                                break;
+                            }
+                        } else {
+                            break;
+                        }
+                        currentLine++;
+                    }
+
+                    // Delete the legacy quotation of the message and update the message in the database.
+                    if (quotationEqualsReferencedMessage) {
+                        message.setBody(MessageReferenceUtils.createStringWithLinesOutOfStringArray(messageBodyLines, currentLine, messageBodyLines.length));
+                        activity.xmppConnectionService.updateMessage(message);
+                    }
+                }
+            }
+        }
+    }
 }
