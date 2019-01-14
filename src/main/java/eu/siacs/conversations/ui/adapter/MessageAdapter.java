@@ -220,7 +220,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		final Transferable transferable = message.getTransferable();
 		boolean multiReceived = message.getConversation().getMode() == Conversation.MODE_MULTI
 				&& message.getMergedStatus() <= Message.STATUS_RECEIVED;
-		if (message.getType() == Message.TYPE_IMAGE || message.getType() == Message.TYPE_FILE || transferable != null) {
+		if (message.isFileOrImage() || transferable != null) {
 			FileParams params = message.getFileParams();
 			if (params.size > (1.5 * 1024 * 1024)) {
 				filesize = Math.round(params.size * 1f / (1024 * 1024)) + " MiB";
@@ -780,10 +780,10 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		MessageReferenceUtils.hideMessageReference(viewHolder.messageReferenceBinding);
 
 		final Transferable transferable = message.getTransferable();
-		if (transferable != null && transferable.getStatus() != Transferable.STATUS_UPLOADING) {
-			if (transferable.getStatus() == Transferable.STATUS_OFFER) {
+		if (message.isDeleted() || (transferable != null && transferable.getStatus() != Transferable.STATUS_UPLOADING)) {
+			if (transferable != null && transferable.getStatus() == Transferable.STATUS_OFFER) {
 				displayDownloadableMessage(viewHolder, message, activity.getString(R.string.download_x_file, UIHelper.getFileDescriptionString(activity, message)));
-			} else if (transferable.getStatus() == Transferable.STATUS_OFFER_CHECK_FILESIZE) {
+			} else if (transferable != null && transferable.getStatus() == Transferable.STATUS_OFFER_CHECK_FILESIZE) {
 				displayDownloadableMessage(viewHolder, message, activity.getString(R.string.check_x_filesize, UIHelper.getFileDescriptionString(activity, message)));
 			} else {
 				displayInfoMessage(viewHolder, UIHelper.getMessagePreview(activity, message).first, darkBackground);
@@ -951,16 +951,8 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 			ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, ConversationsActivity.REQUEST_OPEN_MESSAGE);
 			return;
 		}
-		DownloadableFile file = activity.xmppConnectionService.getFileBackend().getFile(message);
-		if (!file.exists()) {
-			Toast.makeText(activity, R.string.file_deleted, Toast.LENGTH_SHORT).show();
-			return;
-		}
-		String mime = file.getMimeType();
-		if (mime == null) {
-			mime = "*/*";
-		}
-		ViewUtil.view(activity, file, mime);
+		final DownloadableFile file = activity.xmppConnectionService.getFileBackend().getFile(message);
+		ViewUtil.view(activity, file);
 	}
 
 	public void showLocation(Message message) {

@@ -300,7 +300,6 @@
   <string name="account_details">Détails du compte</string>
   <string name="confirm">Confirmer</string>
   <string name="try_again">Réessayer</string>
-  <string name="conversations_foreground_service">Conversations</string>
   <string name="pref_keep_foreground_service">Garder le service au 1er plan</string>
   <string name="pref_keep_foreground_service_summary">Évite que le système ne ferme votre connexion.</string>
   <string name="pref_export_logs">Exporter l\'historique</string>
@@ -699,7 +698,6 @@
   <string name="gif">GIF</string>
   <string name="view_conversation">Voir la conversation</string>
   <string name="pref_use_share_location_plugin">Plugin de partage de localisation</string>
-  <string name="pref_use_share_location_plugin_summary">Utiliser le plugin \"Share Location\" plutôt que la carte intégrée</string>
   <string name="copy_link">Copier l\'adresse internet</string>
   <string name="copy_jabber_id">Copier le Jabber ID</string>
   <string name="p1_s3_filetransfer">Partage de fichier HTTP pour S3</string>

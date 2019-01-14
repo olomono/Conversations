@@ -101,7 +101,9 @@ import eu.siacs.conversations.ui.util.ScrollState;
 import eu.siacs.conversations.ui.util.SendButtonAction;
 import eu.siacs.conversations.ui.util.SendButtonTool;
 import eu.siacs.conversations.ui.util.ShareUtil;
+import eu.siacs.conversations.ui.util.ViewUtil;
 import eu.siacs.conversations.ui.widget.EditMessage;
+import eu.siacs.conversations.utils.Compatibility;
 import eu.siacs.conversations.utils.GeoHelper;
 import eu.siacs.conversations.utils.MessageUtils;
 import eu.siacs.conversations.utils.NickValidityChecker;
@@ -1144,12 +1146,13 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                 return;
             }
 
-            final boolean deleted = t != null && t instanceof TransferablePlaceholder;
+            final boolean deleted = m.isDeleted();
             final boolean encrypted = m.getEncryption() == Message.ENCRYPTION_DECRYPTION_FAILED
                     || m.getEncryption() == Message.ENCRYPTION_PGP;
             final boolean receiving = m.getStatus() == Message.STATUS_RECEIVED && (t instanceof JingleConnection || t instanceof HttpDownloadConnection);
             activity.getMenuInflater().inflate(R.menu.message_context, menu);
             menu.setHeaderTitle(R.string.message_options);
+            MenuItem openWith = menu.findItem(R.id.open_with);
             MenuItem copyMessage = menu.findItem(R.id.copy_message);
             MenuItem copyLink = menu.findItem(R.id.copy_link);
             MenuItem commentMessage = menu.findItem(R.id.comment_message);
@@ -1178,11 +1181,12 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                     copyLink.setVisible(true);
                 }
             }
-            if (m.getEncryption() == Message.ENCRYPTION_DECRYPTION_FAILED) {
+            if (m.getEncryption() == Message.ENCRYPTION_DECRYPTION_FAILED && !deleted) {
                 retryDecryption.setVisible(true);
             }
             if (!showError
                     && relevantForCorrection.getType() == Message.TYPE_TEXT
+                    && !m.isGeoUri()
                     && relevantForCorrection.isLastCorrectableMessage()
                     && m.getConversation() instanceof Conversation
                     && (((Conversation) m.getConversation()).getMucOptions().nonanonymous() || m.getConversation().getMode() == Conversation.MODE_SINGLE)) {
@@ -1220,6 +1224,10 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             }
             if (showError) {
                 showErrorMessage.setVisible(true);
+            }
+            final String mime = m.isFileOrImage() ? m.getMimeType() : null;
+            if ((m.isGeoUri() && GeoHelper.openInOsmAnd(getActivity(),m)) || (mime != null && mime.startsWith("audio/"))) {
+                openWith.setVisible(true);
             }
         }
     }
@@ -1265,6 +1273,9 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                 return true;
             case R.id.show_error_message:
                 showErrorMessage(selectedMessage);
+                return true;
+            case R.id.open_with:
+                openWith(selectedMessage);
                 return true;
             default:
                 return super.onContextItemSelected(item);
@@ -1514,7 +1525,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                 Log.d(Config.LOGTAG, "type: " + transferable.getClass().getName());
                 Toast.makeText(getActivity(), R.string.not_connected_try_again, Toast.LENGTH_SHORT).show();
             }
-        } else if (message.treatAsDownloadable()) {
+        } else if (message.treatAsDownloadable() || message.hasFileOnRemoteHost()) {
             createNewConnection(message);
         }
     }
@@ -1710,6 +1721,15 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         return null;
     }
 
+    private void openWith(final Message message) {
+        if (message.isGeoUri()) {
+            GeoHelper.view(getActivity(),message);
+        } else {
+            final DownloadableFile file = activity.xmppConnectionService.getFileBackend().getFile(message);
+            ViewUtil.view(activity, file);
+        }
+    }
+
     public int getMessagePosition(Message message) {
         return messageListAdapter.getPosition(message);
     }
@@ -1734,7 +1754,8 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         builder.setMessage(R.string.delete_file_dialog_msg);
         builder.setPositiveButton(R.string.confirm, (dialog, which) -> {
             if (activity.xmppConnectionService.getFileBackend().deleteFile(message)) {
-                message.setTransferable(new TransferablePlaceholder(Transferable.STATUS_DELETED));
+                message.setDeleted(true);
+                activity.xmppConnectionService.updateMessage(message, false);
                 activity.onConversationsListItemUpdated();
                 refresh();
             }
@@ -1749,8 +1770,8 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                 return;
             }
             final Conversation conversation = (Conversation) message.getConversation();
-            DownloadableFile file = activity.xmppConnectionService.getFileBackend().getFile(message);
-            if (file.exists()) {
+            final DownloadableFile file = activity.xmppConnectionService.getFileBackend().getFile(message);
+            if ((file.exists() && file.canRead()) || message.hasFileOnRemoteHost()) {
                 final XmppConnection xmppConnection = conversation.getAccount().getXmppConnection();
                 if (!message.hasFileOnRemoteHost()
                         && xmppConnection != null
@@ -1766,9 +1787,13 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                     });
                     return;
                 }
+            } else if (!Compatibility.hasStoragePermission(getActivity())) {
+                Toast.makeText(activity, R.string.no_storage_permission, Toast.LENGTH_SHORT).show();
+                return;
             } else {
                 Toast.makeText(activity, R.string.file_deleted, Toast.LENGTH_SHORT).show();
-                message.setTransferable(new TransferablePlaceholder(Transferable.STATUS_DELETED));
+                message.setDeleted(true);
+                activity.xmppConnectionService.updateMessage(message, false);
                 activity.onConversationsListItemUpdated();
                 refresh();
                 return;
@@ -2811,6 +2836,12 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         }
         if (pendingTakePhotoUri.clear()) {
             Log.e(Config.LOGTAG, "cleared pending photo uri");
+        }
+        if (pendingConversationsUuid.clear()) {
+            Log.e(Config.LOGTAG,"cleared pending conversations uuid");
+        }
+        if (pendingMediaPreviews.clear()) {
+            Log.e(Config.LOGTAG,"cleared pending media previews");
         }
     }
 

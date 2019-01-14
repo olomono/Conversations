@@ -228,6 +228,9 @@
     <string name="conference_address_example">room@conference.example.com/nick</string>
     <string name="save_as_bookmark">Save as bookmark</string>
     <string name="delete_bookmark">Delete bookmark</string>
+    <string name="destroy_room">Destroy group chat</string>
+    <string name="destroy_room_dialog">Are you sure you want to destroy this group chat?\n\n<b>Warning:</b> The group chat will be completely removed on the server.</string>
+    <string name="could_not_destroy_room">Could not destroy group chat</string>
     <string name="bookmark_already_exists">This bookmark already exists</string>
     <string name="action_edit_subject">Edit group chat subject</string>
     <string name="topic">Topic</string>
@@ -309,7 +312,6 @@
     <string name="account_details">Account details</string>
     <string name="confirm">Confirm</string>
     <string name="try_again">Try again</string>
-    <string name="conversations_foreground_service">Conversations</string>
     <string name="pref_keep_foreground_service">Keep service in foreground</string>
     <string name="pref_keep_foreground_service_summary">Prevents the operating system from killing your connection</string>
     <string name="pref_export_logs">Export history</string>
@@ -805,6 +807,10 @@
     <string name="no_market_app_installed">No market app installed.</string>
     <string name="group_chat_will_make_your_jabber_id_public">This group chat will make your Jabber ID public</string>
     <string name="ebook">e-book</string>
+    <string name="video_original">Original (uncompressed)</string>
+    <string name="open_with">Open with…</string>
+    <string name="set_profile_picture">Conversations profile picture</string>
+    <string name="choose_account">Choose account</string>
     <string name="comment">Comment</string>
     <string name="message_not_found">Message not found</string>
 </resources>

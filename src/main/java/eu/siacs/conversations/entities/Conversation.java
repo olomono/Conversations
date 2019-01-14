@@ -183,31 +183,34 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 		}
 	}
 
-	public void findMessagesWithFiles(final OnMessageFound onMessageFound) {
-		final ArrayList<Message> results = new ArrayList<>();
-		synchronized (this.messages) {
-			for (final Message m : this.messages) {
-				if (m.isFileOrImage() && m.getEncryption() != Message.ENCRYPTION_PGP) {
-					results.add(m);
-				}
-			}
-		}
-		for(Message result : results) {
-			onMessageFound.onMessageFound(result);
-		}
-	}
-
 	public Message findMessageWithFileAndUuid(final String uuid) {
 		synchronized (this.messages) {
 			for (final Message message : this.messages) {
 				if (message.getUuid().equals(uuid)
 						&& message.getEncryption() != Message.ENCRYPTION_PGP
-						&& (message.getType() == Message.TYPE_IMAGE || message.getType() == Message.TYPE_FILE || message.treatAsDownloadable())) {
+						&& (message.isFileOrImage() || message.treatAsDownloadable())) {
 					return message;
 				}
 			}
 		}
 		return null;
+	}
+
+	public boolean markAsDeleted(final List<String> uuids) {
+		boolean deleted = false;
+		final PgpDecryptionService pgpDecryptionService = account.getPgpDecryptionService();
+		synchronized (this.messages) {
+			for(Message message : this.messages) {
+				if (uuids.contains(message.getUuid())) {
+					message.setDeleted(true);
+					deleted = true;
+					if (message.getEncryption() == Message.ENCRYPTION_PGP && pgpDecryptionService != null) {
+						pgpDecryptionService.discard(message);
+					}
+				}
+			}
+		}
+		return deleted;
 	}
 
 	public void clearMessages() {

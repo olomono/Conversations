@@ -228,12 +228,15 @@
   <string name="conference_address_example">konferencja@konferencje.example.com/nick</string>
   <string name="save_as_bookmark">Dodaj jako zakładkę</string>
   <string name="delete_bookmark">Usuń zakładkę</string>
+  <string name="destroy_room">Usuń konferencję</string>
+  <string name="destroy_room_dialog">Czy jesteś pewien, że chcesz usunąć tą konferencję?\n\n<b>Ostrzeżenie:</b> Ta konferencja zostanie całkowicie usunięta na serwerze.</string>
+  <string name="could_not_destroy_room">Usuwanie konferencji nieudane</string>
   <string name="bookmark_already_exists">Zakładka już istnieje</string>
   <string name="action_edit_subject">Edytuj tytuł konferencji</string>
   <string name="topic">Temat</string>
   <string name="joining_conference">Dołączanie do konferencji</string>
   <string name="leave">Opuść pokój</string>
-  <string name="contact_added_you">Kontakt został dodany do listy</string>
+  <string name="contact_added_you">Kontakt dodał ciebie do swojej listy kontaktów</string>
   <string name="add_back">Również dodaj</string>
   <string name="contact_has_read_up_to_this_point">%s przeczytał do tego miejsca</string>
   <string name="contacts_have_read_up_to_this_point">%s przeczytali do tego miejsca</string>
@@ -279,6 +282,8 @@
   <string name="pref_use_indicate_received_summary">Jeżeli to możliwe, oznaczaj dostarczone wiadomości zielonym haczykiem</string>
   <string name="pref_use_send_button_to_indicate_status_summary">Koloruj przycisk wysyłania w zależności od statusu kontaktu</string>
   <string name="pref_expert_options_other">Inne</string>
+  <string name="pref_autojoin">Synchronizuj z zakładkami</string>
+  <string name="pref_autojoin_summary">Dołączaj i wychodź z konferencji przy użyciu flagi automatycznego dołączania z zakładek</string>
   <string name="toast_message_omemo_fingerprint">Odcisk klucza OMEMO został skopiowany do schowka!</string>
   <string name="conference_banned">Zbanowany</string>
   <string name="conference_members_only">Konferencja tylko dla użytkowników</string>
@@ -307,7 +312,6 @@
   <string name="account_details">Szczegóły konta</string>
   <string name="confirm">Potwierdź</string>
   <string name="try_again">Spróbuj ponownie</string>
-  <string name="conversations_foreground_service">Conversations</string>
   <string name="pref_keep_foreground_service">Usługa na pierwszym planie</string>
   <string name="pref_keep_foreground_service_summary">Uniemożliwia systemowi przerwanie połączenia</string>
   <string name="pref_export_logs">Wyeksportuj historię rozmów</string>
@@ -818,4 +822,7 @@ Administrator twojego serwera będzie mógł czytać twoje wiadomości, ale moż
   <string name="install_orbot">Zainstaluj Orbot</string>
   <string name="start_orbot">Uruchom Orbot</string>
   <string name="no_market_app_installed">Aplikacja marketu niezainstalowana.</string>
+  <string name="group_chat_will_make_your_jabber_id_public">Każdy uczestnik tej konferencji będzie mógł zobaczyć twój prawdziwy Jabber ID</string>
+  <string name="ebook">e-book</string>
+  <string name="video_original">Oryginalne (nieskompresowane)</string>
 </resources>

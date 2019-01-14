@@ -40,12 +40,12 @@
 
 * End-to-end encryption with [OMEMO](http://conversations.im/omemo/) or [OpenPGP](http://openpgp.org/about/)
 * Send and receive images as well as other kind of files
-* Share your location via an external [plug-in](https://play.google.com/store/apps/details?id=eu.siacs.conversations.sharelocation&referrer=utm_source%3Dgithub)
-* Send voice messages via an external [plug-in](https://play.google.com/store/apps/details?id=eu.siacs.conversations.voicerecorder&referrer=utm_source%3Dgithub)
+* Share your location
+* Send voice messages
 * Indication when your contact has read your message
 * Intuitive UI that follows Android Design guidelines
 * Pictures / Avatars for your Contacts
-* Syncs with desktop client
+* Synchronizes with desktop client
 * Conferences (with support for bookmarks)
 * Address book integration
 * Multiple accounts / unified inbox
@@ -171,11 +171,18 @@ In most cases this error is caused by ejabberd advertising support for TLSv1.3 b
 #### I’m getting this annoying permanent notification
 Starting with Conversations 2.3.6 Conversations releases distributed over the Google Play Store will display a permanent notification if you are running it on Android 8 and above. This is a rule that it is essentially enforced by the Google Play Store (you won’t have the problem if you are getting your app from F-Droid).
 
-However you can disable the notification via settings of the operating system. (Not settings in Conversations.). For that you can long press the permanent notification and disable that particular type of notification by moving the slider to the left. This will make the notification disappear but create another notification (this time created by the operating system itself.) that will complain about Conversations (and other apps) using battery. Starting with Android 8.1 you can disable that notification again with the same method described above.
+However you can disable the notification via settings of the operating system. (Not settings in Conversations.)
 
-The battery consumption and the entire behaviour of Conversations will remain the same (as good or as bad as it was before). Why is Google doing this to you? We have no idea.
+**The battery consumption and the entire behaviour of Conversations will remain the same (as good or as bad as it was before). Why is Google doing this to you? We have no idea.**
 
-P.S.: For Android version up to and including 7.1 the foreground notification is still controlled over the expert settings within Conversations as it always has been.
+##### Android &lt;= 7.1
+The foreground notification is still controlled over the expert settings within Conversations as it always has been.
+
+##### Android 8.x
+Long press the permanent notification and disable that particular type of notification by moving the slider to the left. This will make the notification disappear but create another notification (this time created by the operating system itself.) that will complain about Conversations (and other apps) using battery. Starting with Android 8.1 you can disable that notification again with the same method described above.
+
+##### Android 9.0+
+Long press the permanent notification and press the info `(i)` button to get into the App info screen. In that screen touch the 'Notification' entry. In the next screen remove the checkbox for the 'Foreground service' entry. 
 
 #### How do XEP-0357: Push Notifications work?
 You need to be running the Play Store version of Conversations and your server needs to support push notifications.¹ Because *Google Cloud Notifications (GCM)* are tied with an API key to a specific app your server can not initiate the push message directly. Instead your server will send the push notification to the Conversations App server (operated by us) which then acts as a proxy and initiates the push message for you. The push message sent from our App server through GCM doesn’t contain any personal information. It is just an empty message which will wake up your device and tell Conversations to reconnect to your server. The information sent from your server to our App server depends on the configuration of your server but can be limited to your account name. (In any case the Conversations App server won't redirect any information through GCM even if your server sends this information.)
@@ -323,25 +330,25 @@ To use OpenPGP you have to install the open source app
 manage accounts and choose renew PGP announcement from the contextual menu.
 
 #### OMEMO is grayed out. What do I do?
-OMEMO has two requirements: Your server and the server of your contact need to support PEP. Both of you can verify that individually by opening your account details and selecting ```Server info``` from the menu. The appearing table should list PEP as available. The second requirement is mutual presence subscription. You can verify that by opening the contact details and see if both check boxes *Send presence updates* and *Receive presence updates* are checked.
+OMEMO is only available in 1:1 chats and private (members-only, non-anonymous) group chats. Encrypting public group chats makes little to no sense since anyone (including a hypothetical attacker) can join and a user couldn’t possibily verify all participants anyway. Furthermore for a lot of public group chat it is desirable to give new comers access to the full history.
 
-#### How does the encryption for conferences work?
+#### OMEMO doesn’t work. I get a 'Something went wrong' message in the 'Trust OMEMO Fingerprints' screen.
+OMEMO has two requirements: Your server and the server of your contact need to support PEP. Both of you can verify that individually by opening your account details and selecting ```Server info``` from the menu. The appearing table should list PEP as available. The second requirement is that the initial sender needs to have access to the published key material. This can either be achieved by having mutual presence subscription (you can verify that by opening the contact details and see if both check boxes *Send presence updates* and *Receive presence updates* are checked) or by using a server that makes the public key material accessible to anyone. In the [Compliance Tester](https://compliance.conversations.im) this is indicated by the 'OMEMO' feature. Since it is very common that the first messages are exchanged *before* adding each other to the contact list it is desirable to use servers that have 'OMEMO support'.
 
-For conferences only OMEMO and OpenPGP are supported as encryption method..
+#### How does the encryption for group chats work?
 
 ##### OMEMO
 
-OMEMO encryption works only in private (members only) conferences that are non-anonymous.
+OMEMO encryption works only in private (members only) conferences that are non-anonymous. Non-anonymous (being able to discover the real JID of other participants) is a technical requirement to discover the key material. Members only is a sort of arbitrary requirement imposed by Conversations. (see 'OMEMO is grayed out')
 
 The server of all participants need to pass the OMEMO [Compliance Test](https://conversations.im/compliance/).
-In other words they either need to run version 18.01+ of ejabberd or have the `omemo_all_access` module installed on Prosody.
+In other words they either need to run Ejabberd 18.01+ or Prosody 0.11+.
+
+(Alternatively it would also work if all participants had each other in their contact list; But that rarely is the case in larger group chats.)
 
 The owner of a conference can make a public conference private by going into the conference
 details and hit the settings button (the one with the gears) and select both *private* and
 *members only*.
-
-If OMEMO is grayed out long pressing the lock icon will reveal some quick hints on why OMEMO
-is disabled.
 
 ##### OpenPGP
 
@@ -360,6 +367,11 @@ this.)
 #### What is Blind Trust Before Verification / why are messages marked with a red lock?
 
 Read more about the concept on https://gultsch.de/trust.html
+
+#### What happened to OTR support?
+OTR was removed because it was highly unreliable. It didn’t work with multiple devices and was never really specified to work with XMPP. The codebase was a mess (There was an HTML parser in there for crying out loud to deal with the garbage some OTR clients would send.) Verification was implemented in a non-blocking way. It would tell you if the current session was using an unknown fingerprint but it didn’t actively stopped you from sending messages until you have confirmed the new fingerprint. (Like Conversations would do now with BTBV after verification or when BTBV is turned off.) Considering the previous points there was little to no desire from my point to fix this potential security issue or clean up the code base. Another reason for the removal was that people would use it *accidentally* even to communicate between two Conversations clients because they read somewhere that OTR is good.
+
+OTR is still available in [Conversations Legacy](https://github.com/siacs/Conversations/tree/legacy).
 
 ### What clients do I use on other platforms
 There are XMPP Clients available for all major platforms.

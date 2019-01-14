@@ -359,7 +359,6 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
         super.onCreate(savedInstanceState);
         ConversationMenuConfigurator.reloadFeatures(this);
         OmemoSetting.load(this);
-        new EmojiService(this).init();
         this.binding = DataBindingUtil.setContentView(this, R.layout.activity_conversations);
         setSupportActionBar((Toolbar) binding.toolbar);
         configureActionBar(getSupportActionBar());
@@ -530,6 +529,7 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
     protected void onNewIntent(final Intent intent) {
         if (isViewOrShareIntent(intent)) {
             if (xmppConnectionService != null) {
+                clearPendingViewIntent();
                 processViewIntent(intent);
             } else {
                 pendingViewIntent.push(intent);

@@ -1,5 +1,6 @@
 package eu.siacs.conversations.services;
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -9,8 +10,12 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.Nullable;
+import android.support.v4.content.res.ResourcesCompat;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -44,6 +49,8 @@ public class AvatarService implements OnAdvancedStreamFeaturesLoaded {
 	private static final int TRANSPARENT = 0x00000000;
 	private static final int PLACEHOLDER_COLOR = 0xFF202020;
 
+	public static final int SYSTEM_UI_AVATAR_SIZE = 48;
+
 	private static final String PREFIX_CONTACT = "contact";
 	private static final String PREFIX_CONVERSATION = "conversation";
 	private static final String PREFIX_ACCOUNT = "account";
@@ -56,6 +63,10 @@ public class AvatarService implements OnAdvancedStreamFeaturesLoaded {
 
 	AvatarService(XmppConnectionService service) {
 		this.mXmppConnectionService = service;
+	}
+
+	public static int getSystemUiAvatarSize(final Context context) {
+		return (int) (SYSTEM_UI_AVATAR_SIZE * context.getResources().getDisplayMetrics().density);
 	}
 
 	private Bitmap get(final Contact contact, final int size, boolean cachedOnly) {
@@ -116,10 +127,11 @@ public class AvatarService implements OnAdvancedStreamFeaturesLoaded {
 	}
 
 	private void drawIcon(Canvas canvas, Paint paint) {
-		BitmapFactory.Options opts = new BitmapFactory.Options();
-		opts.inSampleSize = 2;
-		Resources resources = mXmppConnectionService.getResources();
-		Bitmap icon = BitmapFactory.decodeResource(resources, R.mipmap.new_launcher_round, opts);
+		final Resources resources = mXmppConnectionService.getResources();
+		final Bitmap icon = getRoundLauncherIcon(resources);
+		if (icon == null) {
+			return;
+		}
 		paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER));
 
 		int iconSize = Math.round(canvas.getHeight() / 2.6f);
@@ -128,6 +140,25 @@ public class AvatarService implements OnAdvancedStreamFeaturesLoaded {
 		int top = canvas.getHeight() - iconSize;
 		final Rect rect = new Rect(left, top, left + iconSize, top + iconSize);
 		canvas.drawBitmap(icon, null, rect, paint);
+	}
+
+	private static Bitmap getRoundLauncherIcon(Resources resources) {
+
+		final Drawable drawable = ResourcesCompat.getDrawable(resources, R.mipmap.new_launcher_round,null);
+		if (drawable == null) {
+			return null;
+		}
+
+		if (drawable instanceof BitmapDrawable) {
+			return ((BitmapDrawable)drawable).getBitmap();
+		}
+
+		Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+		Canvas canvas = new Canvas(bitmap);
+		drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+		drawable.draw(canvas);
+
+		return bitmap;
 	}
 
 	public Bitmap get(final MucOptions.User user, final int size, boolean cachedOnly) {

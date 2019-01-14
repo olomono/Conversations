@@ -24,16 +24,18 @@ public class PushMessageReceiver extends FirebaseMessagingService {
 		final Intent intent = new Intent(this, XmppConnectionService.class);
 		intent.setAction(XmppConnectionService.ACTION_FCM_MESSAGE_RECEIVED);
 		intent.putExtra("account", data.get("account"));
-		try {
-			if (Compatibility.runsAndTargetsTwentySix(this)) {
-				intent.putExtra(EventReceiver.EXTRA_NEEDS_FOREGROUND_SERVICE, true);
-				ContextCompat.startForegroundService(this, intent);
-			} else {
-				startService(intent);
-			}
-		} catch (IllegalStateException e) {
-			Log.e(Config.LOGTAG,"PushMessageReceiver is not allowed to start service");
+		Compatibility.startService(this, intent);
+	}
+
+	@Override
+	public void onNewToken(String token) {
+		if (!EventReceiver.hasEnabledAccounts(this)) {
+			Log.d(Config.LOGTAG,"PushMessageReceiver ignored new token because no accounts are enabled");
+			return;
 		}
+		final Intent intent = new Intent(this, XmppConnectionService.class);
+		intent.setAction(XmppConnectionService.ACTION_FCM_TOKEN_REFRESH);
+		Compatibility.startService(this, intent);
 	}
 
 }

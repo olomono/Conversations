@@ -8,6 +8,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -45,6 +46,7 @@ import org.openintents.openpgp.IOpenPgpService2;
 import org.openintents.openpgp.util.OpenPgpApi;
 import org.openintents.openpgp.util.OpenPgpServiceConnection;
 
+import java.io.File;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.security.Security;
@@ -84,7 +86,6 @@ import eu.siacs.conversations.entities.Bookmark;
 import eu.siacs.conversations.entities.Contact;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.Conversational;
-import eu.siacs.conversations.entities.DownloadableFile;
 import eu.siacs.conversations.entities.Message;
 import eu.siacs.conversations.entities.MucOptions;
 import eu.siacs.conversations.entities.MucOptions.OnRenameListener;
@@ -92,8 +93,6 @@ import eu.siacs.conversations.entities.Presence;
 import eu.siacs.conversations.entities.PresenceTemplate;
 import eu.siacs.conversations.entities.Roster;
 import eu.siacs.conversations.entities.ServiceDiscoveryResult;
-import eu.siacs.conversations.entities.Transferable;
-import eu.siacs.conversations.entities.TransferablePlaceholder;
 import eu.siacs.conversations.generator.AbstractGenerator;
 import eu.siacs.conversations.generator.IqGenerator;
 import eu.siacs.conversations.generator.MessageGenerator;
@@ -106,6 +105,7 @@ import eu.siacs.conversations.parser.MessageParser;
 import eu.siacs.conversations.parser.PresenceParser;
 import eu.siacs.conversations.persistance.DatabaseBackend;
 import eu.siacs.conversations.persistance.FileBackend;
+import eu.siacs.conversations.ui.ChooseAccountForProfilePictureActivity;
 import eu.siacs.conversations.ui.SettingsActivity;
 import eu.siacs.conversations.ui.UiCallback;
 import eu.siacs.conversations.ui.XmppActivity;
@@ -201,6 +201,7 @@ public class XmppConnectionService extends Service {
     private ShortcutService mShortcutService = new ShortcutService(this);
     private AtomicBoolean mInitialAddressbookSyncCompleted = new AtomicBoolean(false);
     private AtomicBoolean mForceForegroundService = new AtomicBoolean(false);
+    private AtomicBoolean mForceDuringOnCreate = new AtomicBoolean(false);
     private OnMessagePacketReceived mMessageParser = new MessageParser(this);
     private OnPresencePacketReceived mPresenceParser = new PresenceParser(this);
     private IqParser mIqParser = new IqParser(this);
@@ -236,7 +237,6 @@ public class XmppConnectionService extends Service {
     ) {
         @Override
         public void onEvent(int event, String path) {
-            Log.d(Config.LOGTAG,"event "+event+" path="+path);
             markFileDeleted(path);
         }
     };
@@ -258,6 +258,8 @@ public class XmppConnectionService extends Service {
             return false;
         }
     };
+
+    private boolean destroyed = false;
 
     private int unreadCount = -1;
 
@@ -563,7 +565,7 @@ public class XmppConnectionService extends Service {
         final String action = intent == null ? null : intent.getAction();
         final boolean needsForegroundService = intent != null && intent.getBooleanExtra(EventReceiver.EXTRA_NEEDS_FOREGROUND_SERVICE, false);
         if (needsForegroundService) {
-            Log.d(Config.LOGTAG,"toggle forced foreground service after receiving event");
+            Log.d(Config.LOGTAG,"toggle forced foreground service after receiving event (action="+action+")");
             toggleForegroundService(true);
         }
         String pushedAccountHash = null;
@@ -966,6 +968,12 @@ public class XmppConnectionService extends Service {
     @SuppressLint("TrulyRandom")
     @Override
     public void onCreate() {
+        if (Compatibility.runsTwentySix()) {
+            mNotificationService.initializeChannels();
+        }
+        mForceDuringOnCreate.set(Compatibility.runsAndTargetsTwentySix(this));
+        toggleForegroundService();
+        this.destroyed = false;
         OmemoSetting.load(this);
         ExceptionHelper.init(getApplicationContext());
         try {
@@ -976,9 +984,6 @@ public class XmppConnectionService extends Service {
         Resolver.init(this);
         this.mRandom = new SecureRandom();
         updateMemorizingTrustmanager();
-        if (Compatibility.runsTwentySix()) {
-            mNotificationService.initializeChannels();
-        }
         final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
         final int cacheSize = maxMemory / 8;
         this.mBitmapCache = new LruCache<String, Bitmap>(cacheSize) {
@@ -1000,8 +1005,10 @@ public class XmppConnectionService extends Service {
             editor.putBoolean(SettingsActivity.KEEP_FOREGROUND_SERVICE, true);
             Log.d(Config.LOGTAG, Build.MANUFACTURER + " is on blacklist. enabling foreground service");
         }
-        editor.putBoolean(EventReceiver.SETTING_ENABLED_ACCOUNTS, hasEnabledAccounts()).apply();
+        final boolean hasEnabledAccounts = hasEnabledAccounts();
+        editor.putBoolean(EventReceiver.SETTING_ENABLED_ACCOUNTS, hasEnabledAccounts).apply();
         editor.apply();
+        toggleSetProfilePictureActivity(hasEnabledAccounts);
 
         restoreFromDatabase();
 
@@ -1010,7 +1017,8 @@ public class XmppConnectionService extends Service {
         }
         if (Compatibility.hasStoragePermission(this)) {
             Log.d(Config.LOGTAG, "starting file observer");
-            new Thread(fileObserver::startWatching).start();
+            mFileAddingExecutor.execute(this.fileObserver::startWatching);
+            mFileAddingExecutor.execute(this::checkForDeletedFiles);
         }
         if (Config.supportOpenPgp()) {
             this.pgpServiceConnection = new OpenPgpServiceConnection(this, "org.sufficientlysecure.keychain", new OpenPgpServiceConnection.OnBound() {
@@ -1046,6 +1054,32 @@ public class XmppConnectionService extends Service {
             intentFilter.addAction(NotificationManager.ACTION_INTERRUPTION_FILTER_CHANGED);
             registerReceiver(this.mInternalEventReceiver, intentFilter);
         }
+        mForceDuringOnCreate.set(false);
+        toggleForegroundService();
+    }
+
+    private void checkForDeletedFiles() {
+        if (destroyed) {
+            Log.d(Config.LOGTAG, "Do not check for deleted files because service has been destroyed");
+            return;
+        }
+        final List<String> deletedUuids = new ArrayList<>();
+        final List<DatabaseBackend.FilePath> relativeFilePaths = databaseBackend.getAllNonDeletedFilePath();
+        for(final DatabaseBackend.FilePath filePath : relativeFilePaths) {
+            if (destroyed) {
+                Log.d(Config.LOGTAG, "Stop checking for deleted files because service has been destroyed");
+                return;
+            }
+            final File file = fileBackend.getFileForPath(filePath.path);
+            if (!file.exists()) {
+                deletedUuids.add(filePath.uuid.toString());
+            }
+        }
+        Log.d(Config.LOGTAG,"found "+deletedUuids.size()+" deleted files on start up. total="+relativeFilePaths.size());
+        if (deletedUuids.size() > 0) {
+            databaseBackend.markFileAsDeleted(deletedUuids);
+            markUuidsAsDeletedFiles(deletedUuids);
+        }
     }
 
     public void startContactObserver() {
@@ -1076,13 +1110,15 @@ public class XmppConnectionService extends Service {
         } catch (IllegalArgumentException e) {
             //ignored
         }
+        destroyed = false;
         fileObserver.stopWatching();
         super.onDestroy();
     }
 
     public void restartFileObserver() {
         Log.d(Config.LOGTAG, "restarting file observer");
-        new Thread(fileObserver::restartWatching).start();
+        mFileAddingExecutor.execute(this.fileObserver::restartWatching);
+        mFileAddingExecutor.execute(this::checkForDeletedFiles);
     }
 
     public void toggleScreenEventReceiver() {
@@ -1106,7 +1142,7 @@ public class XmppConnectionService extends Service {
 
     private void toggleForegroundService(boolean force) {
         final boolean status;
-        if (force || mForceForegroundService.get() || (Compatibility.keepForegroundService(this) && hasEnabledAccounts())) {
+        if (force || mForceDuringOnCreate.get() || mForceForegroundService.get() || (Compatibility.keepForegroundService(this) && hasEnabledAccounts())) {
             startForeground(NotificationService.FOREGROUND_NOTIFICATION_ID, this.mNotificationService.createForegroundNotification());
             status = true;
         } else {
@@ -1411,6 +1447,7 @@ public class XmppConnectionService extends Service {
     }
 
     public void processBookmarks(Account account, Element storage, final boolean pep) {
+        final Set<Jid> previousBookmarks = account.getBookmarkedJids();
         final HashMap<Jid, Bookmark> bookmarks = new HashMap<>();
         final boolean synchronizeWithBookmarks = synchronizeWithBookmarks();
         if (storage != null) {
@@ -1424,6 +1461,7 @@ public class XmppConnectionService extends Service {
                     if (bookmark.getJid() == null) {
                         continue;
                     }
+                    previousBookmarks.remove(bookmark.getJid().asBareJid());
                     Conversation conversation = find(bookmark);
                     if (conversation != null) {
                         if (conversation.getMode() != Conversation.MODE_MULTI) {
@@ -1437,6 +1475,16 @@ public class XmppConnectionService extends Service {
                     } else if (synchronizeWithBookmarks && bookmark.autojoin()) {
                         conversation = findOrCreateConversation(account, bookmark.getFullJid(), true, true, false);
                         bookmark.setConversation(conversation);
+                    }
+                }
+            }
+            if (pep && synchronizeWithBookmarks) {
+                Log.d(Config.LOGTAG, account.getJid().asBareJid() + ": " + previousBookmarks.size() + " bookmarks have been removed");
+                for (Jid jid : previousBookmarks) {
+                    final Conversation conversation = find(account, jid);
+                    if (conversation != null && conversation.getMucOptions().getError() == MucOptions.Error.DESTROYED) {
+                        Log.d(Config.LOGTAG,account.getJid().asBareJid()+": archiving destroyed conference ("+conversation.getJid()+") after receiving pep");
+                        archiveConversation(conversation, false);
                     }
                 }
             }
@@ -1480,8 +1528,7 @@ public class XmppConnectionService extends Service {
     }
 
 	private void pushNodeAndEnforcePublishOptions(final Account account, final String node, final Element element, final Bundle options, final boolean retry) {
-        IqPacket packet = mIqGenerator.publishElement(node, element, options);
-        Log.d(Config.LOGTAG,packet.toString());
+        final IqPacket packet = mIqGenerator.publishElement(node, element, options);
         sendIqPacket(account, packet, (a, response) -> {
             if (response.getType() == IqPacket.TYPE.RESULT) {
                 return;
@@ -1565,7 +1612,6 @@ public class XmppConnectionService extends Service {
 
 	private void restoreMessages(Conversation conversation) {
 		conversation.addAll(0, databaseBackend.getMessages(conversation, Config.PAGE_SIZE));
-		checkDeletedFiles(conversation);
 		conversation.findUnsentTextMessages(message -> markMessage(message, Message.STATUS_WAITING));
 		conversation.findUnreadMessages(message -> mNotificationService.pushFromBacklog(message));
 	}
@@ -1620,32 +1666,41 @@ public class XmppConnectionService extends Service {
 	}
 
 	private void markFileDeleted(final String path) {
-		Log.d(Config.LOGTAG, "deleted file " + path);
-		for (Conversation conversation : getConversations()) {
-			conversation.findMessagesWithFiles(message -> {
-				DownloadableFile file = fileBackend.getFile(message);
-				if (file.getAbsolutePath().equals(path)) {
-					if (!file.exists()) {
-						message.setTransferable(new TransferablePlaceholder(Transferable.STATUS_DELETED));
-						final int s = message.getStatus();
-						if (s == Message.STATUS_WAITING || s == Message.STATUS_OFFERED || s == Message.STATUS_UNSEND) {
-							markMessage(message, Message.STATUS_SEND_FAILED);
-						} else {
-							updateConversationUi();
-						}
-					} else {
-						Log.d(Config.LOGTAG, "found matching message for file " + path + " but file still exists");
-					}
-				}
-			});
-		}
+        final File file = new File(path);
+        final boolean isInternalFile = fileBackend.isInternalFile(file);
+        final List<String> uuids = databaseBackend.markFileAsDeleted(file, isInternalFile);
+        Log.d(Config.LOGTAG, "deleted file " + path+" internal="+isInternalFile+", database hits="+uuids.size());
+        markUuidsAsDeletedFiles(uuids);
 	}
+
+	private void markUuidsAsDeletedFiles(List<String> uuids) {
+        boolean deleted = false;
+        for (Conversation conversation : getConversations()) {
+            deleted |= conversation.markAsDeleted(uuids);
+        }
+        if (deleted) {
+            updateConversationUi();
+        }
+    }
 
 	public void populateWithOrderedConversations(final List<Conversation> list) {
-		populateWithOrderedConversations(list, true);
+		populateWithOrderedConversations(list, true, true);
 	}
 
-	public void populateWithOrderedConversations(final List<Conversation> list, boolean includeNoFileUpload) {
+	public void populateWithOrderedConversations(final List<Conversation> list, final boolean includeNoFileUpload) {
+        populateWithOrderedConversations(list, includeNoFileUpload, true);
+    }
+
+	public void populateWithOrderedConversations(final List<Conversation> list, final boolean includeNoFileUpload, final boolean sort) {
+        final List<String> orderedUuids;
+        if (sort) {
+            orderedUuids = null;
+        } else {
+            orderedUuids = new ArrayList<>();
+            for(Conversation conversation : list) {
+                orderedUuids.add(conversation.getUuid());
+            }
+        }
 		list.clear();
 		if (includeNoFileUpload) {
 			list.addAll(getConversations());
@@ -1658,7 +1713,18 @@ public class XmppConnectionService extends Service {
 			}
 		}
 		try {
-			Collections.sort(list);
+		    if (orderedUuids != null) {
+                Collections.sort(list, (a, b) -> {
+                    final int indexA = orderedUuids.indexOf(a.getUuid());
+                    final int indexB = orderedUuids.indexOf(b.getUuid());
+                    if (indexA == -1 || indexB == -1 || indexA == indexB) {
+                        return a.compareTo(b);
+                    }
+                    return indexA - indexB;
+                });
+            } else {
+                Collections.sort(list);
+            }
 		} catch (IllegalArgumentException e) {
 			//ignore
 		}
@@ -1676,8 +1742,7 @@ public class XmppConnectionService extends Service {
 			List<Message> messages = databaseBackend.getMessages(conversation, 50, timestamp);
 			if (messages.size() > 0) {
 				conversation.addAll(0, messages);
-				checkDeletedFiles(conversation);
-				callback.onMoreMessagesLoaded(conversation);
+				callback.onMoreMessagesLoaded(messages.size(), conversation);
 			} else if (conversation.hasMessagesLeftOnServer()
 					&& account.isOnlineAndConnected()
 					&& conversation.getLastClearHistory().getTimestamp() == 0) {
@@ -1861,7 +1926,6 @@ public class XmppConnectionService extends Service {
 						}
 					}
 				}
-				checkDeletedFiles(c);
 				if (joinAfterCreate) {
 					joinMuc(c);
 				}
@@ -1890,9 +1954,16 @@ public class XmppConnectionService extends Service {
 			if (conversation.getMode() == Conversation.MODE_MULTI) {
 				if (conversation.getAccount().getStatus() == Account.State.ONLINE) {
 					Bookmark bookmark = conversation.getBookmark();
-					if (maySyncronizeWithBookmarks && bookmark != null && bookmark.autojoin() && synchronizeWithBookmarks()) {
-						bookmark.setAutojoin(false);
-						pushBookmarks(bookmark.getAccount());
+					if (maySyncronizeWithBookmarks && bookmark != null && synchronizeWithBookmarks()) {
+						if (conversation.getMucOptions().getError() == MucOptions.Error.DESTROYED) {
+							Account account = bookmark.getAccount();
+							bookmark.setConversation(null);
+							account.getBookmarks().remove(bookmark);
+							pushBookmarks(account);
+						} else if (bookmark.autojoin()) {
+							bookmark.setAutojoin(false);
+							pushBookmarks(bookmark.getAccount());
+						}
 					}
 				}
 				leaveMuc(conversation);
@@ -1924,8 +1995,20 @@ public class XmppConnectionService extends Service {
 	}
 
 	private void syncEnabledAccountSetting() {
-		getPreferences().edit().putBoolean(EventReceiver.SETTING_ENABLED_ACCOUNTS, hasEnabledAccounts()).apply();
+	    final boolean hasEnabledAccounts = hasEnabledAccounts();
+		getPreferences().edit().putBoolean(EventReceiver.SETTING_ENABLED_ACCOUNTS, hasEnabledAccounts).apply();
+		toggleSetProfilePictureActivity(hasEnabledAccounts);
 	}
+
+	private void toggleSetProfilePictureActivity(final boolean enabled) {
+	    try {
+	        final ComponentName name = new ComponentName(this, ChooseAccountForProfilePictureActivity.class);
+	        final int targetState =  enabled ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED : PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
+            getPackageManager().setComponentEnabledSetting(name, targetState, PackageManager.DONT_KILL_APP);
+        } catch (IllegalStateException e) {
+	        Log.d(Config.LOGTAG,"unable to toggle profile picture actvitiy");
+        }
+    }
 
 	public void createAccountFromKey(final String alias, final OnAccountCreated callback) {
 		new Thread(() -> {
@@ -2504,12 +2587,15 @@ public class XmppConnectionService extends Service {
 	}
 
 	private boolean hasEnabledAccounts() {
-		for (Account account : this.accounts) {
-			if (account.isEnabled()) {
-				return true;
-			}
-		}
-		return false;
+	    if (this.accounts == null) {
+	        return false;
+	    }
+	    for (Account account : this.accounts) {
+	        if (account.isEnabled()) {
+	            return true;
+	        }
+	    }
+	    return false;
 	}
 
 
@@ -2858,6 +2944,26 @@ public class XmppConnectionService extends Service {
 			}
 		});
 	}
+
+    public void destroyRoom(final Conversation conversation, final OnRoomDestroy callback) {
+        IqPacket request = new IqPacket(IqPacket.TYPE.SET);
+        request.setTo(conversation.getJid().asBareJid());
+        request.query("http://jabber.org/protocol/muc#owner").addChild("destroy");
+        sendIqPacket(conversation.getAccount(), request, new OnIqPacketReceived() {
+            @Override
+            public void onIqPacketReceived(Account account, IqPacket packet) {
+                if (packet.getType() == IqPacket.TYPE.RESULT) {
+                    if (callback != null) {
+                        callback.onRoomDestroySucceeded();
+                    }
+                } else if (packet.getType() == IqPacket.TYPE.ERROR) {
+                    if (callback != null) {
+                        callback.onRoomDestroyFailed();
+                    }
+                }
+            }
+        });
+    }
 
 	private void disconnect(Account account, boolean force) {
 		if ((account.getStatus() == Account.State.ONLINE)
@@ -4176,6 +4282,12 @@ public class XmppConnectionService extends Service {
 
 		void onPasswordChangeFailed();
 	}
+
+    public interface OnRoomDestroy {
+        void onRoomDestroySucceeded();
+
+        void onRoomDestroyFailed();
+    }
 
 	public interface OnAffiliationChanged {
 		void onAffiliationChangedSuccessful(Jid jid);
