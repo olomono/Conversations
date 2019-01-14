@@ -545,7 +545,7 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         }
 
         if (oldVersion < 45 && newVersion >= 45) {
-            db.execSQL("ALTER TABLE " + Message.TABLENAME + " ADD COLUMN"
+            db.execSQL("ALTER TABLE " + Message.TABLENAME + " ADD COLUMN "
                     + Message.MESSAGE_REFERENCE + " TEXT");
         }
     }
@@ -752,8 +752,14 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         return getMessage(conversation, Message.REMOTE_MSG_ID, remoteMsgId);
     }
 
-    public ArrayList<Message> getMessages(Conversation conversations, int limit) {
-        return getMessages(conversations, limit, -1);
+    /**
+     * Retrieve messages for a given limit.
+     * @param conversation conversation that holds the messages
+     * @param limit count of retrieved messages or -1 for ignoring this parameter
+     * @return retrieved messages
+     */
+    public ArrayList<Message> getMessages(Conversation conversation, int limit) {
+        return getMessages(conversation, limit, -1);
     }
 
     /**
@@ -818,16 +824,6 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         }
         cursor.close();
         return list;
-    }
-
-    /**
-     * Retrieve messages for a given limit.
-     * @param conversation conversation that holds the messages
-     * @param limit count of retrieved messages or -1 for ignoring this parameter
-     * @return retrieved messages
-     */
-    public ArrayList<Message> getMessages(Conversation conversation, int limit) {
-        return getMessages(conversation, limit, -1);
     }
 
     /**

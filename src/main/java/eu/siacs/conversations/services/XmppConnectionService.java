@@ -1653,18 +1653,6 @@ public class XmppConnectionService extends Service {
 		return this.conversations;
 	}
 
-	public void checkDeletedFiles(Conversation conversation) {
-		conversation.findMessagesWithFiles(message -> {
-			if (!getFileBackend().isFileAvailable(message)) {
-				message.setTransferable(new TransferablePlaceholder(Transferable.STATUS_DELETED));
-				final int s = message.getStatus();
-				if (s == Message.STATUS_WAITING || s == Message.STATUS_OFFERED || s == Message.STATUS_UNSEND) {
-					markMessage(message, Message.STATUS_SEND_FAILED);
-				}
-			}
-		});
-	}
-
 	private void markFileDeleted(final String path) {
         final File file = new File(path);
         final boolean isInternalFile = fileBackend.isInternalFile(file);
@@ -1742,7 +1730,7 @@ public class XmppConnectionService extends Service {
 			List<Message> messages = databaseBackend.getMessages(conversation, 50, timestamp);
 			if (messages.size() > 0) {
 				conversation.addAll(0, messages);
-				callback.onMoreMessagesLoaded(messages.size(), conversation);
+				callback.onMoreMessagesLoaded(conversation);
 			} else if (conversation.hasMessagesLeftOnServer()
 					&& account.isOnlineAndConnected()
 					&& conversation.getLastClearHistory().getTimestamp() == 0) {
@@ -1779,7 +1767,6 @@ public class XmppConnectionService extends Service {
         final List<Message> messages = activity.xmppConnectionService.databaseBackend.getMessages(conversation, message.getTimeSent(), conversation.getFirstMessage().getTimeSent());
         if (messages.size() > 0) {
             conversation.addAll(0, messages);
-            activity.xmppConnectionService.checkDeletedFiles(conversation);
             callback.onMoreMessagesLoaded(conversation);
         } else if (conversation.hasMessagesLeftOnServer()
                 && account.isOnlineAndConnected()
