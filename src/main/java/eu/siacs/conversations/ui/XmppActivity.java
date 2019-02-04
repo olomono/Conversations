@@ -462,34 +462,37 @@ public abstract class XmppActivity extends ActionBarActivity {
 		switchToConversation(conversation, null);
 	}
 
-	public void switchToConversationAndQuote(Conversation conversation, String text) {
-		switchToConversation(conversation, text, true, null, false, false);
+	public void switchToConversationAndCommentMessage(Conversation conversation, String messageReference, boolean quoteMessage) {
+		switchToConversation(conversation, null, messageReference, quoteMessage, null, false, false);
 	}
 
 	public void switchToConversation(Conversation conversation, String text) {
-		switchToConversation(conversation, text, false, null, false, false);
+		switchToConversation(conversation, text, null, false, null, false, false);
 	}
 
 	public void switchToConversationDoNotAppend(Conversation conversation, String text) {
-		switchToConversation(conversation, text, false, null, false, true);
+		switchToConversation(conversation, text, null , false, null, false, true);
 	}
 
 	public void highlightInMuc(Conversation conversation, String nick) {
-		switchToConversation(conversation, null, false, nick, false, false);
+		switchToConversation(conversation, null, null , false, nick, false, false);
 	}
 
 	public void privateMsgInMuc(Conversation conversation, String nick) {
-		switchToConversation(conversation, null, false, nick, true, false);
+		switchToConversation(conversation, null, null , false, nick, true, false);
 	}
 
-	private void switchToConversation(Conversation conversation, String text, boolean asQuote, String nick, boolean pm, boolean doNotAppend) {
+	private void switchToConversation(Conversation conversation, String text, String messageReference, boolean quoteMessage, String nick, boolean pm, boolean doNotAppend) {
 		Intent intent = new Intent(this, ConversationsActivity.class);
 		intent.setAction(ConversationsActivity.ACTION_VIEW_CONVERSATION);
 		intent.putExtra(ConversationsActivity.EXTRA_CONVERSATION, conversation.getUuid());
 		if (text != null) {
 			intent.putExtra(Intent.EXTRA_TEXT, text);
-			if (asQuote) {
-				intent.putExtra(ConversationsActivity.EXTRA_AS_QUOTE, true);
+		}
+		if (messageReference != null) {
+			intent.putExtra(ConversationsActivity.EXTRA_MESSAGE_REFERENCE, messageReference);
+			if (quoteMessage) {
+				intent.putExtra(ConversationsActivity.EXTRA_COMMENT_LINES, true);
 			}
 		}
 		if (nick != null) {

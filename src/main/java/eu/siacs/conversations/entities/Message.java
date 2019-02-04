@@ -102,6 +102,7 @@ public class Message extends AbstractEntity {
 	protected Transferable transferable = null;
 	private Message mNextMessage = null;
 	private Message mPreviousMessage = null;
+	private String messageReference = null;
 	private String axolotlFingerprint = null;
 	private String errorMessage = null;
 	private Set<ReadByMarker> readByMarkers = new HashSet<>();
@@ -379,6 +380,18 @@ public class Message extends AbstractEntity {
 	public void setRemoteMsgId(String id) {
 		this.remoteMsgId = id;
 	}
+
+    public void setMessageReference(String messageReference) {
+        this.messageReference = messageReference;
+    }
+
+    public String getMessageReference() {
+        return messageReference;
+    }
+
+    public boolean hasMessageReference() {
+        return this.messageReference != null;
+    }
 
 	public String getServerMsgId() {
 		return this.serverMsgId;
@@ -679,6 +692,11 @@ public class Message extends AbstractEntity {
 	public boolean wasMergedIntoPrevious() {
 		Message prev = this.prev();
 		return prev != null && prev.mergeable(this);
+	}
+
+	public boolean wasMergedWithNext() {
+		Message next = this.next();
+		return next != null && next.mergeable(this);
 	}
 
 	public boolean trusted() {
