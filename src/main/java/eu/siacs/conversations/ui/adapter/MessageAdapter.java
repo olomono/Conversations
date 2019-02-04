@@ -87,7 +87,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 	private OnContactPictureLongClicked mOnContactPictureLongClickedListener;
 	private boolean mIndicateReceived = false;
 	private boolean mUseGreenBackground = false;
-	private OnQuoteListener onQuoteListener;
+	private OnCommentListener onCommentListener;
 	public MessageAdapter(XmppActivity activity, List<Message> messages) {
 		super(activity, 0, messages);
 		this.audioPlayer = new AudioPlayer(this);
@@ -125,8 +125,8 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		this.mOnContactPictureLongClickedListener = listener;
 	}
 
-	public void setOnQuoteListener(OnQuoteListener listener) {
-		this.onQuoteListener = listener;
+	public void setOnCommentListener(OnCommentListener listener) {
+		this.onCommentListener = listener;
 	}
 
 	@Override
@@ -632,7 +632,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 			}
 			if (viewHolder.messageBody != null) {
 				listSelectionManager.onCreate(viewHolder.messageBody,
-						new MessageBodyActionModeCallback(viewHolder.messageBody));
+						new MessageBodyActionModeCallback(message, viewHolder.messageBody));
 				viewHolder.messageBody.setCopyHandler(this);
 			}
 			view.setTag(viewHolder);
@@ -887,8 +887,8 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		this.highlightedTerm = terms == null ? null : StylingHelper.filterHighlightedWords(terms);
 	}
 
-	public interface OnQuoteListener {
-		void onQuote(String text);
+	public interface OnCommentListener {
+		void onComment(Message message, boolean quoteMessage);
 	}
 
 	public interface OnContactPictureClicked {
@@ -919,15 +919,17 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 
 	private class MessageBodyActionModeCallback implements ActionMode.Callback {
 
+		private final Message message;
 		private final TextView textView;
 
-		public MessageBodyActionModeCallback(TextView textView) {
+		public MessageBodyActionModeCallback(Message message, TextView textView) {
+			this.message = message;
 			this.textView = textView;
 		}
 
 		@Override
 		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-			if (onQuoteListener != null) {
+			if (onCommentListener != null) {
 				int quoteResId = activity.getThemeResource(R.attr.icon_quote, R.drawable.ic_action_reply);
 				// 3rd item is placed after "copy" item
 				menu.add(0, android.R.id.button1, 3, R.string.quote).setIcon(quoteResId)
@@ -948,8 +950,9 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 				int end = textView.getSelectionEnd();
 				if (end > start) {
 					String text = transformText(textView.getText(), start, end, false);
-					if (onQuoteListener != null) {
-						onQuoteListener.onQuote(text);
+					if (onCommentListener != null) {
+						message.setBody(text);
+						onCommentListener.onComment(message, true);
 					}
 					mode.finish();
 				}

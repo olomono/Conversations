@@ -83,6 +83,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 	private ChatState mIncomingChatState = Config.DEFAULT_CHATSTATE;
 	private String mFirstMamReference = null;
 	private Message correctingMessage;
+	private String messageReference = null;
+	private String messageReferenceQuote;
 
 	public Conversation(final String name, final Account account, final Jid contactJid,
 	                    final int mode) {
@@ -999,6 +1001,22 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 	@Override
 	public int getAvatarBackgroundColor() {
 		return UIHelper.getColorForName(getName().toString());
+	}
+
+	public String getMessageReference() {
+		return messageReference;
+	}
+
+	public void setMessageReference(String messageReference) {
+		this.messageReference = messageReference;
+	}
+
+	public String getMessageReferenceQuote() {
+		return messageReferenceQuote;
+	}
+
+	public void setMessageReferenceQuote(String messageReferenceQuote) {
+		this.messageReferenceQuote = messageReferenceQuote;
 	}
 
 	public interface OnMessageFound {

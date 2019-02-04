@@ -725,6 +725,17 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         final Message message;
         if (conversation.getCorrectingMessage() == null) {
             message = new Message(conversation, body, conversation.getNextEncryption());
+
+            // Set the message reference for the message to be sent.
+            final String messageReference = conversation.getMessageReference();
+            if (messageReference != null) {
+                message.setMessageReference(messageReference);
+                message.setBody(conversation.getMessageReferenceQuote() + body);
+
+                // Reset the currently referenced message so that new non-referencing messages will not be sent as referencing messages.
+                this.conversation.setMessageReference(null);
+            }
+
             if (conversation.getMode() == Conversation.MODE_MULTI) {
                 final Jid nextCounterpart = conversation.getNextCounterpart();
                 if (nextCounterpart != null) {
@@ -779,6 +790,8 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         final boolean multi = conversation.getMode() == Conversation.MODE_MULTI;
         if (conversation.getCorrectingMessage() != null) {
             this.binding.textinput.setHint(R.string.send_corrected_message);
+        } else if (conversation.getMessageReference() != null) {
+            this.binding.textinput.setHint(R.string.comment);
         } else if (multi && conversation.getNextCounterpart() != null) {
             this.binding.textinput.setHint(getString(
                     R.string.send_private_message_to,
@@ -990,7 +1003,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         messageListAdapter = new MessageAdapter((XmppActivity) getActivity(), this.messageList);
         messageListAdapter.setOnContactPictureClicked(this);
         messageListAdapter.setOnContactPictureLongClicked(this);
-        messageListAdapter.setOnQuoteListener(this::quoteText);
+        messageListAdapter.setOnCommentListener(this::commentMessage);
         binding.messagesView.setAdapter(messageListAdapter);
 
         registerForContextMenu(binding.messagesView);
@@ -1002,19 +1015,57 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         return binding.getRoot();
     }
 
-    private void quoteText(String text) {
+    /**
+     * Comments the whole given message or line by line for a given message reference.
+     * @param messageReference id of the message that should be referenced when a new message is sent
+     * @param quoteMessage quote the lines of the given message
+     */
+    private void commentMessage(String messageReference, boolean quoteMessage) {
+        commentMessage(conversation.findSentMessageWithUuidOrRemoteId(messageReference), quoteMessage);
+    }
+
+	/**
+     * Comments the whole given message or line by line.
+	 * Sets the message reference for the current conversation so that it can be used by sendMessage()
+     * and shows a preview of the referenced message.
+	 *
+	 * Uses XEP-0367: Message Attaching while still supporting legacy quoting method ("> ").
+	 * @param message message that should be referenced when a new message is sent
+     * @param quoteMessage quote the lines of the given message
+	 */
+	private void commentMessage(Message message, boolean quoteMessage) {
+	    // Add a message reference to be used later in sendMessage().
+        String remoteMsgId = message.getRemoteMsgId();
+        if (remoteMsgId == null) {
+            conversation.setMessageReference(message.getUuid());
+        } else {
+            conversation.setMessageReference(remoteMsgId);
+        }
+
+        updateChatMsgHint();
+        displaySoftInput();
+
+        if (quoteMessage) {
+            // Show the lines of the referenced message as quotations instead of letting a legacy quotation be used for the body of the message to be sent.
+            binding.textinput.insertAsQuote(MessageUtils.prepareQuote(message));
+            conversation.setMessageReferenceQuote("");
+        } else {
+            // Set the legacy quotation so that it can be used as the first part of the body for the message to be sent.
+            conversation.setMessageReferenceQuote(MessageUtils.createQuote(MessageUtils.prepareQuote(message)) + "\n");
+        }
+	}
+
+    /**
+     * Opens the soft keyboard and places the cursor inside of the text input.
+     */
+	private void displaySoftInput() {
         if (binding.textinput.isEnabled()) {
-            binding.textinput.insertAsQuote(text);
             binding.textinput.requestFocus();
             InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             if (inputMethodManager != null) {
                 inputMethodManager.showSoftInput(binding.textinput, InputMethodManager.SHOW_IMPLICIT);
             }
         }
-    }
-
-    private void quoteMessage(Message message) {
-        quoteText(MessageUtils.prepareQuote(message));
     }
 
     @Override
@@ -1049,6 +1100,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             MenuItem openWith = menu.findItem(R.id.open_with);
             MenuItem copyMessage = menu.findItem(R.id.copy_message);
             MenuItem copyLink = menu.findItem(R.id.copy_link);
+            MenuItem commentMessage = menu.findItem(R.id.comment_message);
             MenuItem quoteMessage = menu.findItem(R.id.quote_message);
             MenuItem retryDecryption = menu.findItem(R.id.retry_decryption);
             MenuItem correctMessage = menu.findItem(R.id.correct_message);
@@ -1060,6 +1112,9 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             MenuItem deleteFile = menu.findItem(R.id.delete_file);
             MenuItem showErrorMessage = menu.findItem(R.id.show_error_message);
             final boolean showError = m.getStatus() == Message.STATUS_SEND_FAILED && m.getErrorMessage() != null && !Message.ERROR_MESSAGE_CANCELLED.equals(m.getErrorMessage());
+            if (!encrypted && !m.wasMergedWithNext()) {
+                commentMessage.setVisible(MessageUtils.prepareQuote(m).length() > 0);
+            }
             if (!m.isFileOrImage() && !encrypted && !m.isGeoUri() && !m.treatAsDownloadable()) {
                 copyMessage.setVisible(true);
                 quoteMessage.setVisible(!showError && MessageUtils.prepareQuote(m).length() > 0);
@@ -1136,8 +1191,11 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             case R.id.copy_link:
                 ShareUtil.copyLinkToClipboard(activity, selectedMessage);
                 return true;
+            case R.id.comment_message:
+                commentMessage(selectedMessage, false);
+                return true;
             case R.id.quote_message:
-                quoteMessage(selectedMessage);
+                commentMessage(selectedMessage, true);
                 return true;
             case R.id.send_again:
                 resendMessage(selectedMessage);
@@ -1985,7 +2043,8 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         final String downloadUuid = extras.getString(ConversationsActivity.EXTRA_DOWNLOAD_UUID);
         final String text = extras.getString(Intent.EXTRA_TEXT);
         final String nick = extras.getString(ConversationsActivity.EXTRA_NICK);
-        final boolean asQuote = extras.getBoolean(ConversationsActivity.EXTRA_AS_QUOTE);
+        final String messageReference = extras.getString(ConversationsActivity.EXTRA_MESSAGE_REFERENCE);
+        final boolean quoteMessage = extras.getBoolean(ConversationsActivity.EXTRA_QUOTE_MESSAGE);
         final boolean pm = extras.getBoolean(ConversationsActivity.EXTRA_IS_PRIVATE_MESSAGE, false);
         final boolean doNotAppend = extras.getBoolean(ConversationsActivity.EXTRA_DO_NOT_APPEND, false);
         final List<Uri> uris = extractUris(extras);
@@ -2011,8 +2070,8 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                 }
             }
         } else {
-            if (text != null && asQuote) {
-                quoteText(text);
+            if (messageReference != null) {
+                commentMessage(messageReference, quoteMessage);
             } else {
                 appendText(text, doNotAppend);
             }

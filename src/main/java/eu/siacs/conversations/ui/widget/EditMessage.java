@@ -21,6 +21,7 @@ import android.view.inputmethod.InputConnection;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
+import eu.siacs.conversations.utils.MessageUtils;
 
 public class EditMessage extends EmojiWrapperEditText {
 
@@ -129,7 +130,7 @@ public class EditMessage extends EmojiWrapperEditText {
 	}
 
 	public void insertAsQuote(String text) {
-		text = text.replaceAll("(\n *){2,}", "\n").replaceAll("(^|\n)", "$1> ").replaceAll("\n$", "");
+		text = MessageUtils.createQuote(text);
 		Editable editable = getEditableText();
 		int position = getSelectionEnd();
 		if (position == -1) position = editable.length();
