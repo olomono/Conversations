@@ -731,6 +731,14 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
 		return next != null && this.mergeable(next);
 	}
 
+	public Message firstMergeMessage() {
+		Message firstMergeMessage = this;
+		while (firstMergeMessage.wasMergedIntoPrevious()) {
+			firstMergeMessage = firstMergeMessage.prev();
+		}
+		return firstMergeMessage;
+	}
+
 	public boolean trusted() {
 		Contact contact = this.getContact();
 		return status > STATUS_RECEIVED || (contact != null && (contact.showInContactList() || contact.isSelf()));

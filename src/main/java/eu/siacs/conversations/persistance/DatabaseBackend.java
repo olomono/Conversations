@@ -753,7 +753,7 @@ public class DatabaseBackend extends SQLiteOpenHelper {
     }
 
     /**
-     * Retrieve messages for a given limit.
+     * Retrieves messages for a given limit.
      * @param conversation conversation that holds the messages
      * @param limit count of retrieved messages or -1 for ignoring this parameter
      * @return retrieved messages
@@ -785,7 +785,7 @@ public class DatabaseBackend extends SQLiteOpenHelper {
     }
 
     /**
-     * Retrieve messages between an earliest and a latest timestamp.
+     * Retrieves messages between an earliest and a latest timestamp.
      * @param conversation conversation that holds the messages
      * @param limit count of retrieved messages or -1 for ignoring this parameter
      * @param earliestTimestamp earliest time of a retrieved message (including this message) or -1 for ignoring this parameter
@@ -827,24 +827,13 @@ public class DatabaseBackend extends SQLiteOpenHelper {
     }
 
     /**
-     * Retrieve messages before a latest timestamp.
+     * Retrieves messages before a latest timestamp.
      * @param conversation conversation that holds the messages
      * @param limit count of retrieved messages or -1 for ignoring this parameter
      * @param latestTimestamp latest time of a retrieved message (excluding this message) or -1 for ignoring this parameter	 * @return retrieved messages
      */
     public ArrayList<Message> getMessages(Conversation conversation, int limit, long latestTimestamp) {
         return getMessages(conversation, limit, -1, latestTimestamp);
-    }
-
-    /**
-     * Retrieve messages between an earliest and a latest timestamp without a limit.
-     * @param conversation conversation that holds the messages
-     * @param earliestTimestamp earliest time of a retrieved message (including this message) or -1 for ignoring this parameter
-     * @param latestTimestamp latest time of a retrieved message (excluding this message) or -1 for ignoring this parameter
-     * @return retrieved messages
-     */
-    public ArrayList<Message> getMessages(Conversation conversation, long earliestTimestamp, long latestTimestamp) {
-        return getMessages(conversation, -1, earliestTimestamp, latestTimestamp);
     }
 
     public Cursor getMessageSearchCursor(List<String> term) {

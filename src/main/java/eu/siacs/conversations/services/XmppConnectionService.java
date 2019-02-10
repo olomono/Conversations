@@ -40,6 +40,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.LruCache;
 import android.util.Pair;
+import android.widget.Toast;
 
 import org.conscrypt.Conscrypt;
 import org.openintents.openpgp.IOpenPgpService2;
@@ -108,6 +109,7 @@ import eu.siacs.conversations.persistance.FileBackend;
 import eu.siacs.conversations.ui.ChooseAccountForProfilePictureActivity;
 import eu.siacs.conversations.ui.SettingsActivity;
 import eu.siacs.conversations.ui.UiCallback;
+import eu.siacs.conversations.ui.XmppActivity;
 import eu.siacs.conversations.ui.interfaces.OnAvatarPublication;
 import eu.siacs.conversations.ui.interfaces.OnMediaLoaded;
 import eu.siacs.conversations.ui.interfaces.OnSearchResultsAvailable;
@@ -1798,6 +1800,24 @@ public class XmppConnectionService extends Service {
 		};
 		mDatabaseReaderExecutor.execute(runnable);
 	}
+
+    /**
+     * Loads up to 1000 messages between a given message (inclusive) and the currently loaded earliest message.
+     * @param message earliest message to load
+     * @param callback method that will be called after the messages are loaded
+     */
+    public void loadMoreMessages(final Message message, final OnMoreMessagesLoaded callback){
+        final int limit = 1000;
+        final Conversation conversation = (Conversation) message.getConversation();
+        final XmppActivity activity = (XmppActivity) conversation.getConversationFragment().getActivity();
+        final List<Message> messages = activity.xmppConnectionService.databaseBackend.getMessages(conversation, limit, message.getTimeSent(), conversation.getFirstMessage().getTimeSent());
+        if (messages.size() == limit && !messages.get(0).getUuid().equals(message.getUuid())) {
+            Toast.makeText(activity, R.string.message_too_old_for_jumping_to_it, Toast.LENGTH_SHORT).show();
+        } else if (messages.size() > 0) {
+            conversation.addAll(0, messages);
+            callback.onMoreMessagesLoaded(messages.size(), conversation);
+        }
+    }
 
 	public List<Account> getAccounts() {
 		return this.accounts;
