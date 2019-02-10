@@ -93,6 +93,7 @@ import eu.siacs.conversations.ui.util.DateSeparator;
 import eu.siacs.conversations.ui.util.EditMessageActionModeCallback;
 import eu.siacs.conversations.ui.util.ListViewUtils;
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil;
+import eu.siacs.conversations.ui.util.MessageReferenceUtils;
 import eu.siacs.conversations.ui.util.MucDetailsContextMenuHelper;
 import eu.siacs.conversations.ui.util.PendingItem;
 import eu.siacs.conversations.ui.util.PresenceSelector;
@@ -756,6 +757,9 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 
                 // Reset the currently referenced message so that new non-referencing messages will not be sent as referencing messages.
                 this.conversation.setMessageReference(null);
+
+                // Hide the whole area where the referenced message was displayed.
+                MessageReferenceUtils.hideMessageReference(binding.messageReferencePreview);
             }
 
             if (conversation.getMode() == Conversation.MODE_MULTI) {
@@ -1042,7 +1046,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
      * @param quoteMessage quote the lines of the given message
      */
     private void commentMessage(String messageReference, boolean quoteMessage) {
-        commentMessage(conversation.findSentMessageWithUuidOrRemoteId(messageReference), quoteMessage);
+        commentMessage(conversation.findMessageWithUuidOrRemoteMsgId(messageReference), quoteMessage);
     }
 
 	/**
@@ -1065,6 +1069,10 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 
         updateChatMsgHint();
         displaySoftInput();
+        boolean darkBackground = activity.isDarkTheme();
+
+        // Show the message reference preview.
+        MessageReferenceUtils.displayMessageReference(activity, binding.messageReferencePreview, null, message, darkBackground);
 
         if (quoteMessage) {
             // Show the lines of the referenced message as quotations instead of letting a legacy quotation be used for the body of the message to be sent.
@@ -1969,6 +1977,10 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             return false;
         }
         this.conversation = conversation;
+
+        // Add this object to the Conversation object so that it can be used by methods that only have access to Conversation objects (e.g., via a Message object) but not to ConversationFragment objects.
+        conversation.setConversationFragment(this);
+
         //once we set the conversation all is good and it will automatically do the right thing in onStart()
         if (this.activity == null || this.binding == null) {
             return false;

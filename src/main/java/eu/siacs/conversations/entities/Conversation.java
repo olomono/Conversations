@@ -24,6 +24,7 @@ import eu.siacs.conversations.crypto.OmemoSetting;
 import eu.siacs.conversations.crypto.PgpDecryptionService;
 import eu.siacs.conversations.crypto.axolotl.AxolotlService;
 import eu.siacs.conversations.services.QuickConversationsService;
+import eu.siacs.conversations.ui.ConversationFragment;
 import eu.siacs.conversations.utils.JidHelper;
 import eu.siacs.conversations.xmpp.InvalidJid;
 import eu.siacs.conversations.xmpp.chatstate.ChatState;
@@ -79,7 +80,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 	private String mFirstMamReference = null;
 	private Message correctingMessage;
 	private String messageReference = null;
-	private String messageReferenceQuote;
+    private String messageReferenceQuote;
+    private ConversationFragment conversationFragment;
 
 	public Conversation(final String name, final Account account, final Jid contactJid,
 	                    final int mode) {
@@ -308,6 +310,17 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 		synchronized (this.messages) {
 			for (Message message : this.messages) {
 				if (id.equals(message.getUuid())) {
+					return message;
+				}
+			}
+		}
+		return null;
+	}
+
+	public Message findMessageWithUuidOrRemoteMsgId(String id) {
+		synchronized (this.messages) {
+			for (Message message : this.messages) {
+				if (id.equals(message.getRemoteMsgId()) || id.equals(message.getUuid())) {
 					return message;
 				}
 			}
@@ -988,6 +1001,14 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
 	public void setMessageReferenceQuote(String messageReferenceQuote) {
 		this.messageReferenceQuote = messageReferenceQuote;
+	}
+
+	public ConversationFragment getConversationFragment() {
+		return conversationFragment;
+	}
+
+	public void setConversationFragment(ConversationFragment conversationFragment) {
+		this.conversationFragment = conversationFragment;
 	}
 
 	public interface OnMessageFound {
