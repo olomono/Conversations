@@ -484,13 +484,41 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 		return null;
 	}
 
+	/**
+	 * Creates a status message without a body.
+	 * @return status message
+	 */
+	private Message createEmptyStatusMessage() {
+		Message message = new Message(this, "", Message.ENCRYPTION_NONE);
+		message.setType(Message.TYPE_STATUS);
+		message.setTime(Math.max(getCreated(), getLastClearHistory().getTimestamp()));
+		return message;
+	}
+
+	/**
+	 * Returns the first message in the current list of messages if the list is not empty
+	 * or otherwise a new status message.
+	 * @return first message or new status message
+	 */
+	public Message getFirstMessage() {
+		synchronized (this.messages) {
+			if (this.messages.size() == 0) {
+				return createEmptyStatusMessage();
+			} else {
+				return this.messages.get(0);
+			}
+		}
+	}
+
+	/**
+	 * Returns the last message in the current list of messages if the list is not empty
+	 * or otherwise a new status message.
+	 * @return latest message or new status message
+	 */
 	public Message getLatestMessage() {
 		synchronized (this.messages) {
 			if (this.messages.size() == 0) {
-				Message message = new Message(this, "", Message.ENCRYPTION_NONE);
-				message.setType(Message.TYPE_STATUS);
-				message.setTime(Math.max(getCreated(), getLastClearHistory().getTimestamp()));
-				return message;
+				return createEmptyStatusMessage();
 			} else {
 				return this.messages.get(this.messages.size() - 1);
 			}

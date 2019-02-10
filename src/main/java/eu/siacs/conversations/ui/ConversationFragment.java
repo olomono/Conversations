@@ -235,65 +235,91 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                     } else {
                         timestamp = messageList.get(0).getTimeSent();
                     }
-                    activity.xmppConnectionService.loadMoreMessages(conversation, timestamp, new XmppConnectionService.OnMoreMessagesLoaded() {
-                        @Override
-                        public void onMoreMessagesLoaded(final int c, final Conversation conversation) {
-                            if (ConversationFragment.this.conversation != conversation) {
-                                conversation.messagesLoaded.set(true);
-                                return;
-                            }
-                            runOnUiThread(() -> {
-                                synchronized (messageList) {
-                                    final int oldPosition = binding.messagesView.getFirstVisiblePosition();
-                                    Message message = null;
-                                    int childPos;
-                                    for (childPos = 0; childPos + oldPosition < messageList.size(); ++childPos) {
-                                        message = messageList.get(oldPosition + childPos);
-                                        if (message.getType() != Message.TYPE_STATUS) {
-                                            break;
-                                        }
-                                    }
-                                    final String uuid = message != null ? message.getUuid() : null;
-                                    View v = binding.messagesView.getChildAt(childPos);
-                                    final int pxOffset = (v == null) ? 0 : v.getTop();
-                                    ConversationFragment.this.conversation.populateWithMessages(ConversationFragment.this.messageList);
-                                    try {
-                                        updateStatusMessages();
-                                    } catch (IllegalStateException e) {
-                                        Log.d(Config.LOGTAG, "caught illegal state exception while updating status messages");
-                                    }
-                                    messageListAdapter.notifyDataSetChanged();
-                                    int pos = Math.max(getIndexOf(uuid, messageList), 0);
-                                    binding.messagesView.setSelectionFromTop(pos, pxOffset);
-                                    if (messageLoaderToast != null) {
-                                        messageLoaderToast.cancel();
-                                    }
-                                    conversation.messagesLoaded.set(true);
-                                }
-                            });
-                        }
-
-                        @Override
-                        public void informUser(final int resId) {
-
-                            runOnUiThread(() -> {
-                                if (messageLoaderToast != null) {
-                                    messageLoaderToast.cancel();
-                                }
-                                if (ConversationFragment.this.conversation != conversation) {
-                                    return;
-                                }
-                                messageLoaderToast = Toast.makeText(view.getContext(), resId, Toast.LENGTH_LONG);
-                                messageLoaderToast.show();
-                            });
-
-                        }
-                    });
-
+                    activity.xmppConnectionService.loadMoreMessages(conversation, timestamp, new OnMoreMessagesLoadedImpl(view, null));
                 }
             }
         }
     };
+
+    private class OnMoreMessagesLoadedImpl implements XmppConnectionService.OnMoreMessagesLoaded {
+        private AbsListView view;
+        private Message jumpToMessage;
+
+        public OnMoreMessagesLoadedImpl(AbsListView view, Message jumpToMessage) {
+            this.view = view;
+            this.jumpToMessage = jumpToMessage;
+        }
+
+        @Override
+        public void onMoreMessagesLoaded(int count, final Conversation conversation) {
+            if (ConversationFragment.this.conversation != conversation) {
+                conversation.messagesLoaded.set(true);
+                return;
+            }
+            runOnUiThread(() -> {
+                synchronized (messageList) {
+                    String uuid = null;
+                    int pxOffset = 0;
+
+                    if (jumpToMessage == null) {
+                        final int oldPosition = binding.messagesView.getFirstVisiblePosition();
+                        Message message = null;
+                        int childPos;
+                        for (childPos = 0; childPos + oldPosition < messageList.size(); ++childPos) {
+                            message = messageList.get(oldPosition + childPos);
+                            if (message.getType() != Message.TYPE_STATUS) {
+                                break;
+                            }
+                        }
+                        uuid = message != null ? message.getUuid() : null;
+                        View v = binding.messagesView.getChildAt(childPos);
+                        pxOffset = (v == null) ? 0 : v.getTop();
+                    }
+
+                    ConversationFragment.this.conversation.populateWithMessages(ConversationFragment.this.messageList);
+                    try {
+                        updateStatusMessages();
+                    } catch (IllegalStateException e) {
+                        Log.d(Config.LOGTAG, "caught illegal state exception while updating status messages");
+                    }
+                    messageListAdapter.notifyDataSetChanged();
+
+                    if (jumpToMessage == null) {
+                        int pos = Math.max(getIndexOf(uuid, messageList), 0);
+                        binding.messagesView.setSelectionFromTop(pos, pxOffset);
+                    } else {
+                        setSelection(messageListAdapter.getPosition(conversation.findSentMessageWithUuid(jumpToMessage.getUuid())), false);
+                    }
+
+                    if (messageLoaderToast != null) {
+                        messageLoaderToast.cancel();
+                    }
+                    conversation.messagesLoaded.set(true);
+                }
+            });
+        }
+
+        @Override
+        public void informUser(final int resId) {
+
+            runOnUiThread(() -> {
+                if (messageLoaderToast != null) {
+                    messageLoaderToast.cancel();
+                }
+                if (ConversationFragment.this.conversation != conversation) {
+                    return;
+                }
+                messageLoaderToast = Toast.makeText(view.getContext(), resId, Toast.LENGTH_LONG);
+                messageLoaderToast.show();
+            });
+
+        }
+    }
+
+    public OnMoreMessagesLoadedImpl getOnMoreMessagesLoadedImpl(AbsListView view, Message jumpToMessage) {
+        return new OnMoreMessagesLoadedImpl(view, jumpToMessage);
+    }
+
     private EditMessage.OnCommitContentListener mEditorContentListener = new EditMessage.OnCommitContentListener() {
         @Override
         public boolean onCommitContent(InputContentInfoCompat inputContentInfo, int flags, Bundle opts, String[] contentMimeTypes) {
@@ -1704,6 +1730,10 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         }
     }
 
+    public int getMessagePosition(Message message) {
+        return messageListAdapter.getPosition(message);
+    }
+
     private void showErrorMessage(final Message message) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(R.string.error_message);
@@ -2057,7 +2087,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         this.binding.unreadCountCustomView.setVisibility(View.GONE);
     }
 
-    private void setSelection(int pos, boolean jumpToBottom) {
+    public void setSelection(int pos, boolean jumpToBottom) {
         ListViewUtils.setSelection(this.binding.messagesView, pos, jumpToBottom);
         this.binding.messagesView.post(() -> ListViewUtils.setSelection(this.binding.messagesView, pos, jumpToBottom));
         this.binding.messagesView.post(this::fireReadEvent);
