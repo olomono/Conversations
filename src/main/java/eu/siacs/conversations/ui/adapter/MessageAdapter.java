@@ -19,6 +19,7 @@ import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
 import android.util.DisplayMetrics;
 import android.view.ActionMode;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -40,6 +41,7 @@ import java.util.regex.Pattern;
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.crypto.axolotl.FingerprintStatus;
+import eu.siacs.conversations.databinding.MessageReferenceBinding;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.Conversational;
@@ -58,6 +60,7 @@ import eu.siacs.conversations.ui.service.AudioPlayer;
 import eu.siacs.conversations.ui.text.DividerSpan;
 import eu.siacs.conversations.ui.text.QuoteSpan;
 import eu.siacs.conversations.ui.util.AvatarWorkerTask;
+import eu.siacs.conversations.ui.util.MessageReferenceUtils;
 import eu.siacs.conversations.ui.util.MyLinkify;
 import eu.siacs.conversations.ui.util.ViewUtil;
 import eu.siacs.conversations.ui.widget.ClickableMovementMethod;
@@ -393,6 +396,19 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		return startsWithQuote;
 	}
 
+	/**
+	 * Displays the text, image, preview image or tag of a referenced message next to a bar that indicates the referencing
+	 * and underneath the comment on that message.
+	 * Or displays only an info message for a message reference that has no associated message.
+	 */
+	private void displayReferencingMessage(final ViewHolder viewHolder, final Message message, final Message referencedMessage, boolean darkBackground, int type) {
+		// Show the message reference area.
+		MessageReferenceUtils.displayMessageReference(activity, viewHolder.messageReferenceBinding, message, referencedMessage, darkBackground);
+
+		// Show the comment on the referenced message.
+		displayTextMessage(viewHolder, message, darkBackground, type);
+	}
+
 	private void displayTextMessage(final ViewHolder viewHolder, final Message message, boolean darkBackground, int type) {
 		viewHolder.download_button.setVisibility(View.GONE);
 		viewHolder.image.setVisibility(View.GONE);
@@ -597,6 +613,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 				case SENT:
 					view = activity.getLayoutInflater().inflate(R.layout.message_sent, parent, false);
 					viewHolder.message_box = view.findViewById(R.id.message_box);
+					viewHolder.messageReferenceBinding = MessageReferenceBinding.bind(view.findViewById(R.id.message_reference));
 					viewHolder.contact_picture = view.findViewById(R.id.message_photo);
 					viewHolder.download_button = view.findViewById(R.id.download_button);
 					viewHolder.indicator = view.findViewById(R.id.security_indicator);
@@ -610,6 +627,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 				case RECEIVED:
 					view = activity.getLayoutInflater().inflate(R.layout.message_received, parent, false);
 					viewHolder.message_box = view.findViewById(R.id.message_box);
+					viewHolder.messageReferenceBinding = MessageReferenceBinding.bind(view.findViewById(R.id.message_reference));
 					viewHolder.contact_picture = view.findViewById(R.id.message_photo);
 					viewHolder.download_button = view.findViewById(R.id.download_button);
 					viewHolder.indicator = view.findViewById(R.id.security_indicator);
@@ -706,6 +724,9 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 			}
 		});
 
+		// Hide all referencing message views to make them individually visible later.
+		MessageReferenceUtils.hideMessageReference(viewHolder.messageReferenceBinding);
+
 		final Transferable transferable = message.getTransferable();
 		if (message.isDeleted() || (transferable != null && transferable.getStatus() != Transferable.STATUS_UPLOADING)) {
 			if (transferable != null && transferable.getStatus() == Transferable.STATUS_OFFER) {
@@ -715,10 +736,26 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 			} else {
 				displayInfoMessage(viewHolder, UIHelper.getMessagePreview(activity, message).first, darkBackground);
 			}
+
+		// Display a referenced message and a comment for it if the referencing message has a message reference that matches a locally available message-
+		// Otherwise display the referencing message normally.
+		} else if (message.hasMessageReference() && message.getEncryption() != Message.ENCRYPTION_DECRYPTION_FAILED && message.getEncryption() != Message.ENCRYPTION_AXOLOTL_NOT_FOR_THIS_DEVICE) {
+			Message referencedMessage = ((Conversation) conversation).findMessageWithUuidOrRemoteMsgId(message.getMessageReference());
+
+			// Try to load the referenced message from the DB if it is null and could not be found in the currently loaded conversation.
+			// If it cannot be loaded from the DB it will remain null.
+			if(referencedMessage == null){
+				referencedMessage = activity.xmppConnectionService.databaseBackend.getMsgByUuidOrRemoteMsgId((Conversation) conversation, message.getMessageReference());
+			}
+
+			MessageReferenceUtils.deleteLegacyQuotation(activity, message, referencedMessage);
+
+			displayReferencingMessage(viewHolder, message, referencedMessage, darkBackground, type);
+
 		} else if (message.isFileOrImage() && message.getEncryption() != Message.ENCRYPTION_PGP && message.getEncryption() != Message.ENCRYPTION_DECRYPTION_FAILED) {
-			if (message.getFileParams().width > 0 && message.getFileParams().height > 0) {
+			if (message.isImageOrVideo()) {
 				displayImageMessage(viewHolder, message);
-			} else if (message.getFileParams().runtime > 0) {
+			} else if (message.isAudio()) {
 				displayAudioMessage(viewHolder, message, darkBackground);
 			} else {
 				displayOpenableMessage(viewHolder, message);
@@ -905,6 +942,7 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 		public ImageView edit_indicator;
 		public RelativeLayout audioPlayer;
 		protected LinearLayout message_box;
+		protected MessageReferenceBinding messageReferenceBinding;
 		protected Button download_button;
 		protected ImageView image;
 		protected ImageView indicator;

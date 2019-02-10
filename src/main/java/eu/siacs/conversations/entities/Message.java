@@ -58,6 +58,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
 	public static final int TYPE_STATUS = 3;
 	public static final int TYPE_PRIVATE = 4;
 
+	public static final String UUID = "uuid";
 	public static final String CONVERSATION = "conversationUuid";
 	public static final String COUNTERPART = "counterpart";
 	public static final String TRUE_COUNTERPART = "trueCounterpart";
@@ -602,6 +603,8 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
 	public boolean mergeable(final Message message) {
 		return message != null &&
 				(message.getType() == Message.TYPE_TEXT &&
+						!message.hasMessageReference() &&
+						!this.hasMessageReference() &&
 						this.getTransferable() == null &&
 						message.getTransferable() == null &&
 						message.getEncryption() != Message.ENCRYPTION_PGP &&
@@ -655,6 +658,18 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
 		} else {
 			return UIHelper.getColorForName(UIHelper.getMessageDisplayName(this));
 		}
+	}
+
+	public boolean isText() {
+		return type == Message.TYPE_TEXT;
+	}
+
+	public boolean isImageOrVideo() {
+		return getFileParams().width > 0 && getFileParams().height > 0;
+	}
+
+	public boolean isAudio() {
+		return getFileParams().runtime > 0;
 	}
 
 	public static class MergeSeparator {

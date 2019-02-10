@@ -59,9 +59,7 @@ public class MessageUtils {
 			if (line.length() <= 0) {
 				continue;
 			}
-			final char c = line.charAt(0);
-			if (c == '>' && UIHelper.isPositionFollowedByQuoteableCharacter(line, 0)
-					|| (c == '\u00bb' && !UIHelper.isPositionFollowedByQuote(line, 0))) {
+			if (UIHelper.isQuotationLine(line)) {
 				continue;
 			}
 			if (builder.length() != 0) {
