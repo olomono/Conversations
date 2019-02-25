@@ -12,6 +12,8 @@ import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.Message;
 import eu.siacs.conversations.ui.ConversationFragment;
 import eu.siacs.conversations.ui.XmppActivity;
+import eu.siacs.conversations.utils.EmojiWrapper;
+import eu.siacs.conversations.utils.Emoticons;
 import eu.siacs.conversations.utils.UIHelper;
 
 public class MessageReferenceUtils {
@@ -81,7 +83,11 @@ public class MessageReferenceUtils {
                 setMessageReferenceIcon(darkBackground, messageReferenceBinding, activity.getResources().getDrawable(R.drawable.ic_file_download), activity.getResources().getDrawable(R.drawable.ic_file_download_white));
             } else if (referencedMessage.isText()) {
                 messageReferenceBinding.messageReferenceText.setVisibility(View.VISIBLE);
-                messageReferenceBinding.messageReferenceText.setText(extractFirstTwoLinesOfBody(referencedMessage));
+                CharSequence firstTwoLinesOfBody = extractFirstTwoLinesOfBody(referencedMessage);
+                if (Emoticons.containsEmoji(firstTwoLinesOfBody.toString())) {
+                    firstTwoLinesOfBody = EmojiWrapper.transform(firstTwoLinesOfBody);
+                }
+                messageReferenceBinding.messageReferenceText.setText(firstTwoLinesOfBody);
             } else {
                 messageReferenceBinding.messageReferenceIcon.setVisibility(View.VISIBLE);
                 // default icon
