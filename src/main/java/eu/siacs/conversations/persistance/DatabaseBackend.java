@@ -41,6 +41,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.json.JSONException;
 
 import eu.siacs.conversations.Config;
+import eu.siacs.conversations.crypto.axolotl.AutomaticTrustTransfer;
 import eu.siacs.conversations.crypto.axolotl.AxolotlService;
 import eu.siacs.conversations.crypto.axolotl.FingerprintStatus;
 import eu.siacs.conversations.crypto.axolotl.SQLiteAxolotlStore;
@@ -64,7 +65,7 @@ import rocks.xmpp.addr.Jid;
 public class DatabaseBackend extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "history";
-    private static final int DATABASE_VERSION = 44;
+    private static final int DATABASE_VERSION = 45;
     private static DatabaseBackend instance = null;
     private static String CREATE_CONTATCS_STATEMENT = "create table "
             + Contact.TABLENAME + "(" + Contact.ACCOUNT + " TEXT, "
@@ -142,6 +143,8 @@ public class DatabaseBackend extends SQLiteOpenHelper {
             + SQLiteAxolotlStore.TRUST + " TEXT, "
             + SQLiteAxolotlStore.ACTIVE + " NUMBER, "
             + SQLiteAxolotlStore.LAST_ACTIVATION + " NUMBER,"
+            + AutomaticTrustTransfer.SENDER_AUTHENTICATION_MESSAGE  + " TEXT, "
+            + AutomaticTrustTransfer.SENDER_REVOCATION_MESSAGE + " TEXT, "
             + SQLiteAxolotlStore.KEY + " TEXT, FOREIGN KEY("
             + SQLiteAxolotlStore.ACCOUNT
             + ") REFERENCES " + Account.TABLENAME + "(" + Account.UUID + ") ON DELETE CASCADE, "
@@ -541,6 +544,11 @@ public class DatabaseBackend extends SQLiteOpenHelper {
             db.execSQL(CREATE_MESSAGE_DELETED_INDEX);
             db.execSQL(CREATE_MESSAGE_RELATIVE_FILE_PATH_INDEX);
             db.execSQL(CREATE_MESSAGE_TYPE_INDEX);
+        }
+
+        if (oldVersion < 45 && newVersion >= 45) {
+            db.execSQL("ALTER TABLE " + SQLiteAxolotlStore.IDENTITIES_TABLENAME + " ADD COLUMN " + AutomaticTrustTransfer.SENDER_AUTHENTICATION_MESSAGE + " TEXT");
+            db.execSQL("ALTER TABLE " + SQLiteAxolotlStore.IDENTITIES_TABLENAME + " ADD COLUMN " + AutomaticTrustTransfer.SENDER_REVOCATION_MESSAGE + " TEXT");
         }
     }
 
@@ -1533,6 +1541,117 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         }
         cursor.close();
         return status;
+    }
+
+    public boolean storeTrustMessageFingerprint(Contact keyOwner, String fingerprint, String senderFingerprint, boolean trust) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        final ContentValues contentValues = new ContentValues();
+        String column;
+        if (trust) {
+            column = AutomaticTrustTransfer.SENDER_AUTHENTICATION_MESSAGE;
+        } else {
+            column = AutomaticTrustTransfer.SENDER_REVOCATION_MESSAGE;
+        }
+        contentValues.put(column, senderFingerprint);
+
+        String[] whereArgs = {
+                keyOwner.getAccount().getUuid(),
+                keyOwner.getJid().asBareJid().toEscapedString(),
+                fingerprint
+        };
+
+        int rows = db.update(
+                SQLiteAxolotlStore.IDENTITIES_TABLENAME,
+                contentValues,
+                SQLiteAxolotlStore.ACCOUNT + " =? AND "
+                        + SQLiteAxolotlStore.NAME + " =? AND "
+                        + SQLiteAxolotlStore.FINGERPRINT + " =? ",
+                whereArgs);
+
+        return rows == 1;
+    }
+
+    public Map<String, List<String>> loadTrustMessageFingerprints(Account account, String senderFingerprint, boolean trust) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        String columnWithSenderFingerprint;
+        if (trust) {
+            columnWithSenderFingerprint = AutomaticTrustTransfer.SENDER_AUTHENTICATION_MESSAGE;
+        } else {
+            columnWithSenderFingerprint = AutomaticTrustTransfer.SENDER_REVOCATION_MESSAGE;
+        }
+
+        String[] whereArgs = {
+                account.getUuid(),
+                senderFingerprint
+        };
+
+        String[] selectedColumn = new String[]{SQLiteAxolotlStore.NAME, SQLiteAxolotlStore.FINGERPRINT};
+
+        Cursor cursor = db.query(
+                SQLiteAxolotlStore.IDENTITIES_TABLENAME,
+                selectedColumn,
+                SQLiteAxolotlStore.ACCOUNT + "=? and "
+                        + columnWithSenderFingerprint + "=?",
+                whereArgs,
+                null,
+                null,
+                SQLiteAxolotlStore.ACCOUNT + " DESC",
+                null);
+
+        Map<String, List<String>> keyOwnersAndFingerprints = new HashMap<>();
+
+        if (cursor.moveToFirst()) {
+            do {
+                String keyOwner = cursor.getString(cursor.getColumnIndex(SQLiteAxolotlStore.NAME));
+                List<String> fingerprints;
+
+                if (!keyOwnersAndFingerprints.containsKey(keyOwner)) {
+                    fingerprints = new ArrayList<>();
+                } else {
+                    fingerprints = keyOwnersAndFingerprints.get(keyOwner);
+                }
+
+                fingerprints.add(cursor.getString(cursor.getColumnIndex(SQLiteAxolotlStore.FINGERPRINT)));
+                keyOwnersAndFingerprints.put(keyOwner, fingerprints);
+            } while (cursor.moveToNext());
+        }
+
+        return keyOwnersAndFingerprints;
+    }
+
+    public void deleteTrustMessageFingerprint(Contact keyOwner, String fingerprint) {
+        deleteTrustMessageFingerprint(keyOwner, fingerprint, true);
+        deleteTrustMessageFingerprint(keyOwner, fingerprint, false);
+    }
+
+    public boolean deleteTrustMessageFingerprint(Contact keyOwner, String fingerprint, boolean trust) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        final ContentValues contentValues = new ContentValues();
+        String column;
+        if (trust) {
+            column = AutomaticTrustTransfer.SENDER_AUTHENTICATION_MESSAGE;
+        } else {
+            column = AutomaticTrustTransfer.SENDER_REVOCATION_MESSAGE;
+        }
+        contentValues.putNull(column);
+
+        String[] whereArgs = {
+                keyOwner.getAccount().getUuid(),
+                keyOwner.getJid().asBareJid().toEscapedString(),
+                fingerprint
+        };
+
+        int rows = db.update(
+                SQLiteAxolotlStore.IDENTITIES_TABLENAME, contentValues,
+                SQLiteAxolotlStore.ACCOUNT + " =? AND "
+                        + SQLiteAxolotlStore.NAME + " =? AND "
+                        + SQLiteAxolotlStore.FINGERPRINT + " =? ",
+                whereArgs);
+
+        return rows == 1;
     }
 
     public boolean setIdentityKeyTrust(Account account, String fingerprint, FingerprintStatus fingerprintStatus) {

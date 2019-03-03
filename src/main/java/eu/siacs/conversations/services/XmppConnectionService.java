@@ -112,6 +112,7 @@ import eu.siacs.conversations.ui.UiCallback;
 import eu.siacs.conversations.ui.interfaces.OnAvatarPublication;
 import eu.siacs.conversations.ui.interfaces.OnMediaLoaded;
 import eu.siacs.conversations.ui.interfaces.OnSearchResultsAvailable;
+import eu.siacs.conversations.crypto.axolotl.AutomaticTrustTransfer;
 import eu.siacs.conversations.utils.Compatibility;
 import eu.siacs.conversations.utils.ConversationsFileObserver;
 import eu.siacs.conversations.utils.CryptoHelper;
@@ -4259,46 +4260,51 @@ public class XmppConnectionService extends Service {
 		bookmark.setConversation(conversation);
 	}
 
-	public boolean verifyFingerprints(Contact contact, List<XmppUri.Fingerprint> fingerprints) {
-		boolean performedVerification = false;
-		final AxolotlService axolotlService = contact.getAccount().getAxolotlService();
+	/**
+	 * Verifies fingerprints.
+     *
+	 * @param keysOwner Owner of the devices whose key fingerprints will be verified (can also be the account owner by account.getSelfContact).
+	 * @param fingerprints Fingerprints which will be verified.
+	 * @param trueForPreVerification If true, true will also be returned for a pre verification (i.e., when the key for its fingerprint is not yet available).
+	 * @param sendAuthenticationMessage If true, an authentication message for the verified fingerprint is sent.
+	 * @return true if a fingerprint was verified or, if trueForPreVerification is true, if a fingerprint was pre-verified, otherwise false.
+	 */
+	public boolean verifyFingerprints(Contact keysOwner, List<XmppUri.Fingerprint> fingerprints, boolean trueForPreVerification, boolean sendAuthenticationMessage) {
+		boolean performedVerificationOrPreVerification = false;
+		final AxolotlService axolotlService = keysOwner.getAccount().getAxolotlService();
+		List<XmppUri.Fingerprint> fingerprintsForAuthentication = new ArrayList<>();
 		for (XmppUri.Fingerprint fp : fingerprints) {
 			if (fp.type == XmppUri.FingerprintType.OMEMO) {
-				String fingerprint = "05" + fp.fingerprint.replaceAll("\\s", "");
+				String fingerprint = axolotlService.createFingerprintWithVersion(fp.fingerprint);
 				FingerprintStatus fingerprintStatus = axolotlService.getFingerprintTrust(fingerprint);
 				if (fingerprintStatus != null) {
-					if (!fingerprintStatus.isVerified()) {
-						performedVerification = true;
+				    // Check that the given fingerprint is not verified yet and really belongs to the pretended owner.
+					if (!fingerprintStatus.isVerified() && keysOwner.hasFingerprint(fp)) {
 						axolotlService.setFingerprintTrust(fingerprint, fingerprintStatus.toVerified());
+						performedVerificationOrPreVerification = true;
+                        fingerprintsForAuthentication.add(fp);
+						AutomaticTrustTransfer.authenticateWithStoredTrustMessageFingerprint(this, keysOwner.getAccount(), fp.fingerprint);
 					}
 				} else {
-					axolotlService.preVerifyFingerprint(contact, fingerprint);
+					axolotlService.preVerifyFingerprint(keysOwner, fingerprint);
+                    if (trueForPreVerification) {
+                        performedVerificationOrPreVerification = true;
+                    }
 				}
 			}
 		}
-		return performedVerification;
-	}
+		if (!fingerprintsForAuthentication.isEmpty()) {
+		    // Create a list of fingerprints which will be used for distrusting and distrust all keys which have not yet verified fingerprints.
+            // This enhances Blind Trust Before Verification by stopping from now on attackers who introduced their malicious keys before the first verification.
+            List<XmppUri.Fingerprint> fingerprintsForDistrusting = new ArrayList<>(keysOwner.getFingerprints());
+            fingerprintsForDistrusting.removeAll(keysOwner.getVerifiedFingerprints());
+            axolotlService.distrustFingerprints(keysOwner, fingerprintsForDistrusting, false);
 
-	public boolean verifyFingerprints(Account account, List<XmppUri.Fingerprint> fingerprints) {
-		final AxolotlService axolotlService = account.getAxolotlService();
-		boolean verifiedSomething = false;
-		for (XmppUri.Fingerprint fp : fingerprints) {
-			if (fp.type == XmppUri.FingerprintType.OMEMO) {
-				String fingerprint = "05" + fp.fingerprint.replaceAll("\\s", "");
-				Log.d(Config.LOGTAG, "trying to verify own fp=" + fingerprint);
-				FingerprintStatus fingerprintStatus = axolotlService.getFingerprintTrust(fingerprint);
-				if (fingerprintStatus != null) {
-					if (!fingerprintStatus.isVerified()) {
-						axolotlService.setFingerprintTrust(fingerprint, fingerprintStatus.toVerified());
-						verifiedSomething = true;
-					}
-				} else {
-					axolotlService.preVerifyFingerprint(account, fingerprint);
-					verifiedSomething = true;
-				}
-			}
+            if (sendAuthenticationMessage) {
+                AutomaticTrustTransfer.sendAuthenticationMessage(this, keysOwner, fingerprintsForAuthentication);
+            }
 		}
-		return verifiedSomething;
+		return performedVerificationOrPreVerification;
 	}
 
 	public boolean blindTrustBeforeVerification() {

@@ -140,7 +140,7 @@ public class TrustKeysActivity extends OmemoActivity implements OnKeyStatusUpdat
 				&& mAccount != null
 				&& uri.hasFingerprints()
 				&& mAccount.getAxolotlService().getCryptoTargets(mConversation).contains(uri.getJid())) {
-			boolean performedVerification = xmppConnectionService.verifyFingerprints(mAccount.getRoster().getContact(uri.getJid()), uri.getFingerprints());
+			boolean performedVerification = xmppConnectionService.verifyFingerprints(mAccount.getRoster().getContact(uri.getJid()), uri.getFingerprints(), false, true);
 			boolean keys = reloadFingerprints();
 			if (performedVerification && !keys && !hasNoOtherTrustedKeys() && !hasPendingKeyFetches()) {
 				Toast.makeText(this, R.string.all_omemo_keys_have_been_verified, Toast.LENGTH_SHORT).show();
@@ -165,13 +165,13 @@ public class TrustKeysActivity extends OmemoActivity implements OnKeyStatusUpdat
 		boolean hasForeignKeys = false;
 		for (final String fingerprint : ownKeysToTrust.keySet()) {
 			hasOwnKeys = true;
-			addFingerprintRowWithListeners(binding.ownKeysDetails, mAccount, fingerprint, false,
-					FingerprintStatus.createActive(ownKeysToTrust.get(fingerprint)), false, false,
+			addFingerprintRowWithListeners(binding.ownKeysDetails, mAccount, mAccount.getSelfContact(), fingerprint,
+					false, FingerprintStatus.createActive(ownKeysToTrust.get(fingerprint)), false,
+					false,
 					(buttonView, isChecked) -> {
 						ownKeysToTrust.put(fingerprint, isChecked);
 						// own fingerprints have no impact on locked status.
-					}
-			);
+					});
 		}
 
 		synchronized (this.foreignKeysToTrust) {
@@ -183,13 +183,13 @@ public class TrustKeysActivity extends OmemoActivity implements OnKeyStatusUpdat
 				keysCardBinding.foreignKeysTitle.setOnClickListener(v -> switchToContactDetails(mAccount.getRoster().getContact(jid)));
 				final Map<String, Boolean> fingerprints = entry.getValue();
 				for (final String fingerprint : fingerprints.keySet()) {
-					addFingerprintRowWithListeners(keysCardBinding.foreignKeysDetails, mAccount, fingerprint, false,
-							FingerprintStatus.createActive(fingerprints.get(fingerprint)), false, false,
+					addFingerprintRowWithListeners(keysCardBinding.foreignKeysDetails, mAccount, mConversation.getContact(), fingerprint,
+							false, FingerprintStatus.createActive(fingerprints.get(fingerprint)), false,
+							false,
 							(buttonView, isChecked) -> {
 								fingerprints.put(fingerprint, isChecked);
 								lockOrUnlockAsNeeded();
-							}
-					);
+							});
 				}
 				if (fingerprints.size() == 0) {
 					keysCardBinding.noKeysToAccept.setVisibility(View.VISIBLE);

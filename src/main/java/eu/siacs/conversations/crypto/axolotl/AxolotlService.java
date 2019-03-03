@@ -47,6 +47,7 @@ import eu.siacs.conversations.parser.IqParser;
 import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.utils.CryptoHelper;
 import eu.siacs.conversations.utils.SerialSingleThreadExecutor;
+import eu.siacs.conversations.utils.XmppUri;
 import eu.siacs.conversations.xml.Element;
 import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xmpp.OnAdvancedStreamFeaturesLoaded;
@@ -69,6 +70,8 @@ public class AxolotlService implements OnAdvancedStreamFeaturesLoaded {
 
 	public static final int NUM_KEYS_TO_PUBLISH = 100;
 	public static final int publishTriesThreshold = 3;
+
+	private static final String FINGERPRINT_VERSION = "05";
 
 	private final Account account;
 	private final XmppConnectionService mXmppConnectionService;
@@ -129,12 +132,16 @@ public class AxolotlService implements OnAdvancedStreamFeaturesLoaded {
 		return false;
 	}
 
-	public void preVerifyFingerprint(Contact contact, String fingerprint) {
-		axolotlStore.preVerifyFingerprint(contact.getAccount(), contact.getJid().asBareJid().toString(), fingerprint);
+	public String createFingerprintWithVersion(String fingerprintWithoutVersion) {
+		return FINGERPRINT_VERSION + fingerprintWithoutVersion.replaceAll("\\s", "");
 	}
 
-	public void preVerifyFingerprint(Account account, String fingerprint) {
-		axolotlStore.preVerifyFingerprint(account, account.getJid().asBareJid().toString(), fingerprint);
+	public String createFingerprintWithoutVersion(String fingerprintWithVersion) {
+		return fingerprintWithVersion.replaceFirst(FINGERPRINT_VERSION, "").replaceAll("\\s", "");
+	}
+
+	public void preVerifyFingerprint(Contact contact, String fingerprint) {
+		axolotlStore.preVerifyFingerprint(contact.getAccount(), contact.getJid().asBareJid().toString(), fingerprint);
 	}
 
 	public boolean hasVerifiedKeys(String name) {
@@ -510,10 +517,36 @@ public class AxolotlService implements OnAdvancedStreamFeaturesLoaded {
 		publishDeviceIdsAndRefineAccessModel(deviceIds);
 	}
 
-	public void distrustFingerprint(final String fingerprint) {
-		final String fp = fingerprint.replaceAll("\\s", "");
-		final FingerprintStatus fingerprintStatus = axolotlStore.getFingerprintStatus(fp);
-		axolotlStore.setFingerprintStatus(fp, fingerprintStatus.toUntrusted());
+	public void distrustFingerprint(final Contact keyOwner, final String fingerprint) {
+		List<XmppUri.Fingerprint> fingerprints = new ArrayList<>();
+		fingerprints.add(new XmppUri.Fingerprint(XmppUri.FingerprintType.OMEMO, createFingerprintWithoutVersion(fingerprint), -1));
+		distrustFingerprints(keyOwner, fingerprints, true);
+	}
+
+	/**
+	 * Distrusts fingerprints.
+	 * @param keysOwner Owner of the devices whose key fingerprints will be verified (can also be the account owner by account.getSelfContact).
+	 * @param fingerprints Fingerprints of the keys which will be distrusted.
+	 * @param sendRevocationMessage If true, an authentication message for the verified fingerprint is sent.
+	 */
+	public void distrustFingerprints(final Contact keysOwner, final List<XmppUri.Fingerprint> fingerprints, boolean sendRevocationMessage) {
+		List<XmppUri.Fingerprint> fingerprintsForRevocationMessage = new ArrayList<>();
+
+		for (XmppUri.Fingerprint fp : fingerprints) {
+			String fingerprintWithVersion = createFingerprintWithVersion(fp.fingerprint);
+			FingerprintStatus fingerprintStatus = getFingerprintTrust(fingerprintWithVersion);
+
+			// Check that the key of the given fingerprint is verified and really belongs to the pretended owner.
+			if (fingerprintStatus != null && fingerprintStatus.isTrusted() && keysOwner.hasFingerprint(fp)) {
+				axolotlStore.setFingerprintStatus(fingerprintWithVersion, axolotlStore.getFingerprintStatus(fingerprintWithVersion.replaceAll("\\s", "")).toUntrusted());
+				mXmppConnectionService.databaseBackend.deleteTrustMessageFingerprint(keysOwner, fingerprintWithVersion);
+				fingerprintsForRevocationMessage.add(fp);
+			}
+		}
+
+		if (sendRevocationMessage && !fingerprintsForRevocationMessage.isEmpty()) {
+			AutomaticTrustTransfer.sendRevocationMessages(mXmppConnectionService, keysOwner, fingerprintsForRevocationMessage);
+		}
 	}
 
 	private void publishOwnDeviceIdIfNeeded() {

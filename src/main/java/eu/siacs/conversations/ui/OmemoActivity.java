@@ -24,12 +24,14 @@ import eu.siacs.conversations.crypto.axolotl.FingerprintStatus;
 import eu.siacs.conversations.crypto.axolotl.XmppAxolotlSession;
 import eu.siacs.conversations.databinding.ContactKeyBinding;
 import eu.siacs.conversations.entities.Account;
+import eu.siacs.conversations.entities.Contact;
 import eu.siacs.conversations.utils.CryptoHelper;
 import eu.siacs.conversations.utils.XmppUri;
 
 public abstract class OmemoActivity extends XmppActivity {
 
 	private Account mSelectedAccount;
+	private Contact mSelectedContact;
 	private String mSelectedFingerprint;
 
 	protected XmppUri mPendingFingerprintVerificationUri = null;
@@ -38,11 +40,14 @@ public abstract class OmemoActivity extends XmppActivity {
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
 		super.onCreateContextMenu(menu, v, menuInfo);
 		Object account = v.getTag(R.id.TAG_ACCOUNT);
+		Object contact = v.getTag(R.id.TAG_CONTACT);
 		Object fingerprint = v.getTag(R.id.TAG_FINGERPRINT);
 		Object fingerprintStatus = v.getTag(R.id.TAG_FINGERPRINT_STATUS);
 		if (account != null
 				&& fingerprint != null
 				&& account instanceof Account
+				&& contact != null
+				&& contact instanceof Contact
 				&& fingerprintStatus != null
 				&& fingerprint instanceof String
 				&& fingerprintStatus instanceof FingerprintStatus) {
@@ -60,6 +65,7 @@ public abstract class OmemoActivity extends XmppActivity {
 				distrust.setVisible(status.isVerified() || (!status.isActive() && status.isTrusted()));
 			}
 			this.mSelectedAccount = (Account) account;
+			this.mSelectedContact = (Contact) contact;
 			this.mSelectedFingerprint = (String) fingerprint;
 		}
 	}
@@ -68,7 +74,7 @@ public abstract class OmemoActivity extends XmppActivity {
 	public boolean onContextItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 			case R.id.distrust_key:
-				showPurgeKeyDialog(mSelectedAccount, mSelectedFingerprint);
+				showPurgeKeyDialog(mSelectedAccount, mSelectedContact, mSelectedFingerprint);
 				break;
 			case R.id.copy_omemo_key:
 				copyOmemoFingerprint(mSelectedFingerprint);
@@ -97,7 +103,7 @@ public abstract class OmemoActivity extends XmppActivity {
 	protected abstract void processFingerprintVerification(XmppUri uri);
 
 	protected void copyOmemoFingerprint(String fingerprint) {
-		if (copyTextToClipboard(CryptoHelper.prettifyFingerprint(fingerprint.substring(2)), R.string.omemo_fingerprint)) {
+		if (copyTextToClipboard(CryptoHelper.prettifyFingerprint(mSelectedAccount.getAxolotlService().createFingerprintWithoutVersion(fingerprint)), R.string.omemo_fingerprint)) {
 			Toast.makeText(
 					this,
 					R.string.toast_message_omemo_fingerprint,
@@ -105,31 +111,31 @@ public abstract class OmemoActivity extends XmppActivity {
 		}
 	}
 
-	protected void addFingerprintRow(LinearLayout keys, final XmppAxolotlSession session, boolean highlight) {
+	protected void addFingerprintRow(LinearLayout keys, final XmppAxolotlSession session, Contact contact, boolean highlight) {
 		final Account account = session.getAccount();
 		final String fingerprint = session.getFingerprint();
 		addFingerprintRowWithListeners(keys,
-				session.getAccount(),
+				account, contact,
 				fingerprint,
 				highlight,
 				session.getTrust(),
 				true,
-				true,
-				(buttonView, isChecked) -> account.getAxolotlService().setFingerprintTrust(fingerprint, FingerprintStatus.createActive(isChecked)));
+				true, (buttonView, isChecked) -> account.getAxolotlService().setFingerprintTrust(fingerprint, FingerprintStatus.createActive(isChecked)));
 	}
 
 	protected void addFingerprintRowWithListeners(LinearLayout keys, final Account account,
-	                                              final String fingerprint,
-	                                              boolean highlight,
-	                                              FingerprintStatus status,
-	                                              boolean showTag,
-	                                              boolean undecidedNeedEnablement,
-	                                              CompoundButton.OnCheckedChangeListener
-			                                              onCheckedChangeListener) {
+												  Contact contact, final String fingerprint,
+												  boolean highlight,
+												  FingerprintStatus status,
+												  boolean showTag,
+												  boolean undecidedNeedEnablement,
+												  CompoundButton.OnCheckedChangeListener
+														  onCheckedChangeListener) {
 		ContactKeyBinding binding = DataBindingUtil.inflate(getLayoutInflater(), R.layout.contact_key, keys, true);
 		binding.tglTrust.setVisibility(View.VISIBLE);
 		registerForContextMenu(binding.getRoot());
 		binding.getRoot().setTag(R.id.TAG_ACCOUNT, account);
+		binding.getRoot().setTag(R.id.TAG_CONTACT, contact);
 		binding.getRoot().setTag(R.id.TAG_FINGERPRINT, fingerprint);
 		binding.getRoot().setTag(R.id.TAG_FINGERPRINT_STATUS, status);
 		boolean x509 = Config.X509_VERIFICATION && status.getTrust() == FingerprintStatus.Trust.VERIFIED_X509;
@@ -194,17 +200,17 @@ public abstract class OmemoActivity extends XmppActivity {
 			binding.keyType.setText(getString(x509 ? R.string.omemo_fingerprint_x509 : R.string.omemo_fingerprint));
 		}
 
-		binding.key.setText(CryptoHelper.prettifyFingerprint(fingerprint.substring(2)));
+		binding.key.setText(CryptoHelper.prettifyFingerprint(account.getAxolotlService().createFingerprintWithoutVersion(fingerprint)));
 	}
 
-	public void showPurgeKeyDialog(final Account account, final String fingerprint) {
+	public void showPurgeKeyDialog(final Account account, final Contact keyOwner, final String fingerprint) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle(R.string.distrust_omemo_key);
 		builder.setMessage(R.string.distrust_omemo_key_text);
 		builder.setNegativeButton(getString(R.string.cancel), null);
 		builder.setPositiveButton(R.string.confirm,
 				(dialog, which) -> {
-					account.getAxolotlService().distrustFingerprint(fingerprint);
+					account.getAxolotlService().distrustFingerprint(keyOwner, fingerprint);
 					refreshUi();
 				});
 		builder.create().show();

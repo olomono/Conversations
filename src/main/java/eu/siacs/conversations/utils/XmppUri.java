@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Locale;
 
 import eu.siacs.conversations.Config;
+import eu.siacs.conversations.crypto.axolotl.AutomaticTrustTransfer;
 import rocks.xmpp.addr.Jid;
 
 public class XmppUri {
@@ -17,11 +18,19 @@ public class XmppUri {
 	protected Uri uri;
 	protected String jid;
 	private List<Fingerprint> fingerprints = new ArrayList<>();
+
+	// TODO delete after testing
+	private List<Fingerprint> fingerprintsForInitialization = new ArrayList<>();
+
+	private List<Fingerprint> fingerprintsForAuthentication = new ArrayList<>();
+	private List<Fingerprint> fingerprintsForRevocation = new ArrayList<>();
 	private String body;
 	private String name;
 	private String action;
 	private boolean safeSource = true;
 
+	private static final String XMPP_URI_SCHEME_NAME = "xmpp";
+	private static final String SEPARATOR = ";";
 	private static final String OMEMO_URI_PARAM = "omemo-sid-";
 
 	public static final String ACTION_JOIN = "join";
@@ -77,7 +86,7 @@ public class XmppUri {
 				action = ACTION_JOIN;
 			}
 			fingerprints = parseFingerprints(uri.getQuery(), '&');
-		} else if ("xmpp".equalsIgnoreCase(scheme)) {
+		} else if (XMPP_URI_SCHEME_NAME.equalsIgnoreCase(scheme)) {
 			// sample: xmpp:foo@bar.com
 
 			final String query = uri.getQuery();
@@ -86,6 +95,9 @@ public class XmppUri {
 				this.action = ACTION_JOIN;
 			} else if (hasAction(query, ACTION_MESSAGE)) {
 				this.action = ACTION_MESSAGE;
+			} else if (hasAction(query, AutomaticTrustTransfer.ACTION_TRUST)) {
+				this.action = AutomaticTrustTransfer.ACTION_TRUST;
+				parseAndSetFingerprintsForTrust(query);
 			}
 
 			if (uri.getAuthority() != null) {
@@ -122,6 +134,33 @@ public class XmppUri {
 			return uri.toString();
 		}
 		return "";
+	}
+
+	private void parseAndSetFingerprintsForTrust(String query) {
+		String[] pairs = query == null ? new String[0] : query.substring(AutomaticTrustTransfer.ACTION_TRUST.length()).split(SEPARATOR);
+		for (String pair : pairs) {
+			String[] parts = pair.split("=", 2);
+			if (parts.length == 2) {
+				String key = parts[0].toLowerCase(Locale.US);
+				String value = parts[1].toLowerCase(Locale.US);
+				List<Fingerprint> fingerprints = null;
+				switch (key) {
+					// TODO delete after testing
+					case AutomaticTrustTransfer.ACTION_KEY_INITIATE:
+						fingerprints = fingerprintsForInitialization;
+						break;
+					case AutomaticTrustTransfer.ACTION_KEY_AUTHENTICATE:
+						fingerprints = fingerprintsForAuthentication;
+						break;
+					case AutomaticTrustTransfer.ACTION_KEY_REVOKE:
+						fingerprints = fingerprintsForRevocation;
+						break;
+				}
+				if (fingerprints != null) {
+					fingerprints.add(new Fingerprint(FingerprintType.OMEMO, value, -1));
+				}
+			}
+		}
 	}
 
 	private List<Fingerprint> parseFingerprints(String query) {
@@ -206,6 +245,19 @@ public class XmppUri {
 		return name;
 	}
 
+	// TODO delete after testing
+	public List<Fingerprint> getFingerprintsForInitialization() {
+		return fingerprintsForInitialization;
+	}
+
+	public List<Fingerprint> getFingerprintsForAuthentication() {
+		return fingerprintsForAuthentication;
+	}
+
+	public List<Fingerprint> getFingerprintsForRevocation() {
+		return fingerprintsForRevocation;
+	}
+
 	public List<Fingerprint> getFingerprints() {
 		return this.fingerprints;
 	}
@@ -250,6 +302,16 @@ public class XmppUri {
 		@Override
 		public String toString() {
 			return type.toString() + ": " + fingerprint + (deviceId != 0 ? " " + String.valueOf(deviceId) : "");
+		}
+
+		@Override
+		public boolean equals(Object object) {
+			return object instanceof Fingerprint && equals((Fingerprint) object);
+		}
+
+		public boolean equals(Fingerprint fingerprint) {
+			return this.type.equals(fingerprint.type)
+					&& this.fingerprint.equals(fingerprint.fingerprint);
 		}
 	}
 

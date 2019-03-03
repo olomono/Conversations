@@ -527,7 +527,7 @@ public class Account extends AbstractEntity implements AvatarService.Avatarable 
     }
 
     public String getShareableUri() {
-        List<XmppUri.Fingerprint> fingerprints = this.getFingerprints();
+        List<XmppUri.Fingerprint> fingerprints = this.getVerifiedAndActiveFingerprints();
         String uri = "xmpp:" + this.getJid().asBareJid().toEscapedString();
         if (fingerprints.size() > 0) {
             return XmppUri.getFingerprintUri(uri, fingerprints, ';');
@@ -537,7 +537,7 @@ public class Account extends AbstractEntity implements AvatarService.Avatarable 
     }
 
     public String getShareableLink() {
-        List<XmppUri.Fingerprint> fingerprints = this.getFingerprints();
+        List<XmppUri.Fingerprint> fingerprints = this.getVerifiedAndActiveFingerprints();
         String uri = "https://conversations.im/i/" + XmppUri.lameUrlEncode(this.getJid().asBareJid().toEscapedString());
         if (fingerprints.size() > 0) {
             return XmppUri.getFingerprintUri(uri, fingerprints, '&');
@@ -546,15 +546,15 @@ public class Account extends AbstractEntity implements AvatarService.Avatarable 
         }
     }
 
-    private List<XmppUri.Fingerprint> getFingerprints() {
+    private List<XmppUri.Fingerprint> getVerifiedAndActiveFingerprints() {
         ArrayList<XmppUri.Fingerprint> fingerprints = new ArrayList<>();
         if (axolotlService == null) {
             return fingerprints;
         }
-        fingerprints.add(new XmppUri.Fingerprint(XmppUri.FingerprintType.OMEMO, axolotlService.getOwnFingerprint().substring(2), axolotlService.getOwnDeviceId()));
+        fingerprints.add(new XmppUri.Fingerprint(XmppUri.FingerprintType.OMEMO, axolotlService.createFingerprintWithoutVersion(axolotlService.getOwnFingerprint()), axolotlService.getOwnDeviceId()));
         for (XmppAxolotlSession session : axolotlService.findOwnSessions()) {
             if (session.getTrust().isVerified() && session.getTrust().isActive()) {
-                fingerprints.add(new XmppUri.Fingerprint(XmppUri.FingerprintType.OMEMO, session.getFingerprint().substring(2).replaceAll("\\s", ""), session.getRemoteAddress().getDeviceId()));
+                fingerprints.add(new XmppUri.Fingerprint(XmppUri.FingerprintType.OMEMO, axolotlService.createFingerprintWithoutVersion(session.getFingerprint()), session.getRemoteAddress().getDeviceId()));
             }
         }
         return fingerprints;

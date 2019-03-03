@@ -31,6 +31,7 @@ import eu.siacs.conversations.http.P1S3UrlStreamHandler;
 import eu.siacs.conversations.services.MessageArchiveService;
 import eu.siacs.conversations.services.QuickConversationsService;
 import eu.siacs.conversations.services.XmppConnectionService;
+import eu.siacs.conversations.crypto.axolotl.AutomaticTrustTransfer;
 import eu.siacs.conversations.utils.CryptoHelper;
 import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xml.Element;
@@ -485,6 +486,9 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
             message.setServerMsgId(serverMsgId);
             message.setCarbon(isCarbon);
             message.setTime(timestamp);
+
+            AutomaticTrustTransfer.authenticateOrRevoke(mXmppConnectionService, message);
+
             if (body != null && body.equals(oobUrl)) {
                 message.setOob(true);
                 if (CryptoHelper.isPgpEncryptedUrl(oobUrl)) {

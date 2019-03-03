@@ -438,7 +438,7 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
                 }
                 if (!trust.isCompromised()) {
                     boolean highlight = session.getFingerprint().equals(messageFingerprint);
-                    addFingerprintRow(binding.detailsContactKeys, session, highlight);
+                    addFingerprintRow(binding.detailsContactKeys, session, contact, highlight);
                 }
             }
             if (showsInactive || skippedInactive) {
@@ -516,7 +516,7 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
     @Override
     protected void processFingerprintVerification(XmppUri uri) {
         if (contact != null && contact.getJid().asBareJid().equals(uri.getJid()) && uri.hasFingerprints()) {
-            if (xmppConnectionService.verifyFingerprints(contact, uri.getFingerprints())) {
+            if (xmppConnectionService.verifyFingerprints(contact, uri.getFingerprints(), false, true)) {
                 Toast.makeText(this, R.string.verified_fingerprints, Toast.LENGTH_SHORT).show();
             }
         } else {

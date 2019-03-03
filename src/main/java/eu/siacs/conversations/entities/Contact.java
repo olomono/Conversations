@@ -21,9 +21,12 @@ import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.android.AbstractPhoneContact;
 import eu.siacs.conversations.android.JabberIdContact;
+import eu.siacs.conversations.crypto.axolotl.AxolotlService;
+import eu.siacs.conversations.crypto.axolotl.XmppAxolotlSession;
 import eu.siacs.conversations.services.QuickConversationsService;
 import eu.siacs.conversations.utils.JidHelper;
 import eu.siacs.conversations.utils.UIHelper;
+import eu.siacs.conversations.utils.XmppUri;
 import eu.siacs.conversations.xml.Element;
 import eu.siacs.conversations.xmpp.pep.Avatar;
 import rocks.xmpp.addr.Jid;
@@ -542,7 +545,65 @@ public class Contact implements ListItem, Blockable {
 		return UIHelper.getColorForName(jid != null ? jid.asBareJid().toString() : getDisplayName());
 	}
 
-	public final class Options {
+	public boolean hasVerifiedKeys() {
+		return account.getAxolotlService().hasVerifiedKeys(this.getJid().asBareJid().toEscapedString());
+	}
+
+	public List<XmppUri.Fingerprint> getVerifiedFingerprints() {
+		AxolotlService axolotlService = account.getAxolotlService();
+		ArrayList<XmppUri.Fingerprint> fingerprints = new ArrayList<>();
+		for (XmppUri.Fingerprint fingerprint : getFingerprints()) {
+			String fingerprintWithVersion = axolotlService.createFingerprintWithVersion(fingerprint.fingerprint);
+			if (axolotlService.getFingerprintTrust(fingerprintWithVersion).isVerified()) {
+				fingerprints.add(fingerprint);
+			}
+		}
+		return fingerprints;
+	}
+
+	public List<XmppUri.Fingerprint> getVerifiedAndActiveFingerprints() {
+		AxolotlService axolotlService = account.getAxolotlService();
+		ArrayList<XmppUri.Fingerprint> fingerprints = new ArrayList<>();
+		for (XmppUri.Fingerprint fingerprint : getFingerprints()) {
+			String fingerprintWithVersion = axolotlService.createFingerprintWithVersion(fingerprint.fingerprint);
+			if (axolotlService.getFingerprintTrust(fingerprintWithVersion).isVerified() && axolotlService.getFingerprintTrust(fingerprintWithVersion).isActive()) {
+				fingerprints.add(fingerprint);
+			}
+		}
+		return fingerprints;
+	}
+
+	public List<XmppUri.Fingerprint> getFingerprints() {
+		AxolotlService axolotlService = account.getAxolotlService();
+		ArrayList<XmppUri.Fingerprint> fingerprints = new ArrayList<>();
+		if (axolotlService == null) {
+			return fingerprints;
+		}
+		for (XmppAxolotlSession session : axolotlService.findSessionsForContact(this)) {
+			fingerprints.add(new XmppUri.Fingerprint(XmppUri.FingerprintType.OMEMO, axolotlService.createFingerprintWithoutVersion(session.getFingerprint()), session.getRemoteAddress().getDeviceId()));
+		}
+		return fingerprints;
+	}
+
+	public boolean hasFingerprint(XmppUri.Fingerprint fingerprint) {
+		for (XmppUri.Fingerprint availableFingerprint : getFingerprints()) {
+			if (fingerprint.equals(availableFingerprint)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public XmppUri.Fingerprint getFingerprintForFingerprintString(String fingerprint) {
+		for (XmppUri.Fingerprint availableFingerprint : getFingerprints()) {
+			if (fingerprint.equals(availableFingerprint.fingerprint)) {
+				return availableFingerprint;
+			}
+		}
+		return null;
+	}
+
+    public final class Options {
 		public static final int TO = 0;
 		public static final int FROM = 1;
 		public static final int ASKING = 2;

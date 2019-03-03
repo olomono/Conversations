@@ -460,7 +460,7 @@ public class EditAccountActivity extends OmemoActivity implements OnAccountUpdat
 
     protected void processFingerprintVerification(XmppUri uri, boolean showWarningToast) {
         if (mAccount != null && mAccount.getJid().asBareJid().equals(uri.getJid()) && uri.hasFingerprints()) {
-            if (xmppConnectionService.verifyFingerprints(mAccount, uri.getFingerprints())) {
+            if (xmppConnectionService.verifyFingerprints(mAccount.getSelfContact(), uri.getFingerprints(), true, true)) {
                 Toast.makeText(this, R.string.verified_fingerprints, Toast.LENGTH_SHORT).show();
                 updateAccountInformation(false);
             }
@@ -1053,7 +1053,8 @@ public class EditAccountActivity extends OmemoActivity implements OnAccountUpdat
             } else {
                 this.binding.pgpFingerprintBox.setVisibility(View.GONE);
             }
-            final String ownAxolotlFingerprint = this.mAccount.getAxolotlService().getOwnFingerprint();
+            AxolotlService axolotlService = this.mAccount.getAxolotlService();
+            final String ownAxolotlFingerprint = axolotlService.getOwnFingerprint();
             if (ownAxolotlFingerprint != null && Config.supportOmemo()) {
                 this.binding.axolotlFingerprintBox.setVisibility(View.VISIBLE);
                 if (ownAxolotlFingerprint.equals(messageFingerprint)) {
@@ -1063,7 +1064,7 @@ public class EditAccountActivity extends OmemoActivity implements OnAccountUpdat
                     this.binding.ownFingerprintDesc.setTextAppearance(this, R.style.TextAppearance_Conversations_Caption);
                     this.binding.ownFingerprintDesc.setText(R.string.omemo_fingerprint);
                 }
-                this.binding.axolotlFingerprint.setText(CryptoHelper.prettifyFingerprint(ownAxolotlFingerprint.substring(2)));
+                this.binding.axolotlFingerprint.setText(CryptoHelper.prettifyFingerprint(axolotlService.createFingerprintWithoutVersion(ownAxolotlFingerprint)));
                 this.binding.actionCopyAxolotlToClipboard.setVisibility(View.VISIBLE);
                 this.binding.actionCopyAxolotlToClipboard.setOnClickListener(v -> copyOmemoFingerprint(ownAxolotlFingerprint));
             } else {
@@ -1074,7 +1075,7 @@ public class EditAccountActivity extends OmemoActivity implements OnAccountUpdat
             for (XmppAxolotlSession session : mAccount.getAxolotlService().findOwnSessions()) {
                 if (!session.getTrust().isCompromised()) {
                     boolean highlight = session.getFingerprint().equals(messageFingerprint);
-                    addFingerprintRow(binding.otherDeviceKeys, session, highlight);
+                    addFingerprintRow(binding.otherDeviceKeys, session, mAccount.getSelfContact(), highlight);
                     hasKeys = true;
                 }
             }
