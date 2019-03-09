@@ -221,11 +221,10 @@ public class AutomaticTrustTransfer {
                     }
                 }
             }
-            // If there are no contacts or only contacts without authenticated keys, a trust message is explicitly sent to the own account.
-            if (!deliveredViaMessageCarbons && ownAccountAsContact.hasVerifiedKeys()) {
+            // If there are no contacts with authenticated keys and more other own devices than those of which the keys have been authenticated, a trust message is explicitly sent to the own account.
+            if (!deliveredViaMessageCarbons && fingerprints.size() < ownAccountAsContact.getVerifiedFingerprints().size()) {
                 sendTrustMessage(xmppConnectionService, ownAccountAsContact, fingerprints, trust, ownAccountAsContact);
             }
-
         }
         else if (trust){
             // Send an authentication message containing the contact's keys which have been authenticated to the own devices with already authenticated keys.
