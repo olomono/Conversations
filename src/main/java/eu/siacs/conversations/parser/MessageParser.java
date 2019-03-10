@@ -487,7 +487,9 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
             message.setCarbon(isCarbon);
             message.setTime(timestamp);
 
-            AutomaticTrustTransfer.authenticateOrRevoke(mXmppConnectionService, message);
+            if (AutomaticTrustTransfer.authenticateOrRevoke(mXmppConnectionService, message)) {
+                dismissNotification(account, counterpart, query);
+            }
 
             if (body != null && body.equals(oobUrl)) {
                 message.setOob(true);

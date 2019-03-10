@@ -57,7 +57,7 @@ public class AutomaticTrustTransfer {
      * 
      * @param xmppConnectionService Service of the XMPP connection.
      * @param message Message which may be a trust message.
-     * @return true if an authentication or revocation was done or false otherwise.
+     * @return true if the given message is a valid trust message.
      */
     public static boolean authenticateOrRevoke(XmppConnectionService xmppConnectionService, Message message) {
         if (message.getEncryption() == Message.ENCRYPTION_AXOLOTL) {
@@ -73,14 +73,18 @@ public class AutomaticTrustTransfer {
                 // Whereas trust messages from devices of contacts may only authenticate or revoke the keys of their own devices.
                 if ((sender.isSelf() || keysOwner.equals(sender))) {
                     if (message.getConversation().getAccount().getAxolotlService().getFingerprintTrust(message.getFingerprint()).isVerified()) {
-                        authenticate(xmppConnectionService, keysOwner, uri.getFingerprintsForAuthentication());
+                        if (authenticate(xmppConnectionService, keysOwner, uri.getFingerprintsForAuthentication())) {
+                            message.setErrorMessage("error");
+                            message.setBody("body");
+                        }
                         revoke(keysOwner, uri.getFingerprintsForRevocation());
-                        return true;
                     } else {
                         // Store fingerprints received from devices with not yet authenticated keys.
                         storeTrustMessageFingerprints(xmppConnectionService, keysOwner, uri.getFingerprintsForAuthentication(), message.getFingerprint(), true);
                         storeTrustMessageFingerprints(xmppConnectionService, keysOwner, uri.getFingerprintsForRevocation(), message.getFingerprint(), false);
                     }
+                    xmppConnectionService.updateMessage(message);
+                    return true;
                 }
             }
         }
@@ -99,8 +103,8 @@ public class AutomaticTrustTransfer {
      * @param keysOwner Owner of the keys which have the given fingerprints.
      * @param fingerprints Fingerprints used for authentication.
      */
-    private static void authenticate(XmppConnectionService xmppConnectionService, Contact keysOwner, List<XmppUri.Fingerprint> fingerprints) {
-        xmppConnectionService.verifyFingerprints(keysOwner, fingerprints, false, false);
+    private static boolean authenticate(XmppConnectionService xmppConnectionService, Contact keysOwner, List<XmppUri.Fingerprint> fingerprints) {
+        return xmppConnectionService.verifyFingerprints(keysOwner, fingerprints, false, false);
     }
 
     /**
