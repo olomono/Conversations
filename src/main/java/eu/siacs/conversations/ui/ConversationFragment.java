@@ -1074,10 +1074,9 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
 
         updateChatMsgHint();
         displaySoftInput();
-        boolean darkBackground = activity.isDarkTheme();
 
         // Show the message reference preview.
-        MessageReferenceUtils.displayMessageReference(activity, binding.messageReferencePreview, null, message, darkBackground);
+        MessageReferenceUtils.displayMessageReference(activity, binding.messageReferencePreview, null, message, activity.isDarkTheme());
 
         if (quoteMessage) {
             // Show the lines of the referenced message as quotations instead of letting a legacy quotation be used for the body of the message to be sent.
@@ -1088,6 +1087,16 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             conversation.setMessageReferenceQuote(MessageUtils.createQuote(MessageUtils.prepareQuote(message)) + "\n");
         }
 	}
+
+    /**
+     * Display a preview for the last set message reference.
+     */
+	private void displayMessageReferencePreview() {
+	    if (conversation.getMessageReference() != null) {
+            Message referencedMessage = conversation.findMessageWithUuidOrRemoteMsgId(conversation.getMessageReference());
+            MessageReferenceUtils.displayMessageReference(activity, binding.messageReferencePreview, null, referencedMessage, activity.isDarkTheme());
+        }
+    }
 
     /**
      * Opens the soft keyboard and places the cursor inside of the text input.
@@ -2053,6 +2062,9 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         this.binding.messagesView.post(this::fireReadEvent);
         //TODO if we only do this when this fragment is running on main it won't *bing* in tablet layout which might be unnecessary since we can *see* it
         activity.xmppConnectionService.getNotificationService().setOpenConversation(this.conversation);
+
+        displayMessageReferencePreview();
+
         return true;
     }
 
