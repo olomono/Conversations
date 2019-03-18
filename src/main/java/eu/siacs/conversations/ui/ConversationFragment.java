@@ -780,6 +780,10 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             message.putEdited(message.getUuid(), message.getServerMsgId());
             message.setServerMsgId(null);
             message.setUuid(UUID.randomUUID().toString());
+
+            // Display a previously hidden message reference preview.
+            conversation.setCorrectingMessage(null);
+            displayMessageReferencePreview();
         }
         switch (conversation.getNextEncryption()) {
             case Message.ENCRYPTION_PGP:
@@ -1092,10 +1096,18 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
      * Display a preview for the last set message reference.
      */
 	private void displayMessageReferencePreview() {
-	    if (conversation.getMessageReference() != null) {
-            Message referencedMessage = conversation.findMessageWithUuidOrRemoteMsgId(conversation.getMessageReference());
+	    String messageReference = conversation.getMessageReference();
+	    if (messageReference != null && conversation.getCorrectingMessage() == null) {
+            Message referencedMessage = conversation.findMessageWithUuidOrRemoteMsgId(messageReference);
             MessageReferenceUtils.displayMessageReference(activity, binding.messageReferencePreview, null, referencedMessage, activity.isDarkTheme());
         }
+    }
+
+    /**
+     * Hide the preview for the last set message reference.
+     */
+    private void hideMessageReferencePreview() {
+        MessageReferenceUtils.hideMessageReference(binding.messageReferencePreview);
     }
 
     /**
@@ -1826,6 +1838,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
     }
 
     private void correctMessage(Message message) {
+        hideMessageReferencePreview();
         while (message.mergeable(message.next())) {
             message = message.next();
         }
