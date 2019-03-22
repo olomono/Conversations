@@ -730,6 +730,10 @@ public class MessageAdapter extends ArrayAdapter<Message> implements CopyTextVie
 			} else {
 				displayInfoMessage(viewHolder, UIHelper.getMessagePreview(activity, message).first, darkBackground);
 			}
+		}
+		// Show an info text for Automatic Trust Transfer.
+		else if (message.getType() == Message.TYPE_ATT_INFO) {
+			displayInfoMessage(viewHolder, message.getBody(), darkBackground);
 		} else if (message.isFileOrImage() && message.getEncryption() != Message.ENCRYPTION_PGP && message.getEncryption() != Message.ENCRYPTION_DECRYPTION_FAILED) {
 			if (message.getFileParams().width > 0 && message.getFileParams().height > 0) {
 				displayImageMessage(viewHolder, message);

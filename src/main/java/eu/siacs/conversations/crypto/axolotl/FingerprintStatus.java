@@ -151,6 +151,13 @@ public class FingerprintStatus implements Comparable<FingerprintStatus> {
         return status;
     }
 
+    public static FingerprintStatus createInactiveUntrusted() {
+        final FingerprintStatus status = new FingerprintStatus();
+        status.trust = Trust.UNTRUSTED;
+        status.active = false;
+        return status;
+    }
+
     @Override
     public int compareTo(FingerprintStatus o) {
         if (active == o.active) {

@@ -488,6 +488,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
             message.setTime(timestamp);
 
             if (AutomaticTrustTransfer.authenticateOrRevoke(mXmppConnectionService, message)) {
+                // TODO This does not yet work. How could a notification be dismissed?
                 dismissNotification(account, counterpart, query);
             }
 

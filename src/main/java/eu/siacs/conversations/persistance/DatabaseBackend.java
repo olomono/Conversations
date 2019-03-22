@@ -28,7 +28,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -143,8 +142,6 @@ public class DatabaseBackend extends SQLiteOpenHelper {
             + SQLiteAxolotlStore.TRUST + " TEXT, "
             + SQLiteAxolotlStore.ACTIVE + " NUMBER, "
             + SQLiteAxolotlStore.LAST_ACTIVATION + " NUMBER,"
-            + AutomaticTrustTransfer.SENDER_AUTHENTICATION_MESSAGE  + " TEXT, "
-            + AutomaticTrustTransfer.SENDER_REVOCATION_MESSAGE + " TEXT, "
             + SQLiteAxolotlStore.KEY + " TEXT, FOREIGN KEY("
             + SQLiteAxolotlStore.ACCOUNT
             + ") REFERENCES " + Account.TABLENAME + "(" + Account.UUID + ") ON DELETE CASCADE, "
@@ -152,6 +149,23 @@ public class DatabaseBackend extends SQLiteOpenHelper {
             + SQLiteAxolotlStore.NAME + ", "
             + SQLiteAxolotlStore.FINGERPRINT
             + ") ON CONFLICT IGNORE"
+            + ");";
+
+    private static String CREATE_ATT_CACHE_STATEMENT =
+            "CREATE TABLE "
+                + AutomaticTrustTransfer.TABLE_ATT_CACHE + "("
+                + SQLiteAxolotlStore.ACCOUNT + " TEXT,  "
+                + SQLiteAxolotlStore.NAME + " TEXT, "
+                + SQLiteAxolotlStore.FINGERPRINT + " TEXT, "
+                + AutomaticTrustTransfer.COLUMN_SENDER_FINGERPRINT + " TEXT, "
+                + AutomaticTrustTransfer.COLUMN_TRUST + " INTEGER, "
+                + "UNIQUE("
+                    + SQLiteAxolotlStore.ACCOUNT + ", "
+                    + SQLiteAxolotlStore.NAME + ", "
+                    + SQLiteAxolotlStore.FINGERPRINT + ", "
+                    + AutomaticTrustTransfer.COLUMN_SENDER_FINGERPRINT + ", "
+                    + AutomaticTrustTransfer.COLUMN_TRUST
+                + ")"
             + ");";
 
     private static String RESOLVER_RESULTS_TABLENAME = "resolver_results";
@@ -259,6 +273,7 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         db.execSQL(CREATE_PREKEYS_STATEMENT);
         db.execSQL(CREATE_SIGNED_PREKEYS_STATEMENT);
         db.execSQL(CREATE_IDENTITIES_STATEMENT);
+        db.execSQL(CREATE_ATT_CACHE_STATEMENT);
         db.execSQL(CREATE_PRESENCE_TEMPLATES_STATEMENT);
         db.execSQL(CREATE_RESOLVER_RESULTS_TABLE);
         db.execSQL(CREATE_MESSAGE_INDEX_TABLE);
@@ -547,8 +562,7 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         }
 
         if (oldVersion < 45 && newVersion >= 45) {
-            db.execSQL("ALTER TABLE " + SQLiteAxolotlStore.IDENTITIES_TABLENAME + " ADD COLUMN " + AutomaticTrustTransfer.SENDER_AUTHENTICATION_MESSAGE + " TEXT");
-            db.execSQL("ALTER TABLE " + SQLiteAxolotlStore.IDENTITIES_TABLENAME + " ADD COLUMN " + AutomaticTrustTransfer.SENDER_REVOCATION_MESSAGE + " TEXT");
+            db.execSQL(CREATE_ATT_CACHE_STATEMENT);
         }
     }
 
@@ -1519,7 +1533,7 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         }
     }
 
-    public void storePreVerification(Account account, String name, String fingerprint, FingerprintStatus status) {
+    public void storePreAuthenticationOrRevocation(Account account, String name, String fingerprint, FingerprintStatus status) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(SQLiteAxolotlStore.ACCOUNT, account.getUuid());
@@ -1543,115 +1557,325 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         return status;
     }
 
-    public boolean storeTrustMessageFingerprint(Contact keyOwner, String fingerprint, String senderFingerprint, boolean trust) {
-        SQLiteDatabase db = this.getWritableDatabase();
+    /**
+     * Caches the data of a trust message if the trust message has been sent by a device with a key which is not already authenticated.
+     * As soon as that key is authenticated, that data is loaded by {@link #loadTrustMessageData} to authenticate the keys given by their fingerprints
+     * or revoke the trust in those keys.
+     *
+     * @param keyOwner Owner of the key which has the given fingerprint.
+     * @param fingerprint Fingerprint used for authentication or revocation.
+     * @param senderFingerprint Fingerprint of the sender's key of the trust message which not led to an authentication because the sender's key is not yet authenticated.
+     * @param trust Trust in the key with the given fingerprint. true for authentication and false for revocation.
+     * @return true if the given trust message data was cached, false otherwise.
+     */
+    public boolean cacheTrustMessageData(Contact keyOwner, String fingerprint, String senderFingerprint, boolean trust) {
+        Account account = keyOwner.getAccount();
 
-        final ContentValues contentValues = new ContentValues();
-        String column;
-        if (trust) {
-            column = AutomaticTrustTransfer.SENDER_AUTHENTICATION_MESSAGE;
-        } else {
-            column = AutomaticTrustTransfer.SENDER_REVOCATION_MESSAGE;
+        // Do nothing if the trust message data is already cached.
+        if (trustMessageDataExists(account, keyOwner, fingerprint, senderFingerprint, trust)) {
+            return false;
         }
-        contentValues.put(column, senderFingerprint);
 
-        String[] whereArgs = {
-                keyOwner.getAccount().getUuid(),
-                keyOwner.getJid().asBareJid().toEscapedString(),
-                fingerprint
-        };
+        // If the trust of the retrieved row in the database is not equal to the new one, overwrite the trust of that row.
+        if (trustMessageDataExists(account, keyOwner, fingerprint, senderFingerprint, !trust)) {
+            return updateTrustMessageData(account, keyOwner, fingerprint, senderFingerprint, trust);
+        }
 
-        int rows = db.update(
-                SQLiteAxolotlStore.IDENTITIES_TABLENAME,
-                contentValues,
-                SQLiteAxolotlStore.ACCOUNT + " =? AND "
-                        + SQLiteAxolotlStore.NAME + " =? AND "
-                        + SQLiteAxolotlStore.FINGERPRINT + " =? ",
-                whereArgs);
+        // If the trust of the rows in the database is not equal to the new one, delete those rows and insert a row with the new trust and the new senderFingerprint.
+        //
+        // For multiple senders of trust messages authentication or revocation data may be cached
+        // as long as the trust does not differ.
+        // I.e., if device 1 and device 2 both want to authenticate device 3's key, one row for each trust message data will exist,
+        // but if 1 wants to revoke the trust in 3's key and 2 wants to authenticate 3's key,
+        // only the newest trust message data will be cached.
+        // If the trust message of 1 was received at first, the trust message data from 2 is cached
+        // and 3's key would then be authenticated as soon as 2's key has been authenticated.
+        //
+        // The user may be asked for using the new data from the new sender or keeping the existing data.
+        if (trustMessageDataExists(account, keyOwner, fingerprint, null, !trust)) {
+            deleteTrustMessageData(account, keyOwner, fingerprint, null);
+        }
 
-        return rows == 1;
+        // Insert a new row if there are no corner cases.
+        return insertTrustMessageData(account, keyOwner, fingerprint, senderFingerprint, trust);
     }
 
-    public Map<String, List<String>> loadTrustMessageFingerprints(Account account, String senderFingerprint, boolean trust) {
-        SQLiteDatabase db = this.getWritableDatabase();
-
-        String columnWithSenderFingerprint;
-        if (trust) {
-            columnWithSenderFingerprint = AutomaticTrustTransfer.SENDER_AUTHENTICATION_MESSAGE;
-        } else {
-            columnWithSenderFingerprint = AutomaticTrustTransfer.SENDER_REVOCATION_MESSAGE;
-        }
-
-        String[] whereArgs = {
-                account.getUuid(),
-                senderFingerprint
-        };
-
-        String[] selectedColumn = new String[]{SQLiteAxolotlStore.NAME, SQLiteAxolotlStore.FINGERPRINT};
-
-        Cursor cursor = db.query(
-                SQLiteAxolotlStore.IDENTITIES_TABLENAME,
-                selectedColumn,
-                SQLiteAxolotlStore.ACCOUNT + "=? and "
-                        + columnWithSenderFingerprint + "=?",
-                whereArgs,
+    /**
+     * Loads the data of a trust message cached by {@link #cacheTrustMessageData} if the trust message has been sent by a device with a key which is not already authenticated.
+     *
+     * @param account Account of the user who wants to do the authentication or revocation.
+     * @param senderFingerprint Fingerprint of the sender's key of the trust message which not led to an authentication because the sender's key is not yet authenticated.
+     * @param trust Trust in the key with the given fingerprint. true for authentication and false for revocation.
+     * @return Key owners and fingerprints.
+     */
+    public Map<String, List<String>> loadTrustMessageData(Account account, String senderFingerprint, boolean trust) {
+        Cursor cursor = loadTrustMessageData(
+                account,
                 null,
                 null,
-                SQLiteAxolotlStore.ACCOUNT + " DESC",
-                null);
+                senderFingerprint,
+                trust,
+                new String[] {
+                        SQLiteAxolotlStore.NAME,
+                        SQLiteAxolotlStore.FINGERPRINT
+                },
+                null
+        );
 
-        Map<String, List<String>> keyOwnersAndFingerprints = new HashMap<>();
+        Map<String, List<String>> keysOwnersAndFingerprints = new HashMap<>();
 
         if (cursor.moveToFirst()) {
             do {
                 String keyOwner = cursor.getString(cursor.getColumnIndex(SQLiteAxolotlStore.NAME));
-                List<String> fingerprints;
+                List<String> fingerprints = keysOwnersAndFingerprints.get(keyOwner);
 
-                if (!keyOwnersAndFingerprints.containsKey(keyOwner)) {
+                if (fingerprints == null) {
                     fingerprints = new ArrayList<>();
-                } else {
-                    fingerprints = keyOwnersAndFingerprints.get(keyOwner);
                 }
 
                 fingerprints.add(cursor.getString(cursor.getColumnIndex(SQLiteAxolotlStore.FINGERPRINT)));
-                keyOwnersAndFingerprints.put(keyOwner, fingerprints);
+                keysOwnersAndFingerprints.put(keyOwner, fingerprints);
             } while (cursor.moveToNext());
         }
 
-        return keyOwnersAndFingerprints;
+        cursor.close();
+
+        return keysOwnersAndFingerprints;
     }
 
-    public void deleteTrustMessageFingerprint(Contact keyOwner, String fingerprint) {
-        deleteTrustMessageFingerprint(keyOwner, fingerprint, true);
-        deleteTrustMessageFingerprint(keyOwner, fingerprint, false);
+    /**
+     * Deletes the data of a trust message which has the given account and fingerprint.
+     *
+     * @param account Account of the user who wants to do the authentication or revocation.
+     * @param fingerprint Fingerprint used for authentication or revocation.
+     */
+    public void deleteTrustMessageDataForFingerprint(Account account, String fingerprint) {
+        deleteTrustMessageData(account, null, fingerprint, null);
     }
 
-    public boolean deleteTrustMessageFingerprint(Contact keyOwner, String fingerprint, boolean trust) {
-        SQLiteDatabase db = this.getWritableDatabase();
+    /**
+     * Deletes the data of a trust message which has the given account and senderFingerprint.
+     *
+     * @param account Account of the user who wants to do the authentication or revocation.
+     * @param senderFingerprint Fingerprint of the sender's key of the trust message which not led to an authentication because the sender's key is not yet authenticated.
+     */
+    public void deleteTrustMessageDataForSender(Account account, String senderFingerprint) {
+        deleteTrustMessageData(account, null, null, senderFingerprint);
+    }
 
-        final ContentValues contentValues = new ContentValues();
-        String column;
-        if (trust) {
-            column = AutomaticTrustTransfer.SENDER_AUTHENTICATION_MESSAGE;
-        } else {
-            column = AutomaticTrustTransfer.SENDER_REVOCATION_MESSAGE;
+    /**
+     * Checks whether trust message data for the given values exists.
+     *
+     * @param account Account of the user who wants to do the authentication or revocation.
+     * @param keyOwner Owner of the key which has the given fingerprint.
+     * @param fingerprint Fingerprint used for authentication or revocation.
+     * @param senderFingerprint Fingerprint of the sender's key of the trust message which not led to an authentication because the sender's key is not yet authenticated.
+     * @param trust Trust in the key with the given fingerprint. true for authentication and false for revocation.
+     * @return true if trust message data exists for the given values, otherwise false.
+     */
+    private boolean trustMessageDataExists(Account account, Contact keyOwner, String fingerprint, String senderFingerprint, boolean trust) {
+        Cursor cursor = loadTrustMessageData(
+                account,
+                keyOwner,
+                fingerprint,
+                senderFingerprint,
+                trust,
+                new String[] {
+                        AutomaticTrustTransfer.COLUMN_TRUST
+                },
+                1
+        );
+
+        boolean trustMessageDataExists = false;
+        if (cursor.moveToFirst()) {
+            trustMessageDataExists = true;
         }
-        contentValues.putNull(column);
+        cursor.close();
 
-        String[] whereArgs = {
-                keyOwner.getAccount().getUuid(),
-                keyOwner.getJid().asBareJid().toEscapedString(),
-                fingerprint
-        };
+        return trustMessageDataExists;
+    }
 
-        int rows = db.update(
-                SQLiteAxolotlStore.IDENTITIES_TABLENAME, contentValues,
-                SQLiteAxolotlStore.ACCOUNT + " =? AND "
-                        + SQLiteAxolotlStore.NAME + " =? AND "
-                        + SQLiteAxolotlStore.FINGERPRINT + " =? ",
-                whereArgs);
+    /**
+     * Updates the trust of the given trust message data.
+     *
+     * @param account Account of the user who wants to do the authentication or revocation.
+     * @param keyOwner Owner of the key which has the given fingerprint.
+     * @param fingerprint Fingerprint used for authentication or revocation.
+     * @param senderFingerprint Fingerprint of the sender's key of the trust message which not led to an authentication because the sender's key is not yet authenticated.
+     * @param trust Trust in the key with the given fingerprint. true for authentication and false for revocation.
+     * @return true if trust message data was updated for the given values, otherwise false.
+     */
+    private boolean updateTrustMessageData(Account account, Contact keyOwner, String fingerprint, String senderFingerprint, Boolean trust) {
+        final ContentValues values = new ContentValues();
 
-        return rows == 1;
+        values.put(AutomaticTrustTransfer.COLUMN_TRUST, trust);
+
+        return updateData(
+                AutomaticTrustTransfer.TABLE_ATT_CACHE,
+                values,
+                new HashMap<String, String>() {
+                    {
+                        put(SQLiteAxolotlStore.ACCOUNT, account.getUuid());
+                        put(SQLiteAxolotlStore.NAME, keyOwner.getBareJid());
+                        put(SQLiteAxolotlStore.FINGERPRINT, fingerprint);
+                        put(AutomaticTrustTransfer.COLUMN_SENDER_FINGERPRINT, senderFingerprint);
+                    }
+                }
+        );
+    }
+
+    /**
+     * Inserts the given trust message data.
+     *
+     * @param account Account of the user who wants to do the authentication or revocation.
+     * @param keyOwner Owner of the key which has the given fingerprint.
+     * @param fingerprint Fingerprint used for authentication or revocation.
+     * @param senderFingerprint Fingerprint of the sender's key of the trust message which not led to an authentication because the sender's key is not yet authenticated.
+     * @param trust Trust in the key with the given fingerprint. true for authentication and false for revocation.
+     * @return true if the given trust message data was inserted, otherwise false.
+     */
+    private boolean insertTrustMessageData(Account account, Contact keyOwner, String fingerprint, String senderFingerprint, boolean trust) {
+        final ContentValues contentValues = new ContentValues();
+
+        contentValues.put(SQLiteAxolotlStore.ACCOUNT, account.getUuid());
+        contentValues.put(SQLiteAxolotlStore.NAME, keyOwner.getBareJid());
+        contentValues.put(SQLiteAxolotlStore.FINGERPRINT, fingerprint);
+        contentValues.put(AutomaticTrustTransfer.COLUMN_SENDER_FINGERPRINT, senderFingerprint);
+        contentValues.put(AutomaticTrustTransfer.COLUMN_TRUST, trust ? 1 : 0);
+
+        return getWritableDatabase().insert(
+                AutomaticTrustTransfer.TABLE_ATT_CACHE,
+                null,
+                contentValues
+        ) != -1;
+    }
+
+    /**
+     * Loads trust message data for the given values.
+     *
+     * @param account Account of the user who wants to do the authentication or revocation.
+     * @param keyOwner Owner of the key which has the given fingerprint.
+     * @param fingerprint Fingerprint used for authentication or revocation.
+     * @param senderFingerprint Fingerprint of the sender's key of the trust message which not led to an authentication because the sender's key is not yet authenticated.
+     * @param trust Trust in the key with the given fingerprint. true for authentication and false for revocation.
+     * @param columns Columns to load.
+     * @param limit Maximum number of rows to load.
+     * @return Loaded trust message data.
+     */
+    private Cursor loadTrustMessageData(Account account, Contact keyOwner, String fingerprint, String senderFingerprint, Boolean trust, String[] columns, Integer limit) {
+        return loadData(
+                AutomaticTrustTransfer.TABLE_ATT_CACHE,
+                columns,
+                new HashMap<String, String>() {
+                    {
+                        if (account != null) put(SQLiteAxolotlStore.ACCOUNT, account.getUuid());
+                        if (keyOwner != null) put(SQLiteAxolotlStore.NAME, keyOwner.getBareJid());
+                        if (fingerprint != null) put(SQLiteAxolotlStore.FINGERPRINT, fingerprint);
+                        if (senderFingerprint != null) put(AutomaticTrustTransfer.COLUMN_SENDER_FINGERPRINT, senderFingerprint);
+                        if (trust != null) put(AutomaticTrustTransfer.COLUMN_TRUST, (trust ? "1" : "0"));
+                    }
+                },
+                limit != null ? String.valueOf(limit) : null
+        );
+    }
+
+    /**
+     * Deletes trust message data which has the given values.
+     *
+     * @param account Account of the user who wants to do the authentication or revocation.
+     * @param keyOwner Owner of the key which has the given fingerprint.
+     * @param fingerprint Fingerprint used for authentication or revocation.
+     * @param senderFingerprint Fingerprint of the sender's key of the trust message which not led to an authentication because the sender's key is not yet authenticated.
+     */
+    private void deleteTrustMessageData(Account account, Contact keyOwner, String fingerprint, String senderFingerprint) {
+        deleteData(
+                AutomaticTrustTransfer.TABLE_ATT_CACHE,
+                new HashMap<String, String>() {
+                    {
+                        if (account != null) put(SQLiteAxolotlStore.ACCOUNT, account.getUuid());
+                        if (keyOwner != null) put(SQLiteAxolotlStore.NAME, keyOwner.getBareJid());
+                        if (fingerprint != null) put(SQLiteAxolotlStore.FINGERPRINT, fingerprint);
+                        if (senderFingerprint != null) put(AutomaticTrustTransfer.COLUMN_SENDER_FINGERPRINT, senderFingerprint);
+                    }
+                }
+        );
+    }
+
+    /**
+     * Loads rows from the database by the given properties.
+     *
+     * @param table Table to retrieve the rows from.
+     * @param columns Columns to load.
+     * @param where Condition for loading the rows. Pairs of column names and the wanted values for those columns.
+     * @param limit Maximum number of rows to load.
+     * @return Loaded trust message data.
+     */
+    private Cursor loadData(String table, String[] columns, Map<String, String> where, String limit) {
+        return getWritableDatabase().query(
+                table,
+                columns,
+                createWhereStub(where),
+                createWhereArgs(where),
+                null,
+                null,
+                null,
+                limit
+        );
+    }
+
+    /**
+     * Update rows of the database by the given properties.
+     *
+     * @param table Table to retrieve the rows from.
+     * @param values values which update the existing ones.
+     * @param where Condition for updating the rows. Pairs of column names and the wanted values for those columns.
+     * @return true if at least one row was updated, otherwise false.
+     */
+    private boolean updateData(String table, ContentValues values, Map<String, String> where) {
+        return getWritableDatabase().update(
+                table,
+                values,
+                createWhereStub(where),
+                createWhereArgs(where)
+        ) != 0;
+    }
+
+    /**
+     * Deletes rows of the database by the given properties.
+     *
+     * @param table Table to retrieve the rows from.
+     * @param where Condition for deleting the rows. Pairs of column names and the wanted values for those columns.
+     */
+    private void deleteData(String table, Map<String, String> where) {
+        getWritableDatabase().delete(
+                table,
+                createWhereStub(where),
+                createWhereArgs(where)
+        );
+    }
+
+    /**
+     * Creates a string for column names.
+     *
+     * @param where Condition for loading the rows. Pairs of column names and the wanted values for those columns.
+     */
+    private String createWhereStub(Map<String, String> where) {
+        String whereStub = "";
+        String[] whereColumns = where.keySet().toArray(new String[0]);
+        for (int i = 0; i < where.size()-1; i++) {
+            whereStub += whereColumns[i] + "=? AND ";
+        }
+        whereStub += whereColumns[whereColumns.length-1] + "=?";
+        return whereStub;
+    }
+
+    /**
+     * Creates an array of wanted values for given columnss.
+     *
+     * @param where Condition for loading the rows. Pairs of column names and the wanted values for those columns.
+     */
+    private String[] createWhereArgs(Map<String, String> where) {
+        return where.values().toArray(new String[0]);
     }
 
     public boolean setIdentityKeyTrust(Account account, String fingerprint, FingerprintStatus fingerprintStatus) {

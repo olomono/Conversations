@@ -49,7 +49,6 @@ import eu.siacs.conversations.utils.CryptoHelper;
 import eu.siacs.conversations.utils.SerialSingleThreadExecutor;
 import eu.siacs.conversations.utils.XmppUri;
 import eu.siacs.conversations.xml.Element;
-import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xmpp.OnAdvancedStreamFeaturesLoaded;
 import eu.siacs.conversations.xmpp.OnIqPacketReceived;
 import eu.siacs.conversations.xmpp.pep.PublishOptions;
@@ -140,8 +139,12 @@ public class AxolotlService implements OnAdvancedStreamFeaturesLoaded {
 		return fingerprintWithVersion.replaceFirst(FINGERPRINT_VERSION, "").replaceAll("\\s", "");
 	}
 
-	public void preVerifyFingerprint(Contact contact, String fingerprint) {
-		axolotlStore.preVerifyFingerprint(contact.getAccount(), contact.getJid().asBareJid().toString(), fingerprint);
+	public void preAuthenticateKey(Contact contact, String fingerprint) {
+		axolotlStore.preAuthenticateKey(account, contact.getBareJid(), fingerprint);
+	}
+
+	private void preRevokeKey(Contact contact, String fingerprint) {
+		axolotlStore.preRevokeKey(account, contact.getBareJid(), fingerprint);
 	}
 
 	public boolean hasVerifiedKeys(String name) {
@@ -520,33 +523,48 @@ public class AxolotlService implements OnAdvancedStreamFeaturesLoaded {
 	public void distrustFingerprint(final Contact keyOwner, final String fingerprint) {
 		List<XmppUri.Fingerprint> fingerprints = new ArrayList<>();
 		fingerprints.add(new XmppUri.Fingerprint(XmppUri.FingerprintType.OMEMO, createFingerprintWithoutVersion(fingerprint), -1));
-		distrustFingerprints(keyOwner, fingerprints, true);
+		distrustKeys(keyOwner, fingerprints, true);
 	}
 
 	/**
-	 * Distrusts fingerprints.
-	 * @param keysOwner Owner of the devices whose key fingerprints will be verified (can also be the account owner by account.getSelfContact).
-	 * @param fingerprints Fingerprints of the keys which will be distrusted.
-	 * @param sendRevocationMessage If true, an authentication message for the verified fingerprint is sent.
+	 * Distrusts keys.
+	 * @param keysOwner Owner of the devices whose key fingerprints will be used for revocation (can also be the account owner by account.getSelfContact).
+	 * @param fingerprints Fingerprints of the keys which will be used for revocation.
+	 * @param sendRevocationMessage If true, a revocation message for the keys whose trust has been revoked is sent.
+	 * @return true if the trust in at least one of the given keys has been revoked, otherwise false.
 	 */
-	public void distrustFingerprints(final Contact keysOwner, final List<XmppUri.Fingerprint> fingerprints, boolean sendRevocationMessage) {
+	public boolean distrustKeys(final Contact keysOwner, final List<XmppUri.Fingerprint> fingerprints, boolean sendRevocationMessage) {
+		boolean performedRevocationOrPreRevocation = false;
 		List<XmppUri.Fingerprint> fingerprintsForRevocationMessage = new ArrayList<>();
 
 		for (XmppUri.Fingerprint fp : fingerprints) {
 			String fingerprintWithVersion = createFingerprintWithVersion(fp.fingerprint);
 			FingerprintStatus fingerprintStatus = getFingerprintTrust(fingerprintWithVersion);
 
-			// Check that the key of the given fingerprint is verified and really belongs to the pretended owner.
-			if (fingerprintStatus != null && fingerprintStatus.isTrusted() && keysOwner.hasFingerprint(fp)) {
-				axolotlStore.setFingerprintStatus(fingerprintWithVersion, axolotlStore.getFingerprintStatus(fingerprintWithVersion.replaceAll("\\s", "")).toUntrusted());
-				mXmppConnectionService.databaseBackend.deleteTrustMessageFingerprint(keysOwner, fingerprintWithVersion);
-				fingerprintsForRevocationMessage.add(fp);
+			if (fingerprintStatus != null) {
+				// Check that the key of the given fingerprint is trusted and really belongs to the pretended owner.
+				if (fingerprintStatus.isTrusted() && keysOwner.hasKeyWithFingerprint(fp)) {
+					axolotlStore.setFingerprintStatus(fingerprintWithVersion, axolotlStore.getFingerprintStatus(fingerprintWithVersion.replaceAll("\\s", "")).toUntrusted());
+					// TODO In which case is this needed?
+					mXmppConnectionService.databaseBackend.deleteTrustMessageDataForSender(account, fingerprintWithVersion);
+					fingerprintsForRevocationMessage.add(fp);
+				}
+			}
+			// Store data for an untrusted key if that key does not exist in the DB at the moment.
+			else {
+				preRevokeKey(keysOwner, fingerprintWithVersion);
+				performedRevocationOrPreRevocation = true;
 			}
 		}
 
-		if (sendRevocationMessage && !fingerprintsForRevocationMessage.isEmpty()) {
-			AutomaticTrustTransfer.sendRevocationMessages(mXmppConnectionService, keysOwner, fingerprintsForRevocationMessage);
+		if (!fingerprintsForRevocationMessage.isEmpty()) {
+			if (sendRevocationMessage) {
+				AutomaticTrustTransfer.sendRevocationMessages(mXmppConnectionService, keysOwner, fingerprintsForRevocationMessage);
+			}
+			performedRevocationOrPreRevocation = true;
 		}
+
+		return performedRevocationOrPreRevocation;
 	}
 
 	private void publishOwnDeviceIdIfNeeded() {

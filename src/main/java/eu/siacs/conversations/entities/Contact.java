@@ -154,6 +154,13 @@ public class Contact implements ListItem, Blockable {
 		return jid;
 	}
 
+	/**
+	 * @return bare JID as an escaped String.
+	 */
+	public String getBareJid() {
+		return jid.asBareJid().toEscapedString();
+	}
+
 	@Override
 	public List<Tag> getTags(Context context) {
 		final ArrayList<Tag> tags = new ArrayList<>();
@@ -545,11 +552,11 @@ public class Contact implements ListItem, Blockable {
 		return UIHelper.getColorForName(jid != null ? jid.asBareJid().toString() : getDisplayName());
 	}
 
-	public boolean hasVerifiedKeys() {
+	public boolean hasAuthenticatedKeys() {
 		return account.getAxolotlService().hasVerifiedKeys(this.getJid().asBareJid().toEscapedString());
 	}
 
-	public List<XmppUri.Fingerprint> getVerifiedFingerprints() {
+	public List<XmppUri.Fingerprint> getFingerprintsOfAuthenticatedKeys() {
 		AxolotlService axolotlService = account.getAxolotlService();
 		ArrayList<XmppUri.Fingerprint> fingerprints = new ArrayList<>();
 		for (XmppUri.Fingerprint fingerprint : getFingerprints()) {
@@ -561,7 +568,7 @@ public class Contact implements ListItem, Blockable {
 		return fingerprints;
 	}
 
-	public List<XmppUri.Fingerprint> getVerifiedAndActiveFingerprints() {
+	public List<XmppUri.Fingerprint> getFingerprintsOfAuhtenticatedAndActiveKeys() {
 		AxolotlService axolotlService = account.getAxolotlService();
 		ArrayList<XmppUri.Fingerprint> fingerprints = new ArrayList<>();
 		for (XmppUri.Fingerprint fingerprint : getFingerprints()) {
@@ -585,7 +592,7 @@ public class Contact implements ListItem, Blockable {
 		return fingerprints;
 	}
 
-	public boolean hasFingerprint(XmppUri.Fingerprint fingerprint) {
+	public boolean hasKeyWithFingerprint(XmppUri.Fingerprint fingerprint) {
 		for (XmppUri.Fingerprint availableFingerprint : getFingerprints()) {
 			if (fingerprint.equals(availableFingerprint)) {
 				return true;
@@ -600,7 +607,7 @@ public class Contact implements ListItem, Blockable {
 				return availableFingerprint;
 			}
 		}
-		return null;
+		return new XmppUri.Fingerprint(XmppUri.FingerprintType.OMEMO, fingerprint, -1);
 	}
 
     public final class Options {

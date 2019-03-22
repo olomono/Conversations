@@ -140,7 +140,7 @@ public class TrustKeysActivity extends OmemoActivity implements OnKeyStatusUpdat
 				&& mAccount != null
 				&& uri.hasFingerprints()
 				&& mAccount.getAxolotlService().getCryptoTargets(mConversation).contains(uri.getJid())) {
-			boolean performedVerification = xmppConnectionService.verifyFingerprints(mAccount.getRoster().getContact(uri.getJid()), uri.getFingerprints(), false, true);
+			boolean performedVerification = xmppConnectionService.authenticateKeys(mAccount.getRoster().getContact(uri.getJid()), uri.getFingerprints(), false, true);
 			boolean keys = reloadFingerprints();
 			if (performedVerification && !keys && !hasNoOtherTrustedKeys() && !hasPendingKeyFetches()) {
 				Toast.makeText(this, R.string.all_omemo_keys_have_been_verified, Toast.LENGTH_SHORT).show();

@@ -514,7 +514,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
 			} else {
 				xmppConnectionService.createContact(contact, true);
 				if (invite != null && invite.hasFingerprints()) {
-					xmppConnectionService.verifyFingerprints(contact, invite.getFingerprints(), false, true);
+					xmppConnectionService.authenticateKeys(contact, invite.getFingerprints(), false, true);
 				}
 				switchToConversationDoNotAppend(contact, invite == null ? null : invite.getBody());
 				return true;
@@ -858,7 +858,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
 				displayVerificationWarningDialog(contact, invite);
 			} else {
 				if (invite.hasFingerprints()) {
-					if (xmppConnectionService.verifyFingerprints(contact, invite.getFingerprints(), false, true)) {
+					if (xmppConnectionService.authenticateKeys(contact, invite.getFingerprints(), false, true)) {
 						Toast.makeText(this, R.string.verified_fingerprints, Toast.LENGTH_SHORT).show();
 					}
 				}
@@ -891,7 +891,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
 		builder.setView(view);
 		builder.setPositiveButton(R.string.confirm, (dialog, which) -> {
 			if (isTrustedSource.isChecked() && invite.hasFingerprints()) {
-				xmppConnectionService.verifyFingerprints(contact, invite.getFingerprints(), false, true);
+				xmppConnectionService.authenticateKeys(contact, invite.getFingerprints(), false, true);
 			}
 			switchToConversationDoNotAppend(contact, invite.getBody());
 		});

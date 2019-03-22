@@ -516,7 +516,7 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
     @Override
     protected void processFingerprintVerification(XmppUri uri) {
         if (contact != null && contact.getJid().asBareJid().equals(uri.getJid()) && uri.hasFingerprints()) {
-            if (xmppConnectionService.verifyFingerprints(contact, uri.getFingerprints(), false, true)) {
+            if (xmppConnectionService.authenticateKeys(contact, uri.getFingerprints(), false, true)) {
                 Toast.makeText(this, R.string.verified_fingerprints, Toast.LENGTH_SHORT).show();
             }
         } else {

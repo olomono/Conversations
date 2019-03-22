@@ -471,7 +471,11 @@ public class SQLiteAxolotlStore implements SignalProtocolStore {
 		mXmppConnectionService.databaseBackend.deleteSignedPreKey(account, signedPreKeyId);
 	}
 
-	public void preVerifyFingerprint(Account account, String name, String fingerprint) {
-		mXmppConnectionService.databaseBackend.storePreVerification(account,name,fingerprint,FingerprintStatus.createInactiveVerified());
+	void preAuthenticateKey(Account account, String keyOwner, String fingerprint) {
+		mXmppConnectionService.databaseBackend.storePreAuthenticationOrRevocation(account, keyOwner, fingerprint, FingerprintStatus.createInactiveVerified());
+	}
+
+	void preRevokeKey(Account account, String keyOwner, String fingerprint) {
+		mXmppConnectionService.databaseBackend.storePreAuthenticationOrRevocation(account, keyOwner, fingerprint, FingerprintStatus.createInactiveUntrusted());
 	}
 }

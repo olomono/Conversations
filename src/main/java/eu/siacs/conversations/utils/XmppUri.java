@@ -262,6 +262,13 @@ public class XmppUri {
 		return this.fingerprints;
 	}
 
+	public boolean hasFingerprintsForAuthenticationOrRevocation() {
+		return !fingerprintsForAuthentication.isEmpty() || !fingerprintsForRevocation.isEmpty()
+
+				// TODO delete after testing
+				|| !fingerprintsForInitialization.isEmpty();
+	}
+
 	public boolean hasFingerprints() {
 		return fingerprints.size() > 0;
 	}
