@@ -358,8 +358,9 @@ public class AutomaticTrustTransfer {
      */
     private static String createTrustMessageBody(Contact keysOwner, List<XmppUri.Fingerprint> fingerprints, boolean trust) {
         String trustMessageBody = "xmpp:" + keysOwner.getBareJid() + "?" + ACTION_TRUST;
+        String actionKey = trust ? ACTION_KEY_AUTHENTICATE : ACTION_KEY_REVOKE;
         for (XmppUri.Fingerprint fingerprint : fingerprints) {
-            trustMessageBody += ";" + (trust ? ACTION_KEY_AUTHENTICATE : ACTION_KEY_REVOKE) + "=" + fingerprint.fingerprint;
+            trustMessageBody += ";" + actionKey + "=" + fingerprint.fingerprint;
         }
         return trustMessageBody;
     }
