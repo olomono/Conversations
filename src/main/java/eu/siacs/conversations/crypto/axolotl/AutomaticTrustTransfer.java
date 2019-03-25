@@ -287,6 +287,7 @@ public class AutomaticTrustTransfer {
                         deliveredViaMessageCarbons = true;
                     }
                     // Send a trust message containing the already authenticated contact's keys to the own devices with already authenticated keys.
+                    // Thus, the device whose key was authenticated gets trust messages for already authenticated contact's keys.
                     if (ownAccountAsContact.hasAuthenticatedKeys()) {
                         sendTrustMessage(xmppConnectionService, contact, contact.getFingerprintsOfAuhtenticatedAndActiveKeys(), trust, ownAccountAsContact);
                     }
