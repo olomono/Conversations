@@ -268,7 +268,7 @@ public class AutomaticTrustTransfer {
         Account account = keysOwner.getAccount();
         Contact ownAccountAsContact = account.getSelfContact();
 
-        // Send trust messages containing the own keys which have been authenticated
+        // Send trust messages containing the own keys which have been authenticated or for whom the trust has been revoked
         // to the own devices with already authenticated keys
         // and to all contacts with already authenticated keys.
         // Since all keys which are not already authenticated become untrusted after the first authentication, there is only a check for at least one authenticated key necessary.
@@ -281,15 +281,15 @@ public class AutomaticTrustTransfer {
                 if (!contact.isSelf()) {
                     // TODO Encrypt trust messages not for own devices with unauthenticated keys when using Message Carbons.
 
-                    // Send a trust message containing the own keys which have been authenticated to the contact's devices with already authenticated keys.
+                    // Send a trust message containing the own keys which have been authenticated or for whom the trust has been revoked to the contact's devices with already authenticated keys.
                     if (contact.hasAuthenticatedKeys()) {
                         sendTrustMessage(xmppConnectionService, ownAccountAsContact, fingerprints, trust, contact);
                         deliveredViaMessageCarbons = true;
                     }
-                    // Send a trust message containing the already authenticated contact's keys to the own devices with already authenticated keys.
-                    // Thus, the device whose key was authenticated gets trust messages for already authenticated contact's keys.
-                    if (ownAccountAsContact.hasAuthenticatedKeys()) {
-                        sendTrustMessage(xmppConnectionService, contact, contact.getFingerprintsOfAuhtenticatedAndActiveKeys(), trust, ownAccountAsContact);
+                    // Send an authentication message containing the already authenticated contact's keys to the own devices with already authenticated keys.
+                    // Thus, the device whose key has been authenticated gets trust messages for already authenticated contact's keys.
+                    if (ownAccountAsContact.hasAuthenticatedKeys() && trust) {
+                        sendTrustMessage(xmppConnectionService, contact, contact.getFingerprintsOfAuhtenticatedAndActiveKeys(), true, ownAccountAsContact);
                     }
                 }
             }
@@ -297,14 +297,13 @@ public class AutomaticTrustTransfer {
             if (!deliveredViaMessageCarbons && fingerprints.size() < ownAccountAsContact.getFingerprintsOfAuthenticatedKeys().size()) {
                 sendTrustMessage(xmppConnectionService, ownAccountAsContact, fingerprints, trust, ownAccountAsContact);
             }
-        }
-        else if (trust) {
-            // Send an authentication message containing the contact's keys which have been authenticated to the own devices with already authenticated keys.
+        } else {
+            // Send a trust message containing the contact's keys which have been authenticated or or for whom the trust has been revoked to the own devices with already authenticated keys.
             if (ownAccountAsContact.hasAuthenticatedKeys()) {
-                sendTrustMessage(xmppConnectionService, keysOwner, fingerprints, true, ownAccountAsContact);
+                sendTrustMessage(xmppConnectionService, keysOwner, fingerprints, trust, ownAccountAsContact);
             }
             // Send an authentication message containing the own already authenticated keys to the contact whose keys have been authenticated.
-            if (keysOwner.hasAuthenticatedKeys())
+            if (keysOwner.hasAuthenticatedKeys() && trust)
                 sendTrustMessage(xmppConnectionService, ownAccountAsContact, ownAccountAsContact.getFingerprintsOfAuhtenticatedAndActiveKeys(), true, keysOwner);
         }
     }
