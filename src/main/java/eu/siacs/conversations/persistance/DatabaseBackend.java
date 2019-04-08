@@ -958,6 +958,58 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         return filesPaths;
     }
 
+    /**
+     * Updates all occurrences of a reference to a replaced message.
+     *
+     * This is used when a referenced message is corrected.
+     *
+     * @param oldId UUID of the replaced message
+     * @param newId UUID of the replacing message
+     */
+    public List<String> updateMessageReferences(String oldId, String newId) throws IOException {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        List<String> uuidsOfMessagesWithReferences = findMessagesWithMessageReference(oldId);
+
+        if (!uuidsOfMessagesWithReferences.isEmpty()) {
+            final String where = Message.MESSAGE_REFERENCE + "=?";
+            final String[] args = {oldId};
+            final ContentValues contentValues = new ContentValues();
+            contentValues.put(Message.MESSAGE_REFERENCE, newId);
+
+            if (db.update(Message.TABLENAME, contentValues, where, args) == 0) {
+                throw new IOException("message references could not be updated in DB");
+            }
+        }
+
+        return uuidsOfMessagesWithReferences;
+    }
+
+    /**
+     * Provides all UUIDs of messages that have a given reference to another message.
+     *
+     * @param messageReference reference to another message
+     * @return UUIDs of messages that have the given messageReference
+     */
+    public List<String> findMessagesWithMessageReference(String messageReference) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        final String[] columns = {Message.UUID};
+        final String where = Message.MESSAGE_REFERENCE + "=?";
+        final String[] args = {messageReference};
+
+        List<String> messageUuids = new ArrayList<>();
+        Cursor cursor = db.query(Message.TABLENAME, columns, where, args, null,
+                null, null);
+
+        while (cursor.moveToNext()) {
+            messageUuids.add(cursor.getString(cursor.getColumnIndex(Message.UUID)));
+        }
+        cursor.close();
+
+        return messageUuids;
+    }
+
     public static class FilePath {
         public final UUID uuid;
         public final String path;
