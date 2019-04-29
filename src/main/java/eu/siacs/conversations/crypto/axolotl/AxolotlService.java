@@ -520,7 +520,7 @@ public class AxolotlService implements OnAdvancedStreamFeaturesLoaded {
 		publishDeviceIdsAndRefineAccessModel(deviceIds);
 	}
 
-	public void distrustFingerprint(final Contact keyOwner, final String fingerprint) {
+	public void distrustKey(final Contact keyOwner, final String fingerprint) {
 		List<XmppUri.Fingerprint> fingerprints = new ArrayList<>();
 		fingerprints.add(new XmppUri.Fingerprint(XmppUri.FingerprintType.OMEMO, createFingerprintWithoutVersion(fingerprint), -1));
 		distrustKeys(keyOwner, fingerprints, true);

@@ -210,7 +210,7 @@ public abstract class OmemoActivity extends XmppActivity {
 		builder.setNegativeButton(getString(R.string.cancel), null);
 		builder.setPositiveButton(R.string.confirm,
 				(dialog, which) -> {
-					account.getAxolotlService().distrustFingerprint(keyOwner, fingerprint);
+					account.getAxolotlService().distrustKey(keyOwner, fingerprint);
 					refreshUi();
 				});
 		builder.create().show();
