@@ -298,7 +298,7 @@ public class AutomaticTrustTransfer {
                 sendTrustMessage(xmppConnectionService, ownAccountAsContact, fingerprints, trust, ownAccountAsContact);
             }
         } else {
-            // Send a trust message containing the contact's keys which have been authenticated or or for whom the trust has been revoked to the own devices with already authenticated keys.
+            // Send a trust message containing the contact's keys which have been authenticated or for whom the trust has been revoked to the own devices with already authenticated keys.
             if (ownAccountAsContact.hasAuthenticatedKeys()) {
                 sendTrustMessage(xmppConnectionService, keysOwner, fingerprints, trust, ownAccountAsContact);
             }
