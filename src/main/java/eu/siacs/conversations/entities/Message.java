@@ -107,6 +107,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
 	private Message mNextMessage = null;
 	private Message mPreviousMessage = null;
 	private String axolotlFingerprint = null;
+	private boolean onlyToBeSentToDevicesWithAuthenticatedKeys = false;
 	private String errorMessage = null;
 	private Set<ReadByMarker> readByMarkers = new HashSet<>();
 
@@ -864,6 +865,14 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
 
 	public String getFingerprint() {
 		return axolotlFingerprint;
+	}
+
+	public boolean isOnlyToBeSentToDevicesWithAuthenticatedKeys() {
+		return onlyToBeSentToDevicesWithAuthenticatedKeys;
+	}
+
+	public void setOnlyToBeSentToDevicesWithAuthenticatedKeys(boolean onlyToBeSentToDevicesWithAuthenticatedKeys) {
+		this.onlyToBeSentToDevicesWithAuthenticatedKeys = onlyToBeSentToDevicesWithAuthenticatedKeys;
 	}
 
 	public boolean isTrusted() {

@@ -146,9 +146,10 @@ public class XmppAxolotlSession implements Comparable<XmppAxolotlSession> {
 	}
 
 	@Nullable
-	public AxolotlKey processSending(@NonNull byte[] outgoingMessage, boolean ignoreSessionTrust) {
+	public AxolotlKey processSending(@NonNull byte[] outgoingMessage, boolean ignoreSessionTrust, boolean onlyIfDeviceHasAuthenticatedKey) {
 		FingerprintStatus status = getTrust();
-		if (ignoreSessionTrust || status.isTrustedAndActive()) {
+		boolean sufficientTrustLevel = onlyIfDeviceHasAuthenticatedKey ? status.isVerifiedAndActive() : status.isTrustedAndActive();
+		if (ignoreSessionTrust || sufficientTrustLevel) {
 			try {
 				CiphertextMessage ciphertextMessage = cipher.encrypt(outgoingMessage);
 				return new AxolotlKey(getRemoteAddress().getDeviceId(), ciphertextMessage.serialize(),ciphertextMessage.getType() == CiphertextMessage.PREKEY_TYPE);

@@ -221,16 +221,16 @@ public class XmppAxolotlMessage {
 		return sourceDeviceId;
 	}
 
-	void addDevice(XmppAxolotlSession session) {
-		addDevice(session, false);
+	void addDevice(XmppAxolotlSession session, boolean onlyIfDeviceHasAuthenticatedKey) {
+		addDevice(session, false, onlyIfDeviceHasAuthenticatedKey);
 	}
 
-	void addDevice(XmppAxolotlSession session, boolean ignoreSessionTrust) {
+	void addDevice(XmppAxolotlSession session, boolean ignoreSessionTrust, boolean onlyIfDeviceHasAuthenticatedKey) {
 		XmppAxolotlSession.AxolotlKey key;
 		if (authtagPlusInnerKey != null) {
-			key = session.processSending(authtagPlusInnerKey, ignoreSessionTrust);
+			key = session.processSending(authtagPlusInnerKey, ignoreSessionTrust, onlyIfDeviceHasAuthenticatedKey);
 		} else {
-			key = session.processSending(innerKey, ignoreSessionTrust);
+			key = session.processSending(innerKey, ignoreSessionTrust, onlyIfDeviceHasAuthenticatedKey);
 		}
 		if (key != null) {
 			keys.add(key);

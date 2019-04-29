@@ -275,16 +275,16 @@ public class AutomaticTrustTransfer {
         if (keysOwner.isSelf()) {
             List<Contact> contacts = account.getRoster().getContacts();
 
-            // Use XEP-0280 Message Carbons to deliver trust messages to own devices while not sending a separate message to the own account.
+            // Use XEP-0280 Message Carbons (if available) to deliver trust messages to own devices with authenticated keys while not sending a separate message to the own account.
             boolean deliveredViaMessageCarbons = false;
             for (Contact contact : contacts) {
                 if (!contact.isSelf()) {
-                    // TODO Encrypt trust messages not for own devices with unauthenticated keys when using Message Carbons.
-
+                    // TODO Use Message Carbons when sending a trust message to a contact only one time or do not use it at all here and send one trust message explicitly to own devices. Otherwise own devices get multiple times the same trust message.
                     // Send a trust message containing the own keys which have been authenticated or for whom the trust has been revoked to the contact's devices with already authenticated keys.
+                    // Own devices with authenticated keys receive a copy of the trust message if Message Carbons is available.
                     if (contact.hasAuthenticatedKeys()) {
                         sendTrustMessage(xmppConnectionService, ownAccountAsContact, fingerprints, trust, contact);
-                        deliveredViaMessageCarbons = true;
+                        deliveredViaMessageCarbons = account.getXmppConnection().getFeatures().carbons();
                     }
                     // Send an authentication message containing the already authenticated contact's keys to the own devices with already authenticated keys.
                     // Thus, the device whose key has been authenticated gets trust messages for already authenticated contact's keys.
@@ -333,6 +333,7 @@ public class AutomaticTrustTransfer {
     private static void sendMessage(XmppConnectionService xmppConnectionService, Contact recipient, String body) {
         Conversation conversation = xmppConnectionService.findOrCreateConversation(recipient.getAccount(), recipient.getJid(), false, true);
         Message message = new Message(conversation, body, conversation.getNextEncryption());
+        message.setOnlyToBeSentToDevicesWithAuthenticatedKeys(true);
         xmppConnectionService.sendMessage(message);
     }
 

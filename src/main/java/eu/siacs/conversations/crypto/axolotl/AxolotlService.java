@@ -1326,7 +1326,7 @@ public class AxolotlService implements OnAdvancedStreamFeaturesLoaded {
 	}
 
 	@Nullable
-	private boolean buildHeader(XmppAxolotlMessage axolotlMessage, Conversation c) {
+	private boolean buildHeader(XmppAxolotlMessage axolotlMessage, Conversation c, boolean onlyForDevicesWithAuthenticatedKeys) {
 		Set<XmppAxolotlSession> remoteSessions = findSessionsForConversation(c);
 		final boolean acceptEmpty = (c.getMode() == Conversation.MODE_MULTI && c.getMucOptions().getUserCount() == 0) || c.getContact().isSelf();
 		Collection<XmppAxolotlSession> ownSessions = findOwnSessions();
@@ -1334,17 +1334,17 @@ public class AxolotlService implements OnAdvancedStreamFeaturesLoaded {
 			return false;
 		}
 		for (XmppAxolotlSession session : remoteSessions) {
-			axolotlMessage.addDevice(session);
+			axolotlMessage.addDevice(session, onlyForDevicesWithAuthenticatedKeys );
 		}
 		for (XmppAxolotlSession session : ownSessions) {
-			axolotlMessage.addDevice(session);
+			axolotlMessage.addDevice(session, onlyForDevicesWithAuthenticatedKeys);
 		}
 
 		return true;
 	}
 
 	//this is being used for private muc messages only
-	private boolean buildHeader(XmppAxolotlMessage axolotlMessage, Jid jid) {
+	private boolean buildHeader(XmppAxolotlMessage axolotlMessage, Jid jid, boolean onlyForDevicesWithAuthenticatedKeys) {
 		if (jid == null) {
 			return false;
 		}
@@ -1355,7 +1355,7 @@ public class AxolotlService implements OnAdvancedStreamFeaturesLoaded {
 		}
 		sessions.addAll(findOwnSessions());
 		for(XmppAxolotlSession session : sessions) {
-			axolotlMessage.addDevice(session);
+			axolotlMessage.addDevice(session, onlyForDevicesWithAuthenticatedKeys);
 		}
 		return true;
 	}
@@ -1378,9 +1378,9 @@ public class AxolotlService implements OnAdvancedStreamFeaturesLoaded {
 
 		final boolean success;
 		if (message.getType() == Message.TYPE_PRIVATE) {
-			success = buildHeader(axolotlMessage, message.getTrueCounterpart());
+			success = buildHeader(axolotlMessage, message.getTrueCounterpart(), message.isOnlyToBeSentToDevicesWithAuthenticatedKeys());
 		} else {
-			success = buildHeader(axolotlMessage, (Conversation) message.getConversation());
+			success = buildHeader(axolotlMessage, (Conversation) message.getConversation(), message.isOnlyToBeSentToDevicesWithAuthenticatedKeys());
 		}
 		return success ? axolotlMessage : null;
 	}
@@ -1407,7 +1407,7 @@ public class AxolotlService implements OnAdvancedStreamFeaturesLoaded {
 			@Override
 			public void run() {
 				final XmppAxolotlMessage axolotlMessage = new XmppAxolotlMessage(account.getJid().asBareJid(), getOwnDeviceId());
-				if (buildHeader(axolotlMessage, conversation)) {
+				if (buildHeader(axolotlMessage, conversation, false)) {
 					onMessageCreatedCallback.run(axolotlMessage);
 				} else {
 					onMessageCreatedCallback.run(null);
