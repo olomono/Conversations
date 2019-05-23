@@ -165,8 +165,14 @@ public class TrustKeysActivity extends OmemoActivity implements OnKeyStatusUpdat
 		boolean hasForeignKeys = false;
 		for (final String fingerprint : ownKeysToTrust.keySet()) {
 			hasOwnKeys = true;
-			addFingerprintRowWithListeners(binding.ownKeysDetails, mAccount, mAccount.getSelfContact(), fingerprint,
-					false, FingerprintStatus.createActive(ownKeysToTrust.get(fingerprint)), false,
+			addFingerprintRowWithListeners(
+					binding.ownKeysDetails,
+					mAccount,
+					mAccount.getSelfContact(),
+					fingerprint,
+					false,
+					FingerprintStatus.createActive(ownKeysToTrust.get(fingerprint)),
+					false,
 					false,
 					(buttonView, isChecked) -> {
 						ownKeysToTrust.put(fingerprint, isChecked);
@@ -183,8 +189,14 @@ public class TrustKeysActivity extends OmemoActivity implements OnKeyStatusUpdat
 				keysCardBinding.foreignKeysTitle.setOnClickListener(v -> switchToContactDetails(mAccount.getRoster().getContact(jid)));
 				final Map<String, Boolean> fingerprints = entry.getValue();
 				for (final String fingerprint : fingerprints.keySet()) {
-					addFingerprintRowWithListeners(keysCardBinding.foreignKeysDetails, mAccount, mConversation.getContact(), fingerprint,
-							false, FingerprintStatus.createActive(fingerprints.get(fingerprint)), false,
+					addFingerprintRowWithListeners(
+							keysCardBinding.foreignKeysDetails,
+							mAccount,
+							mConversation.getContact(),
+							fingerprint,
+							false,
+							FingerprintStatus.createActive(fingerprints.get(fingerprint)),
+							false,
 							false,
 							(buttonView, isChecked) -> {
 								fingerprints.put(fingerprint, isChecked);

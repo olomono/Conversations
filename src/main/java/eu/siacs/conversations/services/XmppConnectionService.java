@@ -4262,7 +4262,7 @@ public class XmppConnectionService extends Service {
 
 	/**
 	 * Authenticates keys.
-     *
+	 *
 	 * @param keysOwner Owner of the devices whose key fingerprints will be verified (can also be the account owner by account.getSelfContact).
 	 * @param fingerprints Fingerprints which will be verified.
 	 * @param trueForPreAuthentication If true, true will also be returned for a pre-authentication (i.e., when the key for its fingerprint is not yet available).
@@ -4280,35 +4280,35 @@ public class XmppConnectionService extends Service {
 				FingerprintStatus fingerprintStatus = axolotlService.getFingerprintTrust(fingerprint);
 
 				if (fingerprintStatus != null) {
-				    // Check that the given fingerprint is not verified yet and really belongs to the pretended owner.
+					// Check that the given fingerprint is not verified yet and really belongs to the pretended owner.
 					if (!fingerprintStatus.isVerified() && keysOwner.hasKeyWithFingerprint(fp)) {
 						axolotlService.setFingerprintTrust(fingerprint, fingerprintStatus.toVerified());
 						performedAuthenticationOrPreAuthentication = true;
-                        fingerprintsForAuthentication.add(fp);
+						fingerprintsForAuthentication.add(fp);
 						AutomaticTrustTransfer.authenticateOrRevokeWithCachedTrustMessageData(this, keysOwner.getAccount(), fp.fingerprint);
 					}
 				} else {
 					axolotlService.preAuthenticateKey(keysOwner, fingerprint);
-                    if (trueForPreAuthentication) {
-                        performedAuthenticationOrPreAuthentication = true;
-                    }
+					if (trueForPreAuthentication) {
+						performedAuthenticationOrPreAuthentication = true;
+					}
 				}
 			}
 		}
 		if (!fingerprintsForAuthentication.isEmpty()) {
-            // Create a list of fingerprints which will be used for distrusting and distrust all keys which have not yet verified fingerprints.
-            // This enhances Blind Trust Before Verification by stopping from now on attackers who introduced their malicious keys before the first verification.
-		    if (distrustAllUnauthenticatedKeys) {
-                List<XmppUri.Fingerprint> fingerprintsForDistrusting = new ArrayList<>(keysOwner.getFingerprints());
-                fingerprintsForDistrusting.removeAll(keysOwner.getFingerprintsOfAuthenticatedKeys());
+			// Create a list of fingerprints which will be used for distrusting and distrust all keys which have not yet verified fingerprints.
+			// This enhances Blind Trust Before Verification by stopping from now on attackers who introduced their malicious keys before the first verification.
+			if (distrustAllUnauthenticatedKeys) {
+				List<XmppUri.Fingerprint> fingerprintsForDistrusting = new ArrayList<>(keysOwner.getFingerprints());
+				fingerprintsForDistrusting.removeAll(keysOwner.getFingerprintsOfAuthenticatedKeys());
 
-                // TODO If the return value is true, show a message to the user informing about the fact that blindly trusted keys were distrusted and may be trusted manually by the user again to use them for encryption. It must be made clear that only keys with carefully verified fingerprints should be manually trusted. It would be even more secure if only a fingerprint verification could be used for that by typing in the fingerprint without showing it at the same moment to ensure that an actual fingerprint verification were done. Keys authenticated by that method could than be seen as authenticated. That could also be provided not only in that case but always as an alternative to the currently sole mandatory authentication by QR code scanning.
-                axolotlService.distrustKeys(keysOwner, fingerprintsForDistrusting, false);
-            }
+				// TODO If the return value is true, show a message to the user informing about the fact that blindly trusted keys were distrusted and may be trusted manually by the user again to use them for encryption. It must be made clear that only keys with carefully verified fingerprints should be manually trusted. It would be even more secure if only a fingerprint verification could be used for that by typing in the fingerprint without showing it at the same moment to ensure that an actual fingerprint verification were done. Keys authenticated by that method could than be seen as authenticated. That could also be provided not only in that case but always as an alternative to the currently sole mandatory authentication by QR code scanning.
+				axolotlService.distrustKeys(keysOwner, fingerprintsForDistrusting, false);
+			}
 
-            if (sendAuthenticationMessage) {
-                AutomaticTrustTransfer.sendAuthenticationMessage(this, keysOwner, fingerprintsForAuthentication);
-            }
+			if (sendAuthenticationMessage) {
+				AutomaticTrustTransfer.sendAuthenticationMessage(this, keysOwner, fingerprintsForAuthentication);
+			}
 		}
 		return performedAuthenticationOrPreAuthentication;
 	}

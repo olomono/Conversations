@@ -97,9 +97,9 @@ public class FingerprintStatus implements Comparable<FingerprintStatus> {
         return trust == Trust.TRUSTED || isVerified();
     }
 
-    public boolean isVerifiedAndActive() {
-        return active && isVerified();
-    }
+	public boolean isVerifiedAndActive() {
+		return active && isVerified();
+	}
 
     public boolean isVerified() {
         return trust == Trust.VERIFIED || trust == Trust.VERIFIED_X509;
@@ -155,12 +155,12 @@ public class FingerprintStatus implements Comparable<FingerprintStatus> {
         return status;
     }
 
-    public static FingerprintStatus createInactiveUntrusted() {
-        final FingerprintStatus status = new FingerprintStatus();
-        status.trust = Trust.UNTRUSTED;
-        status.active = false;
-        return status;
-    }
+	public static FingerprintStatus createInactiveUntrusted() {
+		final FingerprintStatus status = new FingerprintStatus();
+		status.trust = Trust.UNTRUSTED;
+		status.active = false;
+		return status;
+	}
 
     @Override
     public int compareTo(FingerprintStatus o) {

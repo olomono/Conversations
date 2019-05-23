@@ -120,17 +120,20 @@ public abstract class OmemoActivity extends XmppActivity {
 				highlight,
 				session.getTrust(),
 				true,
-				true, (buttonView, isChecked) -> account.getAxolotlService().setFingerprintTrust(fingerprint, FingerprintStatus.createActive(isChecked)));
+				true,
+				(buttonView, isChecked) -> account.getAxolotlService().setFingerprintTrust(fingerprint, FingerprintStatus.createActive(isChecked)));
 	}
 
-	protected void addFingerprintRowWithListeners(LinearLayout keys, final Account account,
-												  Contact contact, final String fingerprint,
-												  boolean highlight,
-												  FingerprintStatus status,
-												  boolean showTag,
-												  boolean undecidedNeedEnablement,
-												  CompoundButton.OnCheckedChangeListener
-														  onCheckedChangeListener) {
+	protected void addFingerprintRowWithListeners(
+			LinearLayout keys,
+			final Account account,
+			Contact contact,
+			final String fingerprint,
+			boolean highlight,
+			FingerprintStatus status,
+			boolean showTag,
+			boolean undecidedNeedEnablement,
+			CompoundButton.OnCheckedChangeListener onCheckedChangeListener) {
 		ContactKeyBinding binding = DataBindingUtil.inflate(getLayoutInflater(), R.layout.contact_key, keys, true);
 		binding.tglTrust.setVisibility(View.VISIBLE);
 		registerForContextMenu(binding.getRoot());
