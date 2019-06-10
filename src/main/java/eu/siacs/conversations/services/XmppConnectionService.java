@@ -4303,6 +4303,7 @@ public class XmppConnectionService extends Service {
 				fingerprintsForDistrusting.removeAll(keysOwner.getFingerprintsOfAuthenticatedKeys());
 
 				// TODO If the return value is true, show a message to the user informing about the fact that blindly trusted keys were distrusted and may be trusted manually by the user again to use them for encryption. It must be made clear that only keys with carefully verified fingerprints should be manually trusted. It would be even more secure if only a fingerprint verification could be used for that by typing in the fingerprint without showing it at the same moment to ensure that an actual fingerprint verification were done. Keys authenticated by that method could than be seen as authenticated. That could also be provided not only in that case but always as an alternative to the currently sole mandatory authentication by QR code scanning.
+                // TODO An alternative to the previous solution would be to show a dialog before distrusting blindly trusted keys and let the user choose to keep the trust in specific keys. With that approach revocation messages would not be sent for those keys. Only for blindly trusted keys which are not chosen revocation messages would be sent.
 				axolotlService.distrustKeys(keysOwner, fingerprintsForDistrusting, false);
 			}
 
